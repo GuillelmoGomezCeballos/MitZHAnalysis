@@ -32,6 +32,7 @@ const TString typeLepSel = "medium";
 void zhAnalysis(
  int mH = 125,
  unsigned int nJetsType = 0,
+ bool isBlinded = true,
  Int_t typeSel = 3
  ){
 
@@ -493,8 +494,11 @@ void zhAnalysis(
 
       bool passZMass     = TMath::Abs(dilep.M()-91.1876) < 15.0;
       bool passNjets     = idJet.size() == nJetsType;
+
       bool passMET       = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 120 && mtW > 200;
       if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 3) passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 40;
+      if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 120;
+
       bool passPTFrac    = ptFrac < 0.5;
       if(MVAVarType == 3) passPTFrac = ptFrac < 1.0;
       bool passDPhiZMET  = dPhiDiLepMET*180./TMath::Pi() > 150.;

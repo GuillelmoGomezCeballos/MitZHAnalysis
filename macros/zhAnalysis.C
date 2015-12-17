@@ -131,6 +131,7 @@ void zhAnalysis(
   TH1D *fhDZjets;
   if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
+  else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
   assert(fhDZjets);
   fhDZjets->SetDirectory(0);
   delete fZjetsTemplatesFile;
@@ -150,16 +151,17 @@ void zhAnalysis(
     else if(thePlot >=  1 && thePlot <=  1) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
     else if(thePlot >=  2 && thePlot <=  2) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >=  3 && thePlot <=  3) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >=  4 && thePlot <=  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.0;}
+    else if(thePlot >=  4 && thePlot <=  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >=  5 && thePlot <=  5) {nBinPlot = 180; xminPlot = 0.0; xmaxPlot = 180.0;}
     else if(thePlot >=  6 && thePlot <=  6) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >=  7 && thePlot <=  9) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >=  7 && thePlot <=  7) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
+    else if(thePlot >=  8 && thePlot <=  9) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 10 && thePlot <= 10) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =  40.0;}
     else if(thePlot >= 11 && thePlot <= 11) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
     else if(thePlot >= 12 && thePlot <= 14) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
     else if(thePlot >= 15 && thePlot <= 15) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 16 && thePlot <= 16) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
     else if(thePlot >= 18 && thePlot <= 18) {nBinPlot =  50; xminPlot =-0.5; xmaxPlot =  49.5;}
     else if(thePlot >= 19 && thePlot <= 19) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
     else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
@@ -188,6 +190,9 @@ void zhAnalysis(
   else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
   else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
   else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
+  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
+  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
+  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
   else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
 
   TH1D* histo_ZH_hinv_CMS_MVAZHStatBoundingUp      = new TH1D( Form("histo_ZH_hinv_CMS_zllhinv%s_MVAZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ZH_hinv_CMS_zllhinv%s_MVAZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAZHStatBoundingUp  ->Sumw2();
@@ -478,7 +483,7 @@ void zhAnalysis(
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 10 && 
 	   (float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
 
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) idJet.push_back(nj);
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) {idJet.push_back(nj);}
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.05 > 30) idJetUp.push_back(nj);
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.95 > 30) idJetDown.push_back(nj);
       }
@@ -671,10 +676,10 @@ void zhAnalysis(
 	  else if(thePlot ==  1 && passNMinusOne[0])   {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.M()-91.1876),99.999);}
 	  else if(thePlot ==  2 && passNMinusOne[1])   {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
 	  else if(thePlot ==  3 && passNMinusOne[2])   {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
-	  else if(thePlot ==  4 && passNMinusOne[3])   {makePlot = true;theVar = TMath::Min(ptFrac,1.999);}
+	  else if(thePlot ==  4 && passNMinusOne[3])   {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	  else if(thePlot ==  5 && passNMinusOne[4])   {makePlot = true;theVar = dPhiDiLepMET*180/TMath::Pi();}
 	  else if(thePlot ==  6 && passNMinusOne[5])   {makePlot = true;theVar = TMath::Max(TMath::Min(bDiscrMax,0.999),0.001);}
-	  else if(thePlot ==  7 && passNMinusOne[6])   {makePlot = true;theVar = TMath::Min(dilep.Pt(),199.999);}
+	  else if(thePlot ==  7 && passNMinusOne[6])   {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
 	  else if(thePlot ==  8 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),199.999);}
 	  else if(thePlot ==  9 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),199.999);}
 	  else if(thePlot == 10 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min((double)eventEvent.rho,39.999);}
@@ -683,8 +688,8 @@ void zhAnalysis(
 	  else if(thePlot == 13 && passAllCuts[SIGSEL]){makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
 	  else if(thePlot == 14 && passNMinusOne[7])   {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]))*180/TMath::Pi();}
 	  else if(thePlot == 15 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
-	  else if(thePlot == 16 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(ptFrac,1.999);}
-	  else if(thePlot == 17 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(dilep.Pt(),199.999);}
+	  else if(thePlot == 16 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
+	  else if(thePlot == 17 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
 	  else if(thePlot == 18 && passAllCuts[SIGSEL]){makePlot = true;theVar = (double)(numberGoodGenLep[0]+10*numberGoodGenLep[1]);}
 	  else if(thePlot == 19 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min((double)numberGoodTaus,3.499);}
 	  else if(thePlot == 20 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
@@ -922,8 +927,9 @@ void zhAnalysis(
   if(useZjetsTemplate){
     histo_Zjets->Scale(0.0);
     histo_Zjets->Add(fhDZjets);
-    if(nJetsType == 0) histo_Zjets->Scale(TMath::Abs(1./histo_Zjets->GetSumOfWeights()));
-    else               histo_Zjets->Scale(TMath::Abs(3./histo_Zjets->GetSumOfWeights()));
+    if     (nJetsType == 0) histo_Zjets->Scale(TMath::Abs(1./histo_Zjets->GetSumOfWeights()));
+    else if(nJetsType == 1) histo_Zjets->Scale(TMath::Abs(3./histo_Zjets->GetSumOfWeights()));
+    else                    histo_Zjets->Scale(TMath::Abs(2./histo_Zjets->GetSumOfWeights()));
   }
 
   double mean,up,diff;

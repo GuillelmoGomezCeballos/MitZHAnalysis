@@ -22,8 +22,8 @@
 bool usePureMC = true; 
 double mcPrescale = 1.0;
 bool usingAllTriggers = false;
-enum selType                     {SIGSEL=0,  ZSEL,   NOBTAG,   ZHPRESEL0,   ZHPRESEL1,   ZHSB1SEL0,   ZHSB1SEL1,   ZHSB2SEL0,   ZHSB2SEL1,   ZHSB3SEL0,   ZHSB3SEL1,   ZHSEL0,   ZHSEL1, nSelTypes};
-TString selTypeName[nSelTypes]= {"SIGSEL",  "ZSEL", "NOBTAG", "ZHPRESEL0", "ZHPRESEL1", "ZHSB1SEL0", "ZHSB1SEL1", "ZHSB2SEL0", "ZHSB2SEL1", "ZHSB3SEL0", "ZHSB3SEL1", "ZHSEL0", "ZHSEL1"};
+enum selType                     {SIGSEL=0,  ZSEL,   NOBTAG,   ZHPRESEL0,   ZHPRESEL1,   ZHSEL0,   ZHSEL1,   ZHSEL2,  ZHRECSEL0,   ZHRECSEL1,   ZHRECSEL2, nSelTypes};
+TString selTypeName[nSelTypes]= {"SIGSEL",  "ZSEL", "NOBTAG", "ZHPRESEL0", "ZHPRESEL1", "ZHSEL0", "ZHSEL1", "ZHSEL2","ZHRECSEL0", "ZHRECSEL1", "ZHRECSEL2"};
 const TString typeLepSel = "medium";
 
 // nsel == 0 --> llg selection, pt>20/20/20, lepton triggers
@@ -142,20 +142,24 @@ void zgAnalysis(
   double dataPrescale[4] = {21.469442,4.329899,2.164235,1};
 
   //const int MVAVarType = 0; const int nBinMVA = 4; Float_t xbins[nBinMVA+1] = {200, 300, 400, 500, 800};
-  //const int MVAVarType = 1; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
+  const int MVAVarType = 1; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
   //const int MVAVarType = 2; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800};
-  const int MVAVarType = 3; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
+  //const int MVAVarType = 3; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
   TH1D *histo_Zjets0 = (TH1D*) histoMVA->Clone("histo_Zjets0");
   TH1D *histo_Zjets1 = (TH1D*) histoMVA->Clone("histo_Zjets1");
+  TH1D *histo_Zjets2 = (TH1D*) histoMVA->Clone("histo_Zjets2");
+  TH1D *histo_ZjetsRec0 = (TH1D*) histoMVA->Clone("histo_ZjetsRec0");
+  TH1D *histo_ZjetsRec1 = (TH1D*) histoMVA->Clone("histo_ZjetsRec1");
+  TH1D *histo_ZjetsRec2 = (TH1D*) histoMVA->Clone("histo_ZjetsRec2");
 
   double xmin = 0.0;
   double xmax = 1.0;
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 45;
+  const int allPlots = 35;
   const int histBins = 5;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "....VV", "....ZG", "...ZLL"};
@@ -182,10 +186,7 @@ void zgAnalysis(
     else if(thePlot >= 27 && thePlot <= 28) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
     else if(thePlot >= 29 && thePlot <= 30) {nBinPlot = 100; xminPlot = -TMath::Pi(); xmaxPlot = TMath::Pi();}
     else if(thePlot >= 31 && thePlot <= 32) {nBinPlot = 100; xminPlot = 0; xmaxPlot = TMath::Pi();}
-    else if(thePlot >= 33 && thePlot <= 34) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >= 35 && thePlot <= 36) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 37 && thePlot <= 38) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >= 39 && thePlot <= 42) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
+    else if(thePlot >= 33 && thePlot <= 34) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
     TH1D* histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
     histos->Sumw2();
     for(int i=0; i<histBins; i++) histo[thePlot][i] = (TH1D*) histos->Clone(Form("histo%d",i));
@@ -366,6 +367,7 @@ void zgAnalysis(
         dilep = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ); 
         dilepPho = dilep;
       }
+      TLorentzVector recoil = dilep;
 
       TLorentzVector theMET;
       theMET.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px());
@@ -405,6 +407,7 @@ void zgAnalysis(
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 30) continue;
         
 	idJet.push_back(nj);
+	recoil = recoil + ( *(TLorentzVector*)(eventJets.p4->At(nj)) );
       }
 
       int typePair = 0;
@@ -437,8 +440,10 @@ void zgAnalysis(
       }
 
       double dPhiDiLepMET = TMath::Abs(dilep.DeltaPhi(theMET));
-      double ptFrac[2] = {TMath::Abs(dilep.Pt()   -theMET.Pt())/dilep.Pt(),
-                          TMath::Abs(dilepPho.Pt()-theMET.Pt())/dilepPho.Pt()};
+      double dPhiRecoilMET = TMath::Abs(recoil.DeltaPhi(theMET));
+      double ptFrac[3] = {TMath::Abs(dilep.Pt()   -theMET.Pt())/dilep.Pt(),
+                          TMath::Abs(dilepPho.Pt()-theMET.Pt())/dilepPho.Pt(),
+			  TMath::Abs(recoil.Pt()  -theMET.Pt())/recoil.Pt()};
       double deltaPhiDileptonMet = TMath::Abs(dilep.DeltaPhi(theMET));
       double mtW = TMath::Sqrt(2.0*dilep.Pt()*theMET.Pt()*(1.0 - cos(deltaPhiDileptonMet)));
 
@@ -462,19 +467,22 @@ void zgAnalysis(
       bool passDPhiZMET  = dPhiDiLepMET*180./TMath::Pi() > 150.;
       bool passPTLL      = dilep.Pt() > 60;
 
+      bool passPTFracRecoil = ptFrac[2] < 0.5;
+      if(MVAVarType == 3) passPTFracRecoil = ptFrac[2] < 1.0;
+      bool passDPhiZMETRecoil = dPhiRecoilMET*180./TMath::Pi() > 150.;
+
       bool passAllCuts[nSelTypes] = {passZGMass && passZMass && passBtagVeto,
                                                    passZMass && passBtagVeto,
 				     passZGMass && passZMass                ,
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0,
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && theMET.Pt() > 70. &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && theMET.Pt() > 70. &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET           &&                passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET           &&                passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && theMET.Pt() > 70. && !passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && theMET.Pt() > 70. && !passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET           &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET           &&  passPTFrac && passDPhiZMET && passPTLL};
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL
+				     };
 				     
       // begin event weighting
       double mcWeight = eventMonteCarlo.mcWeight;
@@ -527,8 +535,12 @@ void zgAnalysis(
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,799.999);
 	else if(MVAVarType == 3) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
-	if(passAllCuts[ZHSEL0] && theCategory == 0) {histo_Zjets0->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHSEL1] && theCategory == 0) {histo_Zjets1->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHSEL0]    && theCategory == 0) {histo_Zjets0   ->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHSEL1]    && theCategory == 0) {histo_Zjets1   ->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHSEL2]    && theCategory == 0) {histo_Zjets2   ->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHRECSEL0] && theCategory == 0) {histo_ZjetsRec0->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHRECSEL1] && theCategory == 0) {histo_ZjetsRec1->Fill(MVAVar,totalWeight);}
+	if(passAllCuts[ZHRECSEL2] && theCategory == 0) {histo_ZjetsRec2->Fill(MVAVar,totalWeight);}
 	for(int thePlot=0; thePlot<allPlots; thePlot++){
 	  double theVar = 0.0;
 	  bool makePlot = false;
@@ -565,16 +577,8 @@ void zgAnalysis(
 	  else if(thePlot == 30 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = (double)theMET.Phi();}
 	  else if(thePlot == 31 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = TMath::Abs((double)dilep.Phi());}
 	  else if(thePlot == 32 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = TMath::Abs((double)dilep.Phi());}
-	  else if(thePlot == 33 && passAllCuts[ZHSB1SEL0]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
-	  else if(thePlot == 34 && passAllCuts[ZHSB1SEL1]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
-	  else if(thePlot == 35 && passAllCuts[ZHSB2SEL0]) {makePlot = true;theVar = TMath::Min(ptFrac[0],0.999);}
-	  else if(thePlot == 36 && passAllCuts[ZHSB2SEL1]) {makePlot = true;theVar = TMath::Min(ptFrac[0],0.999);}
-	  else if(thePlot == 37 && passAllCuts[ZHSB3SEL0]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
-	  else if(thePlot == 38 && passAllCuts[ZHSB3SEL1]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
-	  else if(thePlot == 39 && passAllCuts[ZHSB2SEL0]) {makePlot = true;theVar = TMath::Min(mtW,599.999);}
-	  else if(thePlot == 40 && passAllCuts[ZHSB2SEL1]) {makePlot = true;theVar = TMath::Min(mtW,599.999);}
-	  else if(thePlot == 41 && passAllCuts[ZHSEL0])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
-	  else if(thePlot == 42 && passAllCuts[ZHSEL1])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
+	  else if(thePlot == 33 && passAllCuts[ZHSEL0])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
+	  else if(thePlot == 34 && passAllCuts[ZHSEL1])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
 
 	  if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	}
@@ -594,6 +598,10 @@ void zgAnalysis(
   outFilePlotsZjets->cd();
   histo_Zjets0->Write();
   histo_Zjets1->Write();
+  histo_Zjets2->Write();
+  histo_ZjetsRec0->Write();
+  histo_ZjetsRec1->Write();
+  histo_ZjetsRec2->Write();
   outFilePlotsZjets->Close();
 
   double sumEvents = 0;

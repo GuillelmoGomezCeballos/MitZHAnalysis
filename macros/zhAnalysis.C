@@ -114,26 +114,37 @@ void zhAnalysis(
   delete fPUFile;
 
   TString ECMsb  = "13TeV2015";
-  const int MVAVarType = 0; const int nBinMVA = 4; Float_t xbins[nBinMVA+1] = {200, 300, 400, 500, 800};
-  //const int MVAVarType = 1; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
-  //const int MVAVarType = 2; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800};
-  //const int MVAVarType = 3; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
+  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 500, 650, 800}; TString addChan = "";
+  //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 110, 120, 140, 160, 180, 200}; TString addChan = "1";
+  //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 700, 800}; TString addChan = "2";
+  //const int MVAVarType = 3; const int nBinMVA = 23; Float_t xbins[nBinMVA+1] = {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200}; TString addChan = "3";
+  //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00}; TString addChan = "4";
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
-  if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt120_mt.root";
-  else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt40_met.root";
-  else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt40_mt.root";
-  else if(MVAVarType == 3) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt40_ptfraclt1_ptfrac.root";
+  if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt100_mt.root";
+  else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt100_met.root";
+  else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt45_mt.root";
+  else if(MVAVarType == 3) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt45_met.root";
+  else if(MVAVarType == 4) zjetsTemplatesPath = "MitZHAnalysis/data/zjets_13TeV_25ns_metgt45_ptfraclt1_ptfrac.root";
   else {printf("PROBLEM with MVAVarType\n");}
 
   TFile *fZjetsTemplatesFile = TFile::Open(Form("%s",zjetsTemplatesPath.Data()));
+
   TH1D *fhDZjets;
   if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
   assert(fhDZjets);
   fhDZjets->SetDirectory(0);
+
+  TH1D *fhDZjetsSyst;
+  if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
+  else if(nJetsType == 1) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
+  else if(nJetsType == 2) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
+  assert(fhDZjetsSyst);
+  fhDZjetsSyst->SetDirectory(0);
+
   delete fZjetsTemplatesFile;
 
   double xmin = 0.0;
@@ -147,24 +158,25 @@ void zhAnalysis(
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", ".Higgs"};
 
   for(int thePlot=0; thePlot<allPlots; thePlot++){
-    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 300; xminPlot = 0.0; xmaxPlot = 600.0;}
+    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 400; xminPlot = 0.0; xmaxPlot = 400.0;}
     else if(thePlot >=  1 && thePlot <=  1) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
     else if(thePlot >=  2 && thePlot <=  2) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >=  3 && thePlot <=  3) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >=  4 && thePlot <=  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >=  5 && thePlot <=  5) {nBinPlot = 180; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >=  5 && thePlot <=  5) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot >=  6 && thePlot <=  6) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >=  7 && thePlot <=  7) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
     else if(thePlot >=  8 && thePlot <=  9) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 10 && thePlot <= 10) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =  40.0;}
     else if(thePlot >= 11 && thePlot <= 11) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
-    else if(thePlot >= 12 && thePlot <= 14) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >= 12 && thePlot <= 14) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot >= 15 && thePlot <= 15) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 16 && thePlot <= 16) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
     else if(thePlot >= 18 && thePlot <= 18) {nBinPlot =  50; xminPlot =-0.5; xmaxPlot =  49.5;}
     else if(thePlot >= 19 && thePlot <= 19) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
     else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
+    else if(thePlot >= 21 && thePlot <= 21) {nBinPlot = 400; xminPlot = 0.0; xmaxPlot = 800.0;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
     else                      histos = new TH1D("histos", "histos", nBinMVA, xbins);
@@ -308,6 +320,8 @@ void zhAnalysis(
   TH1D* histo_WZ_CMS_EWKCorrDown                = new TH1D( Form("histo_WZ_EWKCorrDown"), Form("histo_WZ_EWKCorrDown"), nBinMVA, xbins); histo_WZ_CMS_EWKCorrDown->Sumw2();
   TH1D* histo_ZZ_CMS_EWKCorrUp                  = new TH1D( Form("histo_ZZ_EWKCorrUp")  , Form("histo_ZZ_EWKCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_EWKCorrUp  ->Sumw2();
   TH1D* histo_ZZ_CMS_EWKCorrDown                = new TH1D( Form("histo_ZZ_EWKCorrDown"), Form("histo_ZZ_EWKCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_EWKCorrDown->Sumw2();
+  TH1D* histo_Zjets_CMS_ZjetsSystUp    	        = new TH1D( Form("histo_Zjets_ZjetsSystUp")  , Form("histo_Zjets_ZjetsSystUp")  , nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystUp  ->Sumw2();
+  TH1D* histo_Zjets_CMS_ZjetsSystDown           = new TH1D( Form("histo_Zjets_ZjetsSystDown"), Form("histo_Zjets_ZjetsSystDown"), nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystDown->Sumw2();
 
   double bgdDecay[nSelTypes*4][histBins],weiDecay[nSelTypes*4][histBins];
   for(unsigned int i=0; i<nSelTypes*4; i++) {
@@ -500,45 +514,48 @@ void zhAnalysis(
       bool passZMass     = TMath::Abs(dilep.M()-91.1876) < 15.0;
       bool passNjets     = idJet.size() == nJetsType;
 
-      bool passMET       = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 120 && mtW > 200;
-      if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 3) passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 40;
+      double metMIN = 100; double mtMIN = 200;
+      if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 45; mtMIN = 0;}
+      bool passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
+      bool passMT = mtW > mtMIN;
       if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 120;
 
-      bool passPTFrac    = ptFrac < 0.5;
-      if(MVAVarType == 3) passPTFrac = ptFrac < 1.0;
-      bool passDPhiZMET  = dPhiDiLepMET*180./TMath::Pi() > 150.;
+      bool passPTFrac    = ptFrac < 0.4;
+      if(MVAVarType == 4) passPTFrac = ptFrac < 1.0;
+      bool passDPhiZMET  = dPhiDiLepMET > 2.8;
       bool passBtagVeto  = bDiscrMax < 0.89 && idSoft.size() == 0;
       bool passPTLL      = dilep.Pt() > 60;
-      bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 40.;
+      bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 45.;
       bool pass3rdLVeto  = idLep.size() == numberOfLeptons && TMath::Abs(signQ) == 0;
-      bool passDelphiLL  = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]))*180/TMath::Pi() < 100.;
+      bool passDelphiLL  = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])) < TMath::Pi()/2.;
 
       bool passZMassLarge = TMath::Abs(dilep.M()-91.1876) < 30.0;
       bool passZMassSB    = (dilep.M() > 110.0 && dilep.M() < 200.0);
 
-      bool passNMinusOne[8] = {             passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass &&              passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass && passNjets &&            passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass && passNjets && passMET &&               passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass && passNjets && passMET && passPTFrac                 && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass && passNjets && passMET && passPTFrac && passDPhiZMET                 && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                               passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto             &&  pass3rdLVeto && passDelphiLL,
-			       passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto                };
-      bool passAllCuts[nSelTypes] = {                   passZMass && passNjets                                                                       &&  pass3rdLVeto                ,
-                                                        passZMass && passNjets && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                                     passZMassLarge && !passZMass && passNjets && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                                     passZMassSB    && !passZMass && passNjets && passMETMin                            && !passBtagVeto             &&  pass3rdLVeto && passDelphiLL,
-                                                        passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-                                                        passZMass && passNjets && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,
-							passZMass && passNjets && passMETMin            && passDPhiZMET                  && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100.};
+      bool passNMinusOne[9] = {          passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT &&              passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass &&              passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass && passNjets &&            passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass && passNjets && passMET &&               passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass && passNjets && passMET && passPTFrac                 && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET                 && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                               passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto             &&  pass3rdLVeto && passDelphiLL,
+			       passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto                };
+      bool passAllCuts[nSelTypes] = {                   passZMass && passNjets                                                                                 &&  pass3rdLVeto                ,
+                                                        passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                                     passZMassLarge && !passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                                     passZMassSB    && !passZMass && passNjets && passMETMin                                      && !passBtagVeto             &&  pass3rdLVeto && passDelphiLL,
+                                                        passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+                                                        passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,
+							passZMass && passNjets && passMETMin                      && passDPhiZMET                  && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100.};
 
      double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*(double)(*eventMet.ptJESUP)[0]  *(1.0 - cos(deltaPhiDileptonMet))),
                           TMath::Sqrt(2.0*dilep.Pt()*(double)(*eventMet.ptJESDOWN)[0]*(1.0 - cos(deltaPhiDileptonMet)))};
      bool passSystCuts[nSystTypes] = {
           passZMass && idJetUp.size() == nJetsType  && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
           passZMass && idJetDown.size()== nJetsType && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-          passZMass && passNjets && (double)(*eventMet.ptJESUP)[0]   > 120 && mtWSyst[0] > 200 && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
-          passZMass && passNjets && (double)(*eventMet.ptJESDOWN)[0] > 120 && mtWSyst[1] > 200 && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL
+          passZMass && passNjets && (double)(*eventMet.ptJESUP)[0]   > metMIN && mtWSyst[0] > mtMIN && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL,
+          passZMass && passNjets && (double)(*eventMet.ptJESDOWN)[0] > metMIN && mtWSyst[1] > mtMIN && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL
      };
 
       int numberGoodTaus = 0;
@@ -672,27 +689,28 @@ void zhAnalysis(
 	for(int thePlot=0; thePlot<allPlots; thePlot++){
 	  double theVar = 0.0;
 	  bool makePlot = false;
-	  if     (thePlot ==  0 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(mtW,599.999);}
-	  else if(thePlot ==  1 && passNMinusOne[0])   {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.M()-91.1876),99.999);}
-	  else if(thePlot ==  2 && passNMinusOne[1])   {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
-	  else if(thePlot ==  3 && passNMinusOne[2])   {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
-	  else if(thePlot ==  4 && passNMinusOne[3])   {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
-	  else if(thePlot ==  5 && passNMinusOne[4])   {makePlot = true;theVar = dPhiDiLepMET*180/TMath::Pi();}
-	  else if(thePlot ==  6 && passNMinusOne[5])   {makePlot = true;theVar = TMath::Max(TMath::Min(bDiscrMax,0.999),0.001);}
-	  else if(thePlot ==  7 && passNMinusOne[6])   {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
+	  if     (thePlot ==  0 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(mtW,799.999);}
+	  else if(thePlot ==  1 && passNMinusOne[1])   {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.M()-91.1876),99.999);}
+	  else if(thePlot ==  2 && passNMinusOne[2])   {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	  else if(thePlot ==  3 && passNMinusOne[3])   {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
+	  else if(thePlot ==  4 && passNMinusOne[4])   {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
+	  else if(thePlot ==  5 && passNMinusOne[5])   {makePlot = true;theVar = dPhiDiLepMET;}
+	  else if(thePlot ==  6 && passNMinusOne[6])   {makePlot = true;theVar = TMath::Max(TMath::Min(bDiscrMax,0.999),0.001);}
+	  else if(thePlot ==  7 && passNMinusOne[7])   {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
 	  else if(thePlot ==  8 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),199.999);}
 	  else if(thePlot ==  9 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),199.999);}
 	  else if(thePlot == 10 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min((double)eventEvent.rho,39.999);}
 	  else if(thePlot == 11 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
-	  else if(thePlot == 12 && passAllCuts[SIGSEL]){makePlot = true;theVar = dPhiJetMET*180/TMath::Pi();}
-	  else if(thePlot == 13 && passAllCuts[SIGSEL]){makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
-	  else if(thePlot == 14 && passNMinusOne[7])   {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]))*180/TMath::Pi();}
+	  else if(thePlot == 12 && passAllCuts[SIGSEL]){makePlot = true;theVar = dPhiJetMET;}
+	  else if(thePlot == 13 && passAllCuts[SIGSEL]){makePlot = true;theVar = dPhiLepMETMin;}
+	  else if(thePlot == 14 && passNMinusOne[8])   {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));}
 	  else if(thePlot == 15 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
 	  else if(thePlot == 16 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	  else if(thePlot == 17 && passAllCuts[PRESEL]){makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
 	  else if(thePlot == 18 && passAllCuts[SIGSEL]){makePlot = true;theVar = (double)(numberGoodGenLep[0]+10*numberGoodGenLep[1]);}
 	  else if(thePlot == 19 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min((double)numberGoodTaus,3.499);}
 	  else if(thePlot == 20 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
+	  else if(thePlot == 21 && passNMinusOne[0])   {makePlot = true;theVar = TMath::Min(mtW,799.999);}
 
 	  if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	}
@@ -701,7 +719,8 @@ void zhAnalysis(
 	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,799.999),200.001);
 	else if(MVAVarType == 1) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,799.999);
-	else if(MVAVarType == 3) MVAVar = TMath::Min(ptFrac,0.999);
+	else if(MVAVarType == 3) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);
+	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac,0.999);
 	else {assert(0); return;}
 
         if     (theCategory == 0){
@@ -924,16 +943,32 @@ void zhAnalysis(
 	 bgdDecay[SIGSEL][1]*NemFact_FromMLLSB[2]  ,sqrt(weiDecay[SIGSEL][4])*NemFact_FromMLLSB[2],bgdDecay[SIGSEL][0],EMbkg,EMSystTotal[2],EMSyst[0][2],EMSyst[1][2],sqrt(EMSystTotal[2]*EMSystTotal[2] - EMSyst[0][2]*EMSyst[0][2] - EMSyst[1][2]*EMSyst[1][2]));
 
   // DY background estimation
+  histo_Zjets_CMS_ZjetsSystUp->Add(fhDZjets);
   if(useZjetsTemplate){
     histo_Zjets->Scale(0.0);
     histo_Zjets->Add(fhDZjets);
-    if     (nJetsType == 0) histo_Zjets->Scale(TMath::Abs(1./histo_Zjets->GetSumOfWeights()));
-    else if(nJetsType == 1) histo_Zjets->Scale(TMath::Abs(3./histo_Zjets->GetSumOfWeights()));
-    else                    histo_Zjets->Scale(TMath::Abs(2./histo_Zjets->GetSumOfWeights()));
+    double ZJetsNorm[3] = {1., 2., 2.};
+    if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {
+      ZJetsNorm[0] = 1.; ZJetsNorm[1] = 1.; ZJetsNorm[2] = 1.; 
+    }
+    if     (nJetsType == 0) histo_Zjets->Scale(TMath::Abs(ZJetsNorm[0]/histo_Zjets->GetSumOfWeights()));
+    else if(nJetsType == 1) histo_Zjets->Scale(TMath::Abs(ZJetsNorm[1]/histo_Zjets->GetSumOfWeights()));
+    else                    histo_Zjets->Scale(TMath::Abs(ZJetsNorm[2]/histo_Zjets->GetSumOfWeights()));
+    
+    histo_Zjets_CMS_ZjetsSystUp->Scale(0.0);
+    histo_Zjets_CMS_ZjetsSystUp->Add(fhDZjetsSyst);
+    if     (nJetsType == 0) histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[0]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
+    else if(nJetsType == 1) histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[1]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
+    else                    histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[2]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
   }
 
   double mean,up,diff;
   for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++){
+    mean = histo_Zjets                ->GetBinContent(i);
+    up   = histo_Zjets_CMS_ZjetsSystUp->GetBinContent(i);
+    diff = mean-up;
+    histo_Zjets_CMS_ZjetsSystDown->SetBinContent(i,TMath::Max(mean+diff,0.000001));
+
     mean = histo_WZ              ->GetBinContent(i);
     up   = histo_WZ_CMS_EWKCorrUp->GetBinContent(i);
     diff = mean-up;
@@ -971,7 +1006,7 @@ void zhAnalysis(
   histo[allPlots-1][6]->Add(histo_ZH_hinv);
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"histozh%2s_nice_%d.root",finalStateName,thePlot);	  
+    sprintf(output,"histo%szh%s_nice_%d.root",addChan.Data(),finalStateName,thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -1003,7 +1038,7 @@ void zhAnalysis(
     histo_EM_CMS_MVAEMStatBoundingBinDown[i-1]       ->Add(histo_EM     ); histo_EM_CMS_MVAEMStatBoundingBinDown[i-1]     ->SetBinContent(i,TMath::Max(histo_EM     ->GetBinContent(i)+factorDown*histo_EM     ->GetBinError(i),0.000001));
   }
   char outputLimits[200];
-  sprintf(outputLimits,"zllhinv%2s_%3d_input_%4s.root",finalStateName,mH,ECMsb.Data());
+  sprintf(outputLimits,"zll%shinv%s_%3d_input_%s.root",addChan.Data(),finalStateName,mH,ECMsb.Data());
   TFile* outFileLimits = new TFile(outputLimits,"recreate");
   outFileLimits->cd();
   histo_Data   ->Write();
@@ -1073,9 +1108,12 @@ void zhAnalysis(
   histo_WZ_CMS_EWKCorrDown	  ->Write(); for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++) {if(histo_WZ->GetBinContent(i)>0)printf("%5.1f ",histo_WZ_CMS_EWKCorrDown->GetBinContent(i)/histo_WZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   histo_ZZ_CMS_EWKCorrUp	  ->Write(); for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++) {if(histo_ZZ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_EWKCorrUp  ->GetBinContent(i)/histo_ZZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   histo_ZZ_CMS_EWKCorrDown	  ->Write(); for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++) {if(histo_ZZ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_EWKCorrDown->GetBinContent(i)/histo_ZZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  printf("uncertainties Zjets\n");
+  histo_Zjets_CMS_ZjetsSystUp	  ->Write(); for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystUp  ->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_Zjets_CMS_ZjetsSystDown	  ->Write(); for(int i=1; i<=histo_ZH_hinv->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystDown->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   outFileLimits->Close();
 
-  double lumiE = 1.12;
+  double lumiE = 1.046;
   double systLepResE[4] = {1.01,1.01,1.01,1.01};
   double systLepResM[4] = {1.01,1.01,1.01,1.01};
   double syst_btag = 1.02;
@@ -1095,6 +1133,7 @@ void zhAnalysis(
     systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV->GetBinContent(nb);
     systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ->GetBinContent(nb);
     systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ->GetBinContent(nb);
+    for(int ntype=0; ntype<4; ntype++) if(systQCDScale[ntype] < 0) systQCDScale[ntype] = 1.0;
     printf("QCDScale(%d): %f %f %f %f\n",nb,systQCDScale[0],systQCDScale[1],systQCDScale[2],systQCDScale[3]);
     
     // PDF study
@@ -1153,8 +1192,16 @@ void zhAnalysis(
     if     (histo_ZZ->GetBinContent(nb)      > 0 && histo_ZZ_CMS_MVAJESBoundingUp        ->GetBinContent(nb) > 0) systJes[3] = histo_ZZ_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
     else if(histo_ZZ->GetBinContent(nb)      > 0 && histo_ZZ_CMS_MVAJESBoundingDown      ->GetBinContent(nb) > 0) systJes[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
 
+    double systZjets[1] = {1.0};
+    if     (histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystUp   ->GetBinContent(nb) > 0) systZjets[0] = histo_Zjets_CMS_ZjetsSystUp->GetBinContent(nb)/histo_Zjets->GetBinContent(nb);
+    else if(histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystDown ->GetBinContent(nb) > 0) systZjets[0] = histo_Zjets->GetBinContent(nb)/histo_Zjets_CMS_ZjetsSystDown->GetBinContent(nb);
+
+    double systEM[1] = {1.0};
+    if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
+    else                                systEM[0] = 2.;
+
     char outputLimitsShape[200];
-    sprintf(outputLimitsShape,"histo_limits_zllhinv%2s_mh%d_shape_%4s_bin%d.txt",finalStateName,mH,ECMsb.Data(),nb-1);
+    sprintf(outputLimitsShape,"histo_limits_zll%shinv%s_mh%d_shape_%s_bin%d.txt",addChan.Data(),finalStateName,mH,ECMsb.Data(),nb-1);
     ofstream newcardShape;
     newcardShape.open(outputLimitsShape);
     newcardShape << Form("imax 1 number of channels\n");
@@ -1164,7 +1211,7 @@ void zhAnalysis(
     newcardShape << Form("bin hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d\n",finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1);
     newcardShape << Form("process ZH_hinv Zjets VVV WZ ZZ EM\n");
     newcardShape << Form("process 0 1 2 3 4 5\n");
-    newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n",histo_ZH_hinv->GetBinContent(nb),histo_Zjets->GetBinContent(nb),histo_VVV->GetBinContent(nb),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_EM->GetBinContent(nb));
+    newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n",histo_ZH_hinv->GetBinContent(nb),histo_Zjets->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_EM->GetBinContent(nb));
     newcardShape << Form("lumi_%4s                               lnN  %7.5f   -   %7.5f %7.5f %7.5f   -  \n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE);		       
     newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -  \n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3]);
     newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -  \n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3]);
@@ -1178,8 +1225,9 @@ void zhAnalysis(
     newcardShape << Form("QCDscale_VH		                 lnN  %7.5f   -     -     -     -     -  \n",systQCDScale[0]);  
     newcardShape << Form("QCDscale_VVV		                 lnN    -     -   %7.5f   -     -     -  \n",systQCDScale[1]);		  
     newcardShape << Form("QCDscale_VV		                 lnN    -     -     -   %7.5f %7.5f   -  \n",systQCDScale[2],systQCDScale[3]);		  
-    newcardShape << Form("CMS_zllhinv_ZLL_%4s                    lnN    -   %7.5f   -	  -     -     -  \n",ECMsb.Data(),1.5);		
-    newcardShape << Form("CMS_zllhinv_EMSyst_%4s                 lnN	-     -     -	  -     -   %7.5f\n",ECMsb.Data(),2.0);	       
+    newcardShape << Form("CMS_zllhinv_ZLLNorm_%s_%s              lnN	-   %7.5f   -	  -     -     -  \n",finalStateName,ECMsb.Data(),1.5);	      
+    newcardShape << Form("CMS_zllhinv_ZLLShape_%s_%s             lnN	-   %7.5f   -	  -     -     -  \n",finalStateName,ECMsb.Data(),systZjets[0]);	      
+    newcardShape << Form("CMS_zllhinv_EM_%s_%s                   lnN	-     -     -	  -     -   %7.5f\n",finalStateName,ECMsb.Data(),systEM[0]);	       
     if(histo_ZH_hinv->GetBinContent(nb)   > 0) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding_%s_Bin%d	  lnN    %7.5f -      -    -    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv->GetBinError(nb)/histo_ZH_hinv->GetBinContent(nb));
     if(histo_Zjets->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%d  lnN      -  %7.5f   -    -    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)  /histo_Zjets->GetBinContent(nb)  );
     if(histo_VVV->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%d    lnN      -	-  %7.5f   -    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)    /histo_VVV->GetBinContent(nb)	);

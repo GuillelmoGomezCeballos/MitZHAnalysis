@@ -141,10 +141,11 @@ void zgAnalysis(
   double eventsTrg[4] = {0,0,0,0};
   double dataPrescale[4] = {21.469442,4.329899,2.164235,1};
 
-  //const int MVAVarType = 0; const int nBinMVA = 4; Float_t xbins[nBinMVA+1] = {200, 300, 400, 500, 800};
-  const int MVAVarType = 1; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
-  //const int MVAVarType = 2; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800};
-  //const int MVAVarType = 3; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
+  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 500, 650, 800};
+  //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 110, 120, 140, 160, 180, 200};
+  //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 700, 800};
+  //const int MVAVarType = 3; const int nBinMVA = 23; Float_t xbins[nBinMVA+1] = {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
+  //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
   TH1D *histo_Zjets0 = (TH1D*) histoMVA->Clone("histo_Zjets0");
@@ -171,7 +172,7 @@ void zgAnalysis(
     else if(thePlot >=  5 && thePlot <=  6) {nBinPlot = 1000; xminPlot =-100.0; xmaxPlot = 100.0;}
     else if(thePlot >=  7 && thePlot <=  7) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >=  8 && thePlot <=  9) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 10 && thePlot <= 10) {nBinPlot = 180; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >= 10 && thePlot <= 10) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot >= 11 && thePlot <= 11) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 12 && thePlot <= 12) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
     else if(thePlot >= 13 && thePlot <= 13) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
@@ -180,7 +181,7 @@ void zgAnalysis(
     else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.0;}
     else if(thePlot >= 18 && thePlot <= 18) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =  0.05;}
     else if(thePlot >= 19 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >= 21 && thePlot <= 22) {nBinPlot = 180; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >= 21 && thePlot <= 22) {nBinPlot = 180; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot >= 23 && thePlot <= 24) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 25 && thePlot <= 26) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
     else if(thePlot >= 27 && thePlot <= 28) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
@@ -459,17 +460,18 @@ void zgAnalysis(
 	passZMass = mtW > 30.;
         passBtagVeto = bDiscrMax < 0.890 && idSoft.size() == 0;
       }
-      bool passMET       = theMET.Pt() > 120 && mtW > 200;
-      if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 3) passMET = theMET.Pt() > 40;
+      double metMIN = 100; double mtMIN = 200;
+      if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 45; mtMIN = 0;}
+      bool passMET = theMET.Pt() > metMIN && mtW > mtMIN;
 
-      bool passPTFrac    = ptFrac[0] < 0.5;
-      if(MVAVarType == 3) passPTFrac = ptFrac[0] < 1.0;
-      bool passDPhiZMET  = dPhiDiLepMET*180./TMath::Pi() > 150.;
+      bool passPTFrac    = ptFrac[0] < 0.4;
+      if(MVAVarType == 4) passPTFrac = ptFrac[0] < 1.0;
+      bool passDPhiZMET  = dPhiDiLepMET > 2.8;
       bool passPTLL      = dilep.Pt() > 60;
 
-      bool passPTFracRecoil = ptFrac[2] < 0.5;
-      if(MVAVarType == 3) passPTFracRecoil = ptFrac[2] < 1.0;
-      bool passDPhiZMETRecoil = dPhiRecoilMET*180./TMath::Pi() > 150.;
+      bool passPTFracRecoil = ptFrac[2] < 0.4;
+      if(MVAVarType == 4) passPTFracRecoil = ptFrac[2] < 1.0;
+      bool passDPhiZMETRecoil = dPhiRecoilMET > 2.8;
 
       bool passAllCuts[nSelTypes] = {passZGMass && passZMass && passBtagVeto,
                                                    passZMass && passBtagVeto,
@@ -533,7 +535,8 @@ void zgAnalysis(
 	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,799.999),200.001);
 	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,799.999);
-	else if(MVAVarType == 3) MVAVar = TMath::Min(ptFrac[0],0.999);
+	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
+	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
 	if(passAllCuts[ZHSEL0]    && theCategory == 0) {histo_Zjets0   ->Fill(MVAVar,totalWeight);}
 	if(passAllCuts[ZHSEL1]    && theCategory == 0) {histo_Zjets1   ->Fill(MVAVar,totalWeight);}
@@ -554,7 +557,7 @@ void zgAnalysis(
 	  else if(thePlot ==  7 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
 	  else if(thePlot ==  8 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min(ptFrac[0],0.999);}
 	  else if(thePlot ==  9 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min(ptFrac[1],0.999);}
-	  else if(thePlot == 10 && passAllCuts[SIGSEL])    {makePlot = true;theVar = dPhiDiLepMET*180/TMath::Pi();}
+	  else if(thePlot == 10 && passAllCuts[SIGSEL])    {makePlot = true;theVar = dPhiDiLepMET;}
 	  else if(thePlot == 11 && passAllCuts[NOBTAG])    {makePlot = true;theVar = TMath::Max(TMath::Min(bDiscrMax,0.999),0.001);}
 	  else if(thePlot == 12 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
 	  else if(thePlot == 13 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min(ptPho,199.999);}
@@ -565,8 +568,8 @@ void zgAnalysis(
 	  else if(thePlot == 18 && passAllCuts[SIGSEL])    {makePlot = true;theVar = TMath::Min(sieiePho,0.04999);}
 	  else if(thePlot == 19 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
 	  else if(thePlot == 20 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = TMath::Min((double)theMET.Pt(),199.999);}
-	  else if(thePlot == 21 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = dPhiDiLepMET*180/TMath::Pi();}
-	  else if(thePlot == 22 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = dPhiDiLepMET*180/TMath::Pi();}
+	  else if(thePlot == 21 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = dPhiDiLepMET;}
+	  else if(thePlot == 22 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = dPhiDiLepMET;}
 	  else if(thePlot == 23 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = TMath::Min(ptFrac[0],0.999);}
 	  else if(thePlot == 24 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = TMath::Min(ptFrac[0],0.999);}
 	  else if(thePlot == 25 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = TMath::Min(dilep.Pt(),499.999);}

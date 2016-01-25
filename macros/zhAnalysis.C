@@ -29,6 +29,7 @@ enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystType
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
 
+
 void zhAnalysis(
  int mH = 125,
  unsigned int nJetsType = 0,
@@ -40,6 +41,7 @@ void zhAnalysis(
   TString filesPath  = "/scratch5/ceballos/ntuples_weights/";
   Double_t lumi = 0.0715;
   if(period == 1) lumi = 2.2;
+  TString processTag = "";
 
   //*******************************************************
   //Input Files
@@ -96,8 +98,72 @@ void zhAnalysis(
   infilenamev.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));			          infilecatv.push_back(5);
   infilenamev.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2+AODSIM.root",filesPath.Data()));			          infilecatv.push_back(5);
 
-  infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data(),mH));			  infilecatv.push_back(6);
-  infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data(),mH));			  infilecatv.push_back(6);
+  if(mH>100){
+  processTag = Form("mh%d",mH);
+  infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data(),mH)); infilecatv.push_back(6);
+  infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data(),mH)); infilecatv.push_back(6);
+  }
+  else if(mH==1) {processTag = "DM_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==2) {processTag = "DM_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==3) {processTag = "DM_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==4) {processTag = "DM_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==5) {processTag = "DM_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==6) {processTag = "DM_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==7) {processTag = "DM_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==8) {processTag = "DM_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==9) {processTag = "DM_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==10){processTag = "DM_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==11){processTag = "DM_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==12){processTag = "DM_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==13){processTag = "DM_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1"; infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==14){processTag = "DM_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==15){processTag = "DM_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==16){processTag = "DM_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==17){processTag = "DM_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1";     infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==18){processTag = "DM_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==19){processTag = "DM_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==20){processTag = "DM_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1";     infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==21){processTag = "DM_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==22){processTag = "DM_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==23){processTag = "DM_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==24){processTag = "DM_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1";     infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==25){processTag = "DM_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==26){processTag = "DM_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1"; infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==27){processTag = "DM_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1"; infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==28){processTag = "DM_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==29){processTag = "DM_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==30){processTag = "DM_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==31){processTag = "DM_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==32){processTag = "DM_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==33){processTag = "DM_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==34){processTag = "DM_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==35){processTag = "DM_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==36){processTag = "DM_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==37){processTag = "DM_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1";infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==38){processTag = "DM_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==39){processTag = "DM_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2+AODSIM",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==40){processTag = "DM_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==41){processTag = "DM_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==42){processTag = "DM_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==43){processTag = "DM_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==44){processTag = "DM_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==45){processTag = "DM_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==46){processTag = "DM_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==47){processTag = "DM_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ";     infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==48){processTag = "DM_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==49){processTag = "DM_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==50){processTag = "DM_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==51){processTag = "DM_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==52){processTag = "DM_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==53){processTag = "DM_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1";     infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==54){processTag = "DM_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1"; infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==55){processTag = "DM_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==56){processTag = "DM_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==57){processTag = "DM_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==58){processTag = "DM_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1";   infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==59){processTag = "DM_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1";  infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==60){processTag = "DM_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
+  else if(mH==61){processTag = "DM_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1";    infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data())); infilecatv.push_back(6);}
 
   }
   else {assert(0);}
@@ -147,6 +213,10 @@ void zhAnalysis(
 
   delete fZjetsTemplatesFile;
 
+  const int numberCuts = 10;
+  TH1D* histoZHSEL = new TH1D("histoZHSEL", "histoZHSEL", numberCuts+1, -0.5, numberCuts+0.5);
+  TString cutName[numberCuts+1] = {"ptl>20/20","Njets=0","Z mass","ptll>60","3rd lepton veto","btag-veto","dPhi(Z-MET)>2.8","dPhi(l-l)<pt/2","|ptll-MET|/ptll<0.4","MET>100","MT>200"};
+
   double xmin = 0.0;
   double xmax = 1.0;
   int nBinPlot      = 200;
@@ -177,6 +247,7 @@ void zhAnalysis(
     else if(thePlot >= 19 && thePlot <= 19) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
     else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
     else if(thePlot >= 21 && thePlot <= 21) {nBinPlot = 400; xminPlot = 0.0; xmaxPlot = 800.0;}
+    else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
     else                      histos = new TH1D("histos", "histos", nBinMVA, xbins);
@@ -414,6 +485,7 @@ void zhAnalysis(
       //return;
     }
 
+    histoZHSEL->Scale(0.0);
     double theMCPrescale = mcPrescale;
     if(infilecatv[ifile] == 0) theMCPrescale = 1.0;
     for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
@@ -549,6 +621,15 @@ void zhAnalysis(
                                                         passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,
 							passZMass && passNjets && passMETMin                      && passDPhiZMET                  && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100.};
 
+     bool passEvolFilter[numberCuts] = {passNjets,passZMass,passPTLL,pass3rdLVeto,passBtagVeto,passDPhiZMET,passDelphiLL,passPTFrac,passMET,passMT};
+
+     int sumEvol = 0;
+     bool totalSel = kTRUE;
+     for(int isel=0; isel<numberCuts; isel++) {
+       totalSel = totalSel && passEvolFilter[isel];
+       if(totalSel == kTRUE) sumEvol++;
+     }
+
      double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*(double)(*eventMet.ptJESUP)[0]  *(1.0 - cos(deltaPhiDileptonMet))),
                           TMath::Sqrt(2.0*dilep.Pt()*(double)(*eventMet.ptJESDOWN)[0]*(1.0 - cos(deltaPhiDileptonMet)))};
      bool passSystCuts[nSystTypes] = {
@@ -674,6 +755,9 @@ void zhAnalysis(
       double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale;
       if(totalWeight == 0) continue;
 
+      for(int nl=0; nl <=sumEvol; nl++) histo[allPlots-2][theCategory]->Fill((double)nl,totalWeight);
+      for(int nl=0; nl <=sumEvol; nl++) histoZHSEL                    ->Fill((double)nl,totalWeight);
+
       if(theCategory == 4) totalWeight = totalWeight * weightEWKCorr(bosonPtMin,1)*1.10;
       // end event weighting
       if((infilecatv[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
@@ -686,7 +770,7 @@ void zhAnalysis(
       }
 
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
-	for(int thePlot=0; thePlot<allPlots; thePlot++){
+	for(int thePlot=0; thePlot<allPlots-2; thePlot++){
 	  double theVar = 0.0;
 	  bool makePlot = false;
 	  if     (thePlot ==  0 && passAllCuts[SIGSEL]){makePlot = true;theVar = TMath::Min(mtW,799.999);}
@@ -841,6 +925,9 @@ void zhAnalysis(
       }
     }
     printf("eff_cuts: %f\n",sumEventsProcess[ifile]);
+    for(int nc=0; nc<numberCuts+1; nc++){
+      printf("(%20s): %10.2f\n",cutName[nc].Data(),histoZHSEL->GetBinContent(nc+1));
+    }
 
   } // end of chain
 
@@ -1006,7 +1093,7 @@ void zhAnalysis(
   histo[allPlots-1][6]->Add(histo_ZH_hinv);
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"histo%szh%s_nice_%d.root",addChan.Data(),finalStateName,thePlot);	  
+    sprintf(output,"histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName,processTag.Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -1038,7 +1125,7 @@ void zhAnalysis(
     histo_EM_CMS_MVAEMStatBoundingBinDown[i-1]       ->Add(histo_EM     ); histo_EM_CMS_MVAEMStatBoundingBinDown[i-1]     ->SetBinContent(i,TMath::Max(histo_EM     ->GetBinContent(i)+factorDown*histo_EM     ->GetBinError(i),0.000001));
   }
   char outputLimits[200];
-  sprintf(outputLimits,"zll%shinv%s_%3d_input_%s.root",addChan.Data(),finalStateName,mH,ECMsb.Data());
+  sprintf(outputLimits,"zll%shinv%s_%s_input_%s.root",addChan.Data(),finalStateName,processTag.Data(),ECMsb.Data());
   TFile* outFileLimits = new TFile(outputLimits,"recreate");
   outFileLimits->cd();
   histo_Data   ->Write();
@@ -1201,7 +1288,7 @@ void zhAnalysis(
     else                                systEM[0] = 2.;
 
     char outputLimitsShape[200];
-    sprintf(outputLimitsShape,"histo_limits_zll%shinv%s_mh%d_shape_%s_bin%d.txt",addChan.Data(),finalStateName,mH,ECMsb.Data(),nb-1);
+    sprintf(outputLimitsShape,"histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName,processTag.Data(),ECMsb.Data(),nb-1);
     ofstream newcardShape;
     newcardShape.open(outputLimitsShape);
     newcardShape << Form("imax 1 number of channels\n");

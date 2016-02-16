@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $1 \< 100 ];
+if [ $1 -lt 100 ];
 then 
 
 root -l -q -b MitZHAnalysis/macros/74x/zhAnalysis.C+\($1+2,0\);

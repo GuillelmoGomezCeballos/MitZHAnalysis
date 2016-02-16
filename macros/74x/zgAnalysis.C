@@ -17,7 +17,7 @@
 #include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
 #include "NeroProducer/Core/interface/BarePhotons.hpp"
 
-#include "MitAnalysisRunII/macros/factors.h"
+#include "MitAnalysisRunII/macros/74x/factors.h"
 
 bool usePureMC = true; 
 double mcPrescale = 1.0;
@@ -40,7 +40,7 @@ void zgAnalysis(
 
   TString filesPath  = "/scratch5/ceballos/ntuples_weights/";
   Double_t lumi = 0.0715;
-  if(period == 1) lumi = 2.2;
+  if(period == 1) lumi = 2.263;
 
   if(nsel == 1 || nsel == 2 || nsel == 4) filesPath  = "/scratch5/ceballos/ntuples_weights/pho_";
   //*******************************************************
@@ -53,9 +53,9 @@ void zgAnalysis(
   TString ptRatioPath  = "";
   TString etaRatioPath = "";
   if      (period==1){
-  puPath       = "MitAnalysisRunII/data/puWeights_13TeV_25ns.root";
-  ptRatioPath  = "MitAnalysisRunII/data/ratio_13TeV_pt.root";
-  etaRatioPath = "MitAnalysisRunII/data/ratio_13TeV_eta.root";
+  puPath       = "MitAnalysisRunII/data/74x/puWeights_13TeV_25ns.root";
+  ptRatioPath  = "MitAnalysisRunII/data/74x/ratio_13TeV_pt.root";
+  etaRatioPath = "MitAnalysisRunII/data/74x/ratio_13TeV_eta.root";
   if(nsel == 1 || nsel == 2 || nsel == 4) {
   infilenamev.push_back(Form("%sdata_AOD_spho_25ns.root",filesPath.Data()));													infilecatv.push_back(0);
   } else {
@@ -138,12 +138,29 @@ void zgAnalysis(
   fhDEtaRatio->SetDirectory(0);
   delete fEtaRatioFile;
 
+  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/74x/scalefactors_dylan.root"));
+  //TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/74x/scalefactors_hww.root"));
+  TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("unfactorized_scalefactors_Medium_ele"));
+  TH2D *fhDElTightSF  = (TH2D*)(fElSF->Get("unfactorized_scalefactors_Tight_ele"));
+  assert(fhDElMediumSF);
+  assert(fhDElTightSF);
+  fhDElMediumSF->SetDirectory(0);
+  fhDElTightSF ->SetDirectory(0);
+  delete fElSF;
+
+  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/74x/scalefactors_dylan.root"));
+  //TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/74x/scalefactors_hww.root"));
+  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("unfactorized_scalefactors_Medium_mu"));
+  assert(fhDMuMediumSF);
+  fhDMuMediumSF->SetDirectory(0);
+  delete fMuSF;
+
   double eventsTrg[4] = {0,0,0,0};
   double dataPrescale[4] = {21.469442,4.329899,2.164235,1};
 
-  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 500, 650, 800};
-  //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 110, 120, 140, 160, 180, 200};
-  //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 700, 800};
+  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000};
+  //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 125, 150, 175, 200, 225, 250};
+  //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000};
   //const int MVAVarType = 3; const int nBinMVA = 23; Float_t xbins[nBinMVA+1] = {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
   //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
@@ -160,7 +177,7 @@ void zgAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 35;
+  const int allPlots = 37;
   const int histBins = 5;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "....VV", "....ZG", "...ZLL"};
@@ -188,6 +205,7 @@ void zgAnalysis(
     else if(thePlot >= 29 && thePlot <= 30) {nBinPlot = 100; xminPlot = -TMath::Pi(); xmaxPlot = TMath::Pi();}
     else if(thePlot >= 31 && thePlot <= 32) {nBinPlot = 100; xminPlot = 0; xmaxPlot = TMath::Pi();}
     else if(thePlot >= 33 && thePlot <= 34) {nBinPlot = 600; xminPlot = 0.0; xmaxPlot = 600.0;}
+    else if(thePlot >= 35 && thePlot <= 36) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
     TH1D* histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
     histos->Sumw2();
     for(int i=0; i<histBins; i++) histo[thePlot][i] = (TH1D*) histos->Clone(Form("histo%d",i));
@@ -485,7 +503,7 @@ void zgAnalysis(
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL
 				     };
-				     
+
       // begin event weighting
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infilecatv[ifile] == 0) mcWeight = theDataPrescale;
@@ -500,12 +518,14 @@ void zgAnalysis(
       // luminosity
       double theLumi  = 1.0; if(infilecatv[ifile] != 0) theLumi  = lumi;
       // pile-up
-      double puWeight = 1.0; if(infilecatv[ifile] != 0) puWeight = nPUScaleFactor(fhDPU, (double)eventVertex.npv);
+      //double puWeight = 1.0; if(infilecatv[ifile] != 0) puWeight = nPUScaleFactor(fhDPU, (double)eventVertex.npv);
+      double puWeight = 1.0; if(infilecatv[ifile] != 0) puWeight = weightTruePileupFall15_74X((double)eventMonteCarlo.puTrueInt);
       // lepton efficiency
       double effSF = 1.0;
       if(infilecatv[ifile] != 0){
         for(unsigned int nl=0; nl<idLep.size(); nl++){
-          effSF = effSF * effScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
+          //effSF = effSF * effScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
+          effSF = effSF * effhDScaleFactor(true,((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF);
         }
       }
       int theCategory = infilecatv[ifile];
@@ -532,9 +552,9 @@ void zgAnalysis(
 
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
 	double MVAVar = 0.0;
-	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,799.999),200.001);
-	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
-	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,799.999);
+	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),200.001);
+	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),249.999);
+	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,999.999);
 	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
@@ -582,6 +602,8 @@ void zgAnalysis(
 	  else if(thePlot == 32 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = TMath::Abs((double)dilep.Phi());}
 	  else if(thePlot == 33 && passAllCuts[ZHSEL0])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
 	  else if(thePlot == 34 && passAllCuts[ZHSEL1])    {makePlot = true;theVar = TMath::Min(mtW,599.999);}
+	  else if(thePlot == 35 && passAllCuts[ZHPRESEL0]) {makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
+	  else if(thePlot == 36 && passAllCuts[ZHPRESEL1]) {makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
 
 	  if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	}

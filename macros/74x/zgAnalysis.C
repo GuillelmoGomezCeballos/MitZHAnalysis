@@ -38,11 +38,11 @@ void zgAnalysis(
  Int_t period = 1
  ){
 
-  TString filesPath  = "/scratch5/ceballos/ntuples_weights/";
+  TString filesPath  = "/scratch5/ceballos/ntuples_weights_74x/";
   Double_t lumi = 0.0715;
   if(period == 1) lumi = 2.263;
 
-  if(nsel == 1 || nsel == 2 || nsel == 4) filesPath  = "/scratch5/ceballos/ntuples_weights/pho_";
+  if(nsel == 1 || nsel == 2 || nsel == 4) filesPath  = "/scratch5/ceballos/ntuples_weights_74x/pho_";
   //*******************************************************
   //Input Files
   //*******************************************************

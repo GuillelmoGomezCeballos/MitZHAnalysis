@@ -118,7 +118,7 @@ void zgAnalysis(
   //infilenamev.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 			   infilecatv.push_back(2);
   infilenamev.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                           infilecatv.push_back(2);
   //infilenamev.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                         infilecatv.push_back(2);
-  //infilenamev.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
   }
 
   infilenamev.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                  infilecatv.push_back(3);
@@ -174,7 +174,7 @@ void zgAnalysis(
   delete fEtaRatioFile;
 
   double eventsTrg[4] = {0,0,0,0};
-  double dataPrescale[4] = {21.622723,4.361040,2.175535,1};
+  double dataPrescale[4] = {21.479639,4.339259,2.163135,1};
 
   const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000};
   //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 125, 150, 175, 200, 225, 250};
@@ -371,7 +371,7 @@ void zgAnalysis(
              (strcmp(tokens[nt],"HLT_Ele27_WPLoose_Gsf_v*")			      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele27_WP85_Gsf_v*")  			      == 0)
              ) passFilter[3] = kTRUE;
-          if(infilecatv[ifile] != 0) passFilter[3] = kTRUE; // do not apply trigger filters to MC
+          //if(infilecatv[ifile] != 0) passFilter[3] = kTRUE; // do not apply trigger filters to MC
         }
         else if(nsel == 2 || nsel == 5){
 	  if(usingAllTriggers == false){
@@ -493,6 +493,25 @@ void zgAnalysis(
         }
       }
 
+      int numberGoodTaus = 0;
+      for(int ntau=0; ntau<eventTaus.p4->GetEntriesFast(); ntau++) {
+        if(((TLorentzVector*)(*eventTaus.p4)[ntau])->Pt() <= 20.0 ||
+           TMath::Abs(((TLorentzVector*)(*eventTaus.p4)[ntau])->Eta()) >= 2.3) continue;
+        bool isElMu = false;
+        for(unsigned nl=0; nl<idLep.size(); nl++){
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventTaus.p4)[ntau])) < 0.1) {
+            isElMu = true;
+            break;
+          }
+        }
+        if(isElMu == false &&
+           ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFinding	 ) == BareTaus::TauDecayModeFinding &&
+           ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFindingNewDMs) == BareTaus::TauDecayModeFindingNewDMs &&
+           (double)(*eventTaus.iso)[ntau] < 4.0){
+          numberGoodTaus++;
+        }
+      }
+
       double dPhiDiLepMET = TMath::Abs(dilep.DeltaPhi(theMET));
       double dPhiRecoilMET = TMath::Abs(recoil.DeltaPhi(theMET));
       double ptFrac[3] = {TMath::Abs(dilep.Pt()   -theMET.Pt())/dilep.Pt(),
@@ -511,7 +530,7 @@ void zgAnalysis(
       else if(nsel == 4) {
         passZGMass = theMET.Pt() > 30.;
 	passZMass = mtW > 30.;
-        passBtagVeto = bDiscrMax < 0.890 && idSoft.size() == 0;
+        passBtagVeto = bDiscrMax < 0.800 && idSoft.size() == 0;
       }
       double metMIN = 100; double mtMIN = 200;
       if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 45; mtMIN = 0;}
@@ -526,17 +545,20 @@ void zgAnalysis(
       if(MVAVarType == 4) passPTFracRecoil = ptFrac[2] < 1.0;
       bool passDPhiZMETRecoil = dPhiRecoilMET > 2.8;
 
+      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passTauVeto    = numberGoodTaus == 0;
+
       bool passAllCuts[nSelTypes] = {passZGMass && passZMass && passBtagVeto,
                                                    passZMass && passBtagVeto,
 				     passZGMass && passZMass                ,
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0,
 				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFrac && passDPhiZMET && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
-				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passTauVeto,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passTauVeto,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passTauVeto,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 0 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL && passDPhiJetMET && passTauVeto,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 1 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL && passDPhiJetMET && passTauVeto,
+				     passZGMass && passZMass && passBtagVeto && idJet.size() == 2 && passMET &&  passPTFracRecoil && passDPhiZMETRecoil && passPTLL && passDPhiJetMET && passTauVeto,
 				     passPTLL
 				     };
 
@@ -546,6 +568,7 @@ void zgAnalysis(
       if(nsel == 2) {
         //if(TMath::Abs(dilep.Eta())>1.5)mcWeight=0;
         //if(TMath::Abs((double)dilep.Phi()) < 0.8 || TMath::Abs((double)dilep.Phi()) > 2.6) mcWeight = 0.0; // ugly, against beamhalo
+	mcWeight = mcWeight * ratioFactor_gjets_zll(TMath::Min(dilep.Pt(),399.999));
         /*
 	mcWeight = mcWeight * 
 	           ratioFactor(fhDPtRatio,  TMath::Min(dilep.Pt(),499.999)) *
@@ -554,11 +577,11 @@ void zgAnalysis(
       }
       // trigger efficiency
       double trigEff = 1.0;
-      if(infilecatv[ifile] != 0 && (nsel == 0 || nsel == 3)) {
-        trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
-        						  ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),
-        						 TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
-      }
+      //if(infilecatv[ifile] != 0 && (nsel == 0 || nsel == 3)) {
+      //  trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
+      //  						  ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),
+      //  						 TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
+      //}
       // luminosity
       double theLumi  = 1.0; if(infilecatv[ifile] != 0) theLumi  = lumi;
       // pile-up

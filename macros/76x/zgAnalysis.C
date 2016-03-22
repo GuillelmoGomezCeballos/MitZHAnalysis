@@ -41,8 +41,8 @@ void zgAnalysis(
  Int_t period = 1
  ){
 
-  TString filesPathDA  = "/scratch/ceballos/ntuples_weightsDA_76x/met_";
-  TString filesPathMC  = "/scratch5/ceballos/ntuples_weightsMC_76x/met_";
+  TString filesPathDA  = "/scratch/ceballos/ntuples_weightsDA_76x/";
+  TString filesPathMC  = "/scratch5/ceballos/ntuples_weightsMC_76x/";
   Double_t lumi = 2.318;
 
   double denFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -67,8 +67,6 @@ void zgAnalysis(
   TString etaRatioPath = "";
   if      (period==1){
   puPath = "MitAnalysisRunII/data/76x/puWeights_76x.root";
-  ptRatioPath  = "MitAnalysisRunII/data/74x/ratio_13TeV_pt.root";
-  etaRatioPath = "MitAnalysisRunII/data/74x/ratio_13TeV_eta.root";
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
   infilenamev.push_back(Form("%sSinglePhoton+Run2015C_25ns-16Dec2015-v1+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
   infilenamev.push_back(Form("%sSinglePhoton+Run2015D-16Dec2015-v1+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
@@ -76,7 +74,7 @@ void zgAnalysis(
   infilenamev.push_back(Form("%sdata_AOD_Run2015C_25ns.root",filesPathDA.Data()));											      infilecatv.push_back(0);
   infilenamev.push_back(Form("%sdata_AOD_Run2015D_25ns.root",filesPathDA.Data()));											      infilecatv.push_back(0);
   }  
-/*
+
   infilenamev.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                                            infilecatv.push_back(1);
   infilenamev.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v2+AODSIM.root",filesPathMC.Data()));					   infilecatv.push_back(1);
   infilenamev.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));						   infilecatv.push_back(1);
@@ -96,11 +94,11 @@ void zgAnalysis(
   infilenamev.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));           infilecatv.push_back(1);
 
   if(nsel == 2 || nsel == 5) {
-  infilenamev.push_back(Form("%sGJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));	       infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sGJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));        infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sGJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));        infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sGJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));        infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sGJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));        infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sGJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));	   infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sGJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));          infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sGJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));          infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sGJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));          infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sGJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));          infilecatv.push_back(2);
   } else {
   infilenamev.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));			   infilecatv.push_back(2);
   infilenamev.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v2+AODSIM.root",filesPathMC.Data()));			   infilecatv.push_back(2);
@@ -126,7 +124,7 @@ void zgAnalysis(
 
   infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1+AODSIM.root",filesPathMC.Data()));  infilecatv.push_back(4);
   infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1+AODSIM.root",filesPathMC.Data()));	   infilecatv.push_back(4);
-*/
+
   }
   else {assert(0);}
   
@@ -160,18 +158,6 @@ void zgAnalysis(
   fhDMuMediumSF->SetDirectory(0);
   fhDMuIsoSF->SetDirectory(0);
   delete fMuSF;
-
-  TFile *fPtRatioFile = TFile::Open(Form("%s",ptRatioPath.Data()));
-  TH1D *fhDPtRatio = (TH1D*)(fPtRatioFile->Get("ratioWeights"));
-  assert(fhDPtRatio);
-  fhDPtRatio->SetDirectory(0);
-  delete fPtRatioFile;
-
-  TFile *fEtaRatioFile = TFile::Open(Form("%s",etaRatioPath.Data()));
-  TH1D *fhDEtaRatio = (TH1D*)(fEtaRatioFile->Get("ratioWeights"));
-  assert(fhDEtaRatio);
-  fhDEtaRatio->SetDirectory(0);
-  delete fEtaRatioFile;
 
   double eventsTrg[4] = {0,0,0,0};
   double dataPrescale[4] = {21.479639,4.339259,2.163135,1};
@@ -335,6 +321,7 @@ void zgAnalysis(
         if(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[npho])->Eta()) >= 1.479) continue;
 	if(((TLorentzVector*)(*eventPhotons.p4)[npho])->Pt() <= 20) continue;
 	if((double)(*eventPhotons.r9)[npho] <= 0.9) continue;
+	//if((double)(*eventPhotons.sieie)[npho] >= 0.011) continue;
         bool isRecoLepton = false;
 	for(unsigned int nl=0; nl<idLep.size(); nl++){
           if(((TLorentzVector*)(*eventPhotons.p4)[npho])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3)
@@ -562,18 +549,13 @@ void zgAnalysis(
 				     passPTLL
 				     };
 
+      int theCategory = infilecatv[ifile];
       // begin event weighting
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infilecatv[ifile] == 0) mcWeight = theDataPrescale;
       if(nsel == 2) {
-        //if(TMath::Abs(dilep.Eta())>1.5)mcWeight=0;
-        //if(TMath::Abs((double)dilep.Phi()) < 0.8 || TMath::Abs((double)dilep.Phi()) > 2.6) mcWeight = 0.0; // ugly, against beamhalo
 	mcWeight = mcWeight * ratioFactor_gjets_zll(TMath::Min(dilep.Pt(),399.999));
-        /*
-	mcWeight = mcWeight * 
-	           ratioFactor(fhDPtRatio,  TMath::Min(dilep.Pt(),499.999)) *
-	           ratioFactor(fhDEtaRatio, TMath::Min(TMath::Abs(dilep.Eta()),2.499));
-        */
+	if(infilecatv[ifile] == 0 && theMET.Pt() > 200) mcWeight = mcWeight * 0.2;
       }
       // trigger efficiency
       double trigEff = 1.0;
@@ -596,7 +578,6 @@ void zgAnalysis(
         }
       }
 
-      int theCategory = infilecatv[ifile];
       double totalWeight = mcWeight*theLumi*puWeight*effSF*theMCPrescale*trigEff;
       if(totalWeight == 0) continue;
       // end event weighting
@@ -681,12 +662,20 @@ void zgAnalysis(
 	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
-	if(passAllCuts[ZHSEL0]    && theCategory == 0) {histo_Zjets0   ->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHSEL1]    && theCategory == 0) {histo_Zjets1   ->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHSEL2]    && theCategory == 0) {histo_Zjets2   ->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHRECSEL0] && theCategory == 0) {histo_ZjetsRec0->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHRECSEL1] && theCategory == 0) {histo_ZjetsRec1->Fill(MVAVar,totalWeight);}
-	if(passAllCuts[ZHRECSEL2] && theCategory == 0) {histo_ZjetsRec2->Fill(MVAVar,totalWeight);}
+	
+	double theTemplateWeight = totalWeight;
+	if     (theCategory == 0) theTemplateWeight = theTemplateWeight;
+	else if(theCategory == 3) theTemplateWeight = -1.0 * theTemplateWeight;
+	else                      theTemplateWeight = 0.0;
+	if(theTemplateWeight != 0){
+	  if(passAllCuts[ZHSEL0]   ) {histo_Zjets0   ->Fill(MVAVar,theTemplateWeight);}
+	  if(passAllCuts[ZHSEL1]   ) {histo_Zjets1   ->Fill(MVAVar,theTemplateWeight);}
+	  if(passAllCuts[ZHSEL2]   ) {histo_Zjets2   ->Fill(MVAVar,theTemplateWeight);}
+	  if(passAllCuts[ZHRECSEL0]) {histo_ZjetsRec0->Fill(MVAVar,theTemplateWeight);}
+	  if(passAllCuts[ZHRECSEL1]) {histo_ZjetsRec1->Fill(MVAVar,theTemplateWeight);}
+	  if(passAllCuts[ZHRECSEL2]) {histo_ZjetsRec2->Fill(MVAVar,theTemplateWeight);}
+        }
+
 	for(int thePlot=0; thePlot<allPlots; thePlot++){
 	  double theVar = 0.0;
 	  bool makePlot = false;
@@ -804,6 +793,15 @@ void zgAnalysis(
     }
     printf("};\n");
 
+  }
+
+  for(int i=1; i<=histo_Zjets0->GetNbinsX(); i++){
+    histo_Zjets0   ->SetBinContent(i,TMath::Max(histo_Zjets0   ->GetBinContent(i),0.000001));
+    histo_Zjets1   ->SetBinContent(i,TMath::Max(histo_Zjets1   ->GetBinContent(i),0.000001));
+    histo_Zjets2   ->SetBinContent(i,TMath::Max(histo_Zjets2   ->GetBinContent(i),0.000001));
+    histo_ZjetsRec0->SetBinContent(i,TMath::Max(histo_ZjetsRec0->GetBinContent(i),0.000001));
+    histo_ZjetsRec1->SetBinContent(i,TMath::Max(histo_ZjetsRec1->GetBinContent(i),0.000001));
+    histo_ZjetsRec2->SetBinContent(i,TMath::Max(histo_ZjetsRec2->GetBinContent(i),0.000001));
   }
 
   char output[200];

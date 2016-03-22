@@ -166,14 +166,14 @@ void zhAnalysis(
   TFile *fZjetsTemplatesFile = TFile::Open(Form("%s",zjetsTemplatesPath.Data()));
 
   TH1D *fhDZjets;
-  if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
+  if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
   assert(fhDZjets);
   fhDZjets->SetDirectory(0);
 
   TH1D *fhDZjetsSyst;
-  if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
+  if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
   else if(nJetsType == 1) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
   else if(nJetsType == 2) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   assert(fhDZjetsSyst);
@@ -1151,7 +1151,7 @@ void zhAnalysis(
     histo_Zjets->Add(fhDZjets);
     histo_ZjetsNoW->Scale(0.0);
     histo_ZjetsNoW->Add(fhDZjets);
-    double ZJetsNorm[3] = {1., 2., 2.};
+    double ZJetsNorm[3] = {0.56, 0.52, 1.};
     if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {
       ZJetsNorm[0] = 1.; ZJetsNorm[1] = 1.; ZJetsNorm[2] = 1.; 
     }
@@ -1213,8 +1213,8 @@ void zhAnalysis(
 
     //systEM[0] = 1. + EMSystTotal[typeSel-1];
     systEM[0] = 1. + EMSyst[1][typeSel-1];
-    systEM[1] = bgdDecay[SIGSEL][0];
-    histo_EM->Scale(EMNormFact[typeSel-1]);
+    systEM[1] = TMath::Max(bgdDecay[SIGSEL][0],1.0);
+    if(bgdDecay[SIGSEL][0] > 0) histo_EM->Scale(EMNormFact[typeSel-1]);
   }
 
   histo[allPlots-1][0]->Add(histo_Data);
@@ -1544,6 +1544,7 @@ void zhAnalysis(
     newcardShape << Form("CMS_zllhinv_ZLLNorm_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
     newcardShape << Form("CMS_zllhinv_ZLLShape_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    
     newcardShape << Form("CMS_zllhinv_EMSyst_%s_%s               lnN	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),systEM[0]);	       
+    if(useEMFromData == true)
     newcardShape << Form("CMS_zllhinv_EMNorm_%s_%s      gmN %d  	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),(int)systEM[1],histo_EM->GetBinContent(nb)/systEM[1]);	       
 
     if     (histo_ZH_hinv->GetBinContent(nb)   > 0 && histo_ZH_hinvNoW->GetBinContent(nb) < 20  ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding_%s_Bin%d	  gmN %d  %7.5f -      -    -	 -    -      -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZH_hinvNoW  ->GetBinContent(nb)  ,histo_ZH_hinv  ->GetBinContent(nb)/histo_ZH_hinvNoW  ->GetBinContent(nb));

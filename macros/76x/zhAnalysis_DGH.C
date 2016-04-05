@@ -24,7 +24,7 @@
 const TString typeLepSel = "medium";
 
 void zhAnalysis_DGH(
-  int nJets=0
+  unsigned int nJets=0
 
 ) {
   Double_t lumi = 2.318;
@@ -32,6 +32,9 @@ void zhAnalysis_DGH(
   TString processTag = "";
   Float_t fMVACut[4][4];
   InitializeJetIdCuts(fMVACut);
+  
+  LeptonScaleLookup trigLookup(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
+  
 
   double events_0jet_ee, events_0jet_mm, events_1jet_ee, events_1jet_mm;
 
@@ -42,8 +45,38 @@ void zhAnalysis_DGH(
   vector<Int_t> infilecatv;
   TString puPath = "";
   TString zjetsTemplatesPath = "";
-//  if      (period==1){
   puPath = "MitAnalysisRunII/data/76x/puWeights_76x.root";
+
+  TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
+  TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeights"));     assert(fhDPU);    fhDPU    ->SetDirectory(0);
+  //TH1D *fhDPUUp   = (TH1D*)(fPUFile->Get("puWeightsUp"));   assert(fhDPUUp);  fhDPUUp  ->SetDirectory(0);
+  //TH1D *fhDPUDown = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPUDown);fhDPUDown->SetDirectory(0);
+  fhDPU->SetDirectory(0);
+  delete fPUFile;
+
+  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
+  TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("unfactorized_scalefactors_Medium_ele"));
+  TH2D *fhDElTightSF  = (TH2D*)(fElSF->Get("unfactorized_scalefactors_Tight_ele"));
+  TH2D *fhDElMediumMVASF = (TH2D*)(fElSF->Get("unfactorized_scalefactors_MediumMVA_ele"));
+  TH2D *fhDElTightMVASF  = (TH2D*)(fElSF->Get("unfactorized_scalefactors_TightMVA_ele"));
+  assert(fhDElMediumSF);
+  assert(fhDElTightSF);
+  assert(fhDElMediumMVASF);
+  assert(fhDElTightMVASF);
+  fhDElMediumSF->SetDirectory(0);
+  fhDElTightSF ->SetDirectory(0);
+  fhDElMediumMVASF->SetDirectory(0);
+  fhDElTightMVASF ->SetDirectory(0);
+  delete fElSF;
+
+  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
+  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("unfactorized_scalefactors_Medium_mu"));
+  TH2D *fhDMuIsoSF = (TH2D*)(fMuSF->Get("unfactorized_scalefactors_Iso_mu"));
+  assert(fhDMuMediumSF);
+  assert(fhDMuIsoSF);
+  fhDMuMediumSF->SetDirectory(0);
+  fhDMuIsoSF->SetDirectory(0);
+  delete fMuSF;
 
   infilenamev.push_back(Form("%sdata_AOD_Run2015C_25ns.root",filesPathDA.Data()));                                                infilecatv.push_back(0);
   infilenamev.push_back(Form("%sdata_AOD_Run2015D_25ns.root",filesPathDA.Data()));                                                infilecatv.push_back(0);
@@ -66,6 +99,7 @@ void zhAnalysis_DGH(
   infilenamev.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));       infilecatv.push_back(1);
   infilenamev.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));               infilecatv.push_back(1);
   infilenamev.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));           infilecatv.push_back(1);
+  infilenamev.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v3+AODSIM.root",filesPathMC.Data()));                        infilecatv.push_back(1);
 
   infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1+AODSIM.root",filesPathMC.Data()));  infilecatv.push_back(2);
   infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1+AODSIM.root",filesPathMC.Data()));      infilecatv.push_back(2);
@@ -125,7 +159,9 @@ void zhAnalysis_DGH(
     char **triggerNames;
     size_t numTriggers;
     triggerNames = strsplit(triggerNamesCommaDelimited->GetTitle(), ",", &numTriggers);
-    if(infilecatv[ifile] != 0) continue; // only look at data for now
+
+    //if(infilecatv[ifile] != 2) continue; // only look at data for now
+    
     //if(infilecatv[ifile] == 0){
     //  for (int i = 0; i < (int)numTriggers; i++) {
     //    printf("triggerNames(%2d): \"%s\"\n",(int)i, triggerNames[i]);
@@ -136,25 +172,25 @@ void zhAnalysis_DGH(
     //}
     
     double numFoundLeptonCandidates, numPassTrigger;
-    double numTwoGoodLeptons                [5]={0,0,0,0,0};
-    double numPassDileptonPtCut             [5]={0,0,0,0,0};
-    double numPassMetPreselection           [5]={0,0,0,0,0};
-    double numPassPreselection              [5]={0,0,0,0,0};
-    double numPassMetSelection              [5]={0,0,0,0,0};
-    double numPassNJetsCut                  [5]={0,0,0,0,0};
-    double numPassZMassWindowCut            [5]={0,0,0,0,0};
-    double numPass3rdLeptonVeto             [5]={0,0,0,0,0};
-    double numPassBJetVeto                  [5]={0,0,0,0,0};
-    double numPassSoftMuonVeto              [5]={0,0,0,0,0};
-    double numPassDeltaPhiDileptonMetCut    [5]={0,0,0,0,0};
-    double numPassDeltaPhiLeptonsCut        [5]={0,0,0,0,0};
-    double numPassMetBalanceCut             [5]={0,0,0,0,0};
-    double numPassTransverseMassCut         [5]={0,0,0,0,0};
-    double numPassDeltaPhiJetMetCut         [5]={0,0,0,0,0};
-    double numPassTauVeto                   [5]={0,0,0,0,0};
-    double numPassEventSelection            [5]={0,0,0,0,0};
-    double badBoostedNonZLeptons            [5]={0,0,0,0,0};
-    double goodBoostedNonZLeptons           [5]={0,0,0,0,0};
+    double numTwoGoodLeptons                [5]={0,0,0,0,0},
+           numPassDileptonPtCut             [5]={0,0,0,0,0},
+           numPassMetPreselection           [5]={0,0,0,0,0},
+           numPassPreselection              [5]={0,0,0,0,0},
+           numPassMetSelection              [5]={0,0,0,0,0},
+           numPassNJetsCut                  [5]={0,0,0,0,0},
+           numPassZMassWindowCut            [5]={0,0,0,0,0},
+           numPass3rdLeptonVeto             [5]={0,0,0,0,0},
+           numPassBJetVeto                  [5]={0,0,0,0,0},
+           numPassSoftMuonVeto              [5]={0,0,0,0,0},
+           numPassDeltaPhiDileptonMetCut    [5]={0,0,0,0,0},
+           numPassDeltaPhiLeptonsCut        [5]={0,0,0,0,0},
+           numPassMetBalanceCut             [5]={0,0,0,0,0},
+           numPassTransverseMassCut         [5]={0,0,0,0,0},
+           numPassDeltaPhiJetMetCut         [5]={0,0,0,0,0},
+           numPassTauVeto                   [5]={0,0,0,0,0},
+           numPassEventSelection            [5]={0,0,0,0,0},
+           badBoostedNonZLeptons            [5]={0,0,0,0,0},
+           goodBoostedNonZLeptons           [5]={0,0,0,0,0};
     vector<ULong64_t> eventNums;
     for(int i=0; i<(int)input_tree->GetEntries(); i++) {
       input_tree->GetEntry(i); 
@@ -165,7 +201,7 @@ void zhAnalysis_DGH(
          ((TLorentzVector*)(*eventLeptons.p4)[1])->Pt() > 10);
       
       // Check if the event passes the trigger
-      bool passTrigger=(infilecatv[ifile] != 0 ? true : false);
+      bool passTrigger=false;
       for(int ntrigger=0; ntrigger < (int)numTriggers && !passTrigger; ntrigger++) {
         if( (*eventTrigger.triggerFired)[ntrigger] != 0 && (
           (strcmp( triggerNames[ntrigger], "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
@@ -235,21 +271,102 @@ void zhAnalysis_DGH(
 //        for(int igl2=0; igl2 < (int)goodLeptons.size() && !passPreselection && !passDileptonPtCut; igl2++) {
 //          if(igl1==igl2) continue;
 //          int il1=goodLeptons[igl1], il2=goodLeptons[igl2];
-          // check ptll
       if( ((TLorentzVector*)(*eventLeptons.p4)[lepton1])->Pt() <= 20 || ((TLorentzVector*)(*eventLeptons.p4)[lepton2])->Pt() <= 20) continue;
-      dileptonSystem = ( (* (TLorentzVector*)(eventLeptons.p4->At(lepton1))) + (* (TLorentzVector*)(eventLeptons.p4->At(lepton2))) );
       
-      ++numTwoGoodLeptons[flavor];
+      // Now that we have the two leptons and the flavor, handle event weight here
+      double totalWeight=1;
+      {
+        double mcWeight = (infilecatv[ifile] == 0) ? 1 : eventMonteCarlo.mcWeight;
+        
+        //lepton efficiency
+        double leptonScaleFactor = 1.;
+        if(infilecatv[ifile] != 0) { for(unsigned int igl1=0; igl1 < (int)goodOrFakeLeptons.size(); igl1++) {
+          int il1=goodOrFakeLeptons[igl1];
+          leptonScaleFactor *= effhDScaleFactor(
+            ((TLorentzVector*)(*eventLeptons.p4)[il1])->Pt(),
+            ((TLorentzVector*)(*eventLeptons.p4)[il1])->Eta(),
+            TMath::Abs((int)(*eventLeptons.pdgId)[il1]),
+            typeLepSel.Data(),
+            fhDMuMediumSF,
+            fhDMuIsoSF,
+            fhDElMediumSF,
+            fhDElTightSF,
+            fhDElMediumMVASF,
+            fhDElTightMVASF          
+          );
+        }}
+
+        //fake rate
+        double fakeScaleFactor = 1.; //not implemented for now
+
+        //trigger efficiency
+        double triggerScaleFactor = 1.; // assume 1 for now
+
+        //luminosity
+        double luminosityRescale = (infilecatv[ifile] != 0) ? lumi : 1.; 
+        
+        // pileup
+        double puWeight     = (infilecatv[ifile] != 0) ? nPUScaleFactor(fhDPU    , (double)eventMonteCarlo.puTrueInt) : 1.0;
+
+        // electroweak corrections
+        vector<int>zzBoson;
+        vector<bool> isGenDupl; double bosonPtMin = 1000000000; bool isBosonFound = false; vector<bool> isNeuDupl;
+        if(infilecatv[ifile] == 4 && infilenamev[ifile].Contains("GluGlu") == kFALSE) { for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
+          if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zzBoson.push_back(ngen0);
+          if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
+             ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
+          // begin neutrinos
+          isNeuDupl.push_back(0);
+          if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 12 &&
+             TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 14 &&
+             TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 16) isNeuDupl[ngen0] = 1;
+          else {
+            for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
+              if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
+                isNeuDupl[ngen0] = 1;
+                break;
+              }
+            } 
+          } 
+          // begin leptons        
+          isGenDupl.push_back(0);
+          if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 11 &&
+             TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 13) isGenDupl[ngen0] = 1;                              
+          else {
+            for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
+              if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
+                isGenDupl[ngen0] = 1;
+                break;
+              }
+            }
+          }
+        }}
+        
+        //double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
+        double zzCorrection[2] {1,1};
+        if(infilecatv[ifile] == 4 && infilenamev[ifile].Contains("GluGlu") == kFALSE) {
+          float GENmZZ = 0.0; 
+          if(zzBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).M();
+          zzCorrection[0] = weightEWKCorr(bosonPtMin,1);
+          zzCorrection[1] = kfactor_qqZZ_qcd_M(GENmZZ);
+        }
+        totalWeight *= mcWeight * leptonScaleFactor * fakeScaleFactor * triggerScaleFactor * luminosityRescale * zzCorrection[0] * zzCorrection[1];
+    
+
+      }
+      numTwoGoodLeptons[flavor]+=totalWeight;
+      // Ptll cut
+      dileptonSystem = ( (* (TLorentzVector*)(eventLeptons.p4->At(lepton1))) + (* (TLorentzVector*)(eventLeptons.p4->At(lepton2))) );
       if(dileptonSystem.Pt() > 60) passDileptonPtCut=true;
-      if(passDileptonPtCut) ++numPassDileptonPtCut[flavor]; else continue;
-      if(passMetPreselection) ++numPassMetPreselection[flavor]; else continue;
+      if(passDileptonPtCut) numPassDileptonPtCut[flavor]+=totalWeight; else continue;
+      if(passMetPreselection) numPassMetPreselection[flavor]+=totalWeight; else continue;
       if(passMetPreselection && passDileptonPtCut) passPreselection=true;
-      if(passPreselection) ++numPassPreselection[flavor]; else continue;
+      if(passPreselection) numPassPreselection[flavor]+=totalWeight; else continue;
 
       // Start applying event selection
       bool passMetSelection = met > 100.;
       bool passEventSelection=false;
-      if(passMetSelection) ++numPassMetSelection[flavor]; else continue;
+      if(passMetSelection) numPassMetSelection[flavor] += totalWeight; else continue;
       
       // Look for jets in this event and also find the max b discriminator value
       vector<int> goodJets;
@@ -276,39 +393,39 @@ void zhAnalysis_DGH(
       }
 
       // Cut on number of jets (0 for now)
-      if(goodJets.size()==nJets) ++numPassNJetsCut[flavor]; else continue;
+      if(goodJets.size()==nJets) numPassNJetsCut[flavor]+=totalWeight; else continue;
 
       // Z mass window
       double dileptonMass = dileptonSystem.M();
-      if(TMath::Abs(dileptonMass - 91.1876) < 15.) ++numPassZMassWindowCut[flavor]; else continue;
+      if(TMath::Abs(dileptonMass - 91.1876) < 15.) numPassZMassWindowCut[flavor]+=totalWeight; else continue;
       
       // 3rd lepton veto
-      if((int)goodOrFakeLeptons.size() == 2 && totalLeptonCharge == 0) ++numPass3rdLeptonVeto[flavor]; else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by 3rd lepton veto\n"); continue; }
+      if((int)goodOrFakeLeptons.size() == 2 && totalLeptonCharge == 0) numPass3rdLeptonVeto[flavor]+=totalWeight; else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by 3rd lepton veto\n"); continue; }
       
       // b-jet and soft muon veto
-      if(maxBDiscriminatorValue < .8) ++numPassBJetVeto[flavor]; //else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by bjet veto (max discriminator value %f)\n\n", maxBDiscriminatorValue); continue; }
+      if(maxBDiscriminatorValue < .8) numPassBJetVeto[flavor]+=totalWeight; //else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by bjet veto (max discriminator value %f)\n\n", maxBDiscriminatorValue); continue; }
       else continue;
-      if(softLeptons.size() == 0) ++numPassSoftMuonVeto[flavor]; //else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by soft muon veto\n"); continue; }
+      if(softLeptons.size() == 0) numPassSoftMuonVeto[flavor]+=totalWeight; //else { if(eventEvent.eventNum==77208166) printf("event 77208166 killed by soft muon veto\n"); continue; }
       else continue;
 
       // delta phi cut between dilepton system and the MET
       double deltaPhiDileptonMet = TMath::Abs(dileptonSystem.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-      if(deltaPhiDileptonMet > 2.8) ++numPassDeltaPhiDileptonMetCut[flavor]; else continue;
+      if(deltaPhiDileptonMet > 2.8) numPassDeltaPhiDileptonMetCut[flavor]+=totalWeight; else continue;
       
       // delta phi cut between the two leptons
       double deltaPhiLeptons = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[lepton1])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[lepton2]));
-      if(deltaPhiLeptons < TMath::Pi()/2.) ++numPassDeltaPhiLeptonsCut[flavor]; else continue;
+      if(deltaPhiLeptons < TMath::Pi()/2.) numPassDeltaPhiLeptonsCut[flavor]+=totalWeight; else continue;
 
       // MET balance cut
       double metBalance = TMath::Abs(dileptonSystem.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt() ) / dileptonSystem.Pt();
-      if(metBalance < 0.4) ++numPassMetBalanceCut[flavor]; else continue;
+      if(metBalance < 0.4) numPassMetBalanceCut[flavor]+=totalWeight; else continue;
 
       // transverse mass cut
       double transverseMass = TMath::Sqrt(2.0*dileptonSystem.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - TMath::Cos(deltaPhiDileptonMet)));
-      if(transverseMass > 200.) ++numPassTransverseMassCut[flavor]; else continue;
+      if(transverseMass > 200.) numPassTransverseMassCut[flavor]+=totalWeight; else continue;
 
       // delta phi cut between any jets and the MET (not implemented yet)
-      if(true) ++numPassDeltaPhiJetMetCut[flavor]; else continue;
+      if(true) numPassDeltaPhiJetMetCut[flavor]+=totalWeight; else continue;
 
       // veto on taus
       int numberOfGoodTaus=0;
@@ -328,12 +445,21 @@ void zhAnalysis_DGH(
            ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFindingNewDMs) == BareTaus::TauDecayModeFindingNewDMs &&
            (double)(*eventTaus.iso)[ntau] < 4.0) numberOfGoodTaus++;
       }
-      if(numberOfGoodTaus==0) ++numPassTauVeto[flavor]; else continue;
+      if(numberOfGoodTaus==0) numPassTauVeto[flavor]+=totalWeight; else continue;
 
       passEventSelection=true;
-      if(flavor==1 || flavor==2) { 
-        /*printf("event # %lld \n\tptll = %f\n\tMET = %f\n\t%d jets\n\tmll = %f\n\tmax B discriminator value = %f\n\tdPhi(ll,MET) = %f\n\tdPhi(l1,l2) = %f\n\t|ptll - MET|/ptll = %f\n\ttransverse mass = %f\n\n",
+      if((flavor==1 || flavor==2) && infilecatv[ifile]==2) { 
+
+        /*printf("event # %lld \n\tlepton1: pT=%f, eta=%f, phi=%f, selBits=%d\n\tlepton2: pT=%f, eta=%f, phi=%f, selBits=%d\n\tptll = %f, MET = %f\n\t%d jets\n\tmll = %f\n\tmax B discriminator value = %f\n\tdPhi(ll,MET) = %f, dPhi(l1,l2) = %f\n\t|ptll - MET|/ptll = %f, transverse mass = %f\n\n",
           eventEvent.eventNum,
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton1])->Pt(),
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton1])->Eta(),
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton1])->Phi(),
+          (int)(*eventLeptons.selBits)[lepton1],
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton2])->Pt(),
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton2])->Eta(),
+          ((TLorentzVector*)(*eventLeptons.p4)[lepton2])->Phi(),
+          (int)(*eventLeptons.selBits)[lepton2],
           dileptonSystem.Pt(),
           met,
           (int)goodJets.size(),
@@ -357,11 +483,11 @@ void zhAnalysis_DGH(
               (double)(*eventLeptons.iso)[il1],
               (int)(*eventLeptons.selBits)[il1],
               (double)(*eventLeptons.mva)[il1]
-            )) badBoostedNonZLeptons[flavor]++;
-        //else goodBoostedNonZLeptons[flavor]++;
+            )) badBoostedNonZLeptons[flavor]+=totalWeight;
+        //else goodBoostedNonZLeptons[flavor]+=totalWeight;
       }}
 
-      if(passEventSelection) ++numPassEventSelection[flavor];
+      if(passEventSelection) numPassEventSelection[flavor]+=totalWeight;
     }
     numTwoGoodLeptons[3] = numTwoGoodLeptons[1] + numTwoGoodLeptons[2]; numTwoGoodLeptons[4] = numTwoGoodLeptons[0] + numTwoGoodLeptons[3];
     numPassDileptonPtCut[3] = numPassDileptonPtCut[1] + numPassDileptonPtCut[2]; numPassDileptonPtCut[4] = numPassDileptonPtCut[0] + numPassDileptonPtCut[3];

@@ -194,7 +194,7 @@ void zhAnalysis(
   histoZHSEL[1] = new TH1D("histoZHSEL_1", "histoZHSEL_1", numberCuts+1, -0.5, numberCuts+0.5);
   histoZHSEL[2] = new TH1D("histoZHSEL_2", "histoZHSEL_2", numberCuts+1, -0.5, numberCuts+0.5);
   histoZHSEL[3] = new TH1D("histoZHSEL_3", "histoZHSEL_3", numberCuts+1, -0.5, numberCuts+0.5);
-  TString cutName[numberCuts+1] = {"ptl>20/20","ptll>60","MET>100","Njets=0","Z mass","3rd lepton veto","btag-veto","dPhi(Z-MET)>2.8","dPhi(l-l)<pt/2","|ptll-MET|/ptll<0.4","MT>200","dPhiJetMet>0.5","tauVeto"};
+  TString cutName[numberCuts+1] = {"ptl>20/20","ptll>60","MET>100","Njets=0","Z mass","3rd lepton veto","btag-veto","dPhi(Z-MET)>2.8","dPhi(l-l)<pi/2","|ptll-MET|/ptll<0.4","MT>200","dPhiJetMet>0.5","tauVeto"};
 
   double xmin = 0.0;
   double xmax = 1.0;
@@ -207,7 +207,7 @@ void zhAnalysis(
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
 
   for(int thePlot=0; thePlot<allPlots; thePlot++){
-    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 400; xminPlot = 0.0; xmaxPlot = 400.0;}
+    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =1000.0;}
     else if(thePlot >=  1 && thePlot <=  1) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
     else if(thePlot >=  2 && thePlot <=  2) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >=  3 && thePlot <=  3) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}

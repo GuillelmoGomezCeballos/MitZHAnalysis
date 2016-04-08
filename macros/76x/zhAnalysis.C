@@ -119,12 +119,13 @@ void zhAnalysis(
     infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data(),mH)); infileCategory_.push_back(6); signalIndex_.push_back(0);
     infileName_.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));       infileCategory_.push_back(7); signalIndex_.push_back(0);
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
-  { int mH_[8]={110, 125, 150, 200, 300, 400, 500, 600}; int iH=0; for(int i=1; i<=8; i++) { int mH = mH_[iH]; iH++;
+  { int mH_[8]={110, 125, 150, 200, 300, 400, 500, 600}; int iH=0; for(int i=1; i<=8; i++) { int mH = mH_[iH]; 
     signalName_.push_back(Form("mh%d", mH));
     infileName_.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data(),mH)); 
     infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data(),mH));
     infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
     infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
+    iH++;
   }} {  // Models 9 thru 15: ADD mono Z (7 models)
     int i=signalName_.size(); 
     signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2"); infileName_.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;

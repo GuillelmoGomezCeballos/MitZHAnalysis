@@ -25,7 +25,7 @@
 bool useZjetsTemplate = true;
 bool usePureMC = true; 
 bool useEMFromData = true;
-double mcPrescale = 1.0;
+double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL, nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -110,7 +110,7 @@ void zhAnalysis(
   for(int ifile=0; ifile<(int)infileName_.size(); ifile++) {
     signalIndex_.push_back(-1); // Populate vector of signal indices with -1 for the non-MC-signal files
   }
-  
+  int plotModel=0;  
   // Monte Carlo signals
   { // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;
@@ -221,7 +221,7 @@ void zhAnalysis(
     signalName_.push_back("AxialMonoZ_Mphi-10000_Mchi-500_lep_gSM-1p0_gDM-1p0");  infileName_.push_back(Form("%sAxialMonoZ_Mphi-10000_Mchi-500_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));       infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
     signalName_.push_back("AxialMonoZ_Mphi-10000_Mchi-1000_gSM-1p0_gDM-1p0");     infileName_.push_back(Form("%sAxialMonoZ_Mphi-10000_Mchi-1000_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));          infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
     signalName_.push_back("AxialMonoZ_Mphi-10000_Mchi-1000_lep_gSM-1p0_gDM-1p0"); infileName_.push_back(Form("%sAxialMonoZ_Mphi-10000_Mchi-1000_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));      infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
-  } { // dark matter models () (TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM)
+  } { // dark matter models (100 thru 166) (TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM)
     int i=signalName_.size();
     signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1");      infileName_.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root", filesPathDMMC.Data()));             infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
     signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1");      infileName_.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root", filesPathDMMC.Data()));             infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
@@ -290,7 +290,7 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root", filesPathDMMC.Data()));        infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root", filesPathDMMC.Data()));        infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root", filesPathDMMC.Data()));        infileCategory_.push_back(6); signalIndex_.push_back(i); i++; 
-  } { // vector models
+  } { // vector models (167 thru 275)
     int i=signalName_.size();
     signalName_.push_back("VectorMonoZ_Mphi-10_Mchi-1_gSM-1p0_gDM-1p0");           infileName_.push_back(Form("%sVectorMonoZ_Mphi-10_Mchi-1_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));              infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-10_Mchi-1_lep_gSM-1p0_gDM-1p0");       infileName_.push_back(Form("%sVectorMonoZ_Mphi-10_Mchi-1_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));          infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
@@ -339,6 +339,7 @@ void zhAnalysis(
     signalName_.push_back("VectorMonoZ_Mphi-300_Mchi-100_lep_gSM-1p0_gDM-1p0");    infileName_.push_back(Form("%sVectorMonoZ_Mphi-300_Mchi-100_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));       infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-500_Mchi-1_gSM-1p0_gDM-1p0");          infileName_.push_back(Form("%sVectorMonoZ_Mphi-500_Mchi-1_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));             infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-500_Mchi-1_lep_gSM-1p0_gDM-1p0");      infileName_.push_back(Form("%sVectorMonoZ_Mphi-500_Mchi-1_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));         infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    plotModel=i;
     signalName_.push_back("VectorMonoZ_Mphi-500_Mchi-10_gSM-1p0_gDM-1p0");         infileName_.push_back(Form("%sVectorMonoZ_Mphi-500_Mchi-10_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));            infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-500_Mchi-10_lep_gSM-1p0_gDM-1p0");     infileName_.push_back(Form("%sVectorMonoZ_Mphi-500_Mchi-10_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));        infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-500_Mchi-50_gSM-1p0_gDM-1p0");         infileName_.push_back(Form("%sVectorMonoZ_Mphi-500_Mchi-50_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));            infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
@@ -401,7 +402,6 @@ void zhAnalysis(
     signalName_.push_back("VectorMonoZ_Mphi-10000_Mchi-500_lep_gSM-1p0_gDM-1p0");  infileName_.push_back(Form("%sVectorMonoZ_Mphi-10000_Mchi-500_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));     infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-10000_Mchi-1000_gSM-1p0_gDM-1p0");     infileName_.push_back(Form("%sVectorMonoZ_Mphi-10000_Mchi-1000_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));        infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("VectorMonoZ_Mphi-10000_Mchi-1000_lep_gSM-1p0_gDM-1p0"); infileName_.push_back(Form("%sVectorMonoZ_Mphi-10000_Mchi-1000_lep_gSM-1p0_gDM-1p0_13TeV-madgraph+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root", filesPathDMMC.Data()));    infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-
   }
 
   int nSigModels=signalName_.size();
@@ -447,6 +447,8 @@ void zhAnalysis(
 
   TString ECMsb  = "13TeV2015";
   const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
+  //const int MVAVarType = 0; const int nBinMVA = 1; Float_t xbins[nBinMVA+1] = {200, 1000}; TString addChan = "";
+  
   //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 125, 150, 175, 200, 225, 250}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 23; Float_t xbins[nBinMVA+1] = {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200}; TString addChan = "3";
@@ -752,13 +754,15 @@ void zhAnalysis(
     histo_ZH_hinv_CMS_PUBoundingDown [nModel]                  = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
 
   }
+  // ABCD variables
+  double sumWeights=0, sumWeightsSquared=0, sumProductOfDiscriminants=0, sumVar1=0, sumVar2=0;
+  vector<double> var1_, var2_, weight_;
+  double N_A, N_B, N_C, N_D;
 
-  double bgdDecay[nSelTypes*4][histBins],weiDecay[nSelTypes*4][histBins];
-  for(unsigned int i=0; i<nSelTypes*4; i++) {
-    for(int j=0; j<histBins; j++) {
-      bgdDecay[i][j] = 0.0; weiDecay[i][j] = 0.0; 
-    }
-  }
+  double bgdDecay[nSigModels][nSelTypes*4][histBins],weiDecay[nSigModels][nSelTypes*4][histBins];
+  for(int nModel=0; nModel<nSigModels; nModel++) { for(unsigned int i=0; i<nSelTypes*4; i++) { for(int j=0; j<histBins; j++) {       
+    bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
+  }}}
 
   unsigned int numberOfLeptons = 2;
   TString signalName="";
@@ -1014,7 +1018,7 @@ void zhAnalysis(
                                      passZMassSB    && !passZMass && passNjets && passMETMin                                      && !passBtagVeto             &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // WWLOOSESEL
                                                         passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // BTAGSEL
                                                         passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,                                                      // WZSEL
-							passZMass && passNjets && passMETMin                      && passDPhiZMET                  && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
+							passZMass && passNjets && passMETMin                                      &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
 							passZMass && passNjets && passMT && passMET &&!passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // CR1SEL
 							passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // CR2SEL
 							passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto      // CR12SEL
@@ -1184,9 +1188,12 @@ void zhAnalysis(
       for(int nl=0; nl <=sumEvol; nl++) histoZHSEL[3]                 ->Fill((double)nl,totalWeight);
 
       for(unsigned int i=0; i<nSelTypes; i++) {
-        if(passAllCuts[i] && nModel <= 0) {
-          bgdDecay[i+typePair*nSelTypes][theCategory] += totalWeight;
-          weiDecay[i+typePair*nSelTypes][theCategory] += totalWeight*totalWeight;
+        if(passAllCuts[i] && nModel <=0) {
+          bgdDecay[0][i+typePair*nSelTypes][theCategory] += totalWeight;
+          weiDecay[0][i+typePair*nSelTypes][theCategory] += totalWeight*totalWeight;
+        } else if(passAllCuts[i]) {
+          bgdDecay[nModel][i+typePair*nSelTypes][theCategory] += totalWeight;
+          weiDecay[nModel][i+typePair*nSelTypes][theCategory] += totalWeight*totalWeight;
         }
       }
 
@@ -1241,6 +1248,23 @@ void zhAnalysis(
         else if(theCategory == 2){
 	  if(passAllCuts[SIGSEL]) histo_Zjets   ->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[SIGSEL]) histo_ZjetsNoW->Fill(MVAVar,1.);
+	  // ABCD study
+          if( ( passAllCuts[SIGSEL] || passAllCuts[CR1SEL] || passAllCuts[CR2SEL] || passAllCuts[CR12SEL] ) && totalWeight!=0) {
+            double var1=ptFrac;
+            double var2=dPhiDiLepMET;
+            sumWeights+=totalWeight;
+            sumWeightsSquared+=totalWeight*totalWeight;
+            sumProductOfDiscriminants+=var1*var2*totalWeight;
+            sumVar1+=var1*totalWeight;
+            sumVar2+=var2*totalWeight;
+            var1_.push_back(totalWeight*var1);
+            var2_.push_back(totalWeight*var2);
+            weight_.push_back(totalWeight);
+            if(passAllCuts[SIGSEL]) N_A+=totalWeight;
+            if(passAllCuts[CR1SEL]) N_B+=totalWeight;
+            if(passAllCuts[CR2SEL]) N_C+=totalWeight;
+            if(passAllCuts[CR12SEL]) N_D+=totalWeight;
+          }
         }
         else if(theCategory == 3){
 	  if(passAllCuts[SIGSEL]) {
@@ -1420,47 +1444,54 @@ void zhAnalysis(
   for(int np=1; np<histBins; np++) printf(" %.3f",histo[0][np]->GetSumOfWeights());
   printf(" = %.3f\n",sumEvents);
 
-  printf("                    em                      mm                      ee                      ll\n");
   printf("-----------------------------------------------------------------------------------------------------------\n");
-  for(int ns=0; ns<nSelTypes; ns++) {
-    printf("Selection: %s\n",selTypeName[ns].Data());
-    double sumEventsType[4] = {0,0,0,0}; double sumEventsTypeE[4] = {0,0,0,0};
-    for(int np=0; np<histBins; np++) {       
-       bgdDecay[ns+nSelTypes*3][np] = bgdDecay[ns+nSelTypes*1][np] + bgdDecay[ns+nSelTypes*2][np];
-       weiDecay[ns+nSelTypes*3][np] = weiDecay[ns+nSelTypes*1][np] + weiDecay[ns+nSelTypes*2][np];
-       printf("(%6s): %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f\n",
-       processName[np].Data(),bgdDecay[ns+nSelTypes*0][np],sqrt(weiDecay[ns+nSelTypes*0][np]),bgdDecay[ns+nSelTypes*1][np],sqrt(weiDecay[ns+nSelTypes*1][np]),
-                              bgdDecay[ns+nSelTypes*2][np],sqrt(weiDecay[ns+nSelTypes*2][np]),bgdDecay[ns+nSelTypes*3][np],sqrt(weiDecay[ns+nSelTypes*3][np]));
-       if(np!=0 && np!=6 && np!=7){
-         sumEventsType[0] = sumEventsType[0] + bgdDecay[ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[ns+nSelTypes*0][np];
-         sumEventsType[1] = sumEventsType[1] + bgdDecay[ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[ns+nSelTypes*1][np];
-         sumEventsType[2] = sumEventsType[2] + bgdDecay[ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[ns+nSelTypes*2][np];
-         sumEventsType[3] = sumEventsType[3] + bgdDecay[ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[ns+nSelTypes*3][np];
-       }
-    }
-    printf("(...bkg): %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f\n",
-           sumEventsType[0],sqrt(sumEventsTypeE[0]),sumEventsType[1],sqrt(sumEventsTypeE[1]),
-	   sumEventsType[2],sqrt(sumEventsTypeE[2]),sumEventsType[3],sqrt(sumEventsTypeE[3]));
+  printf("Printing yields and statistical uncertainties for all signal models\n");
+  printf("-----------------------------------------------------------------------------------------------------------\n");
+  for(int nModel=0; nModel<nSigModels; nModel++) {
+    printf("Model: %s\n", signalName_[nModel].Data()); 
     printf("-----------------------------------------------------------------------------------------------------------\n");
+    printf("                    em                      mm                      ee                      ll\n");
+    printf("-----------------------------------------------------------------------------------------------------------\n");
+    for(int ns=0; ns<nSelTypes; ns++) {
+      printf("Selection: %s\n",selTypeName[ns].Data());
+      double sumEventsType[4] = {0,0,0,0}; double sumEventsTypeE[4] = {0,0,0,0};
+      for(int np=0; np<histBins; np++) {       
+         bgdDecay[nModel][ns+nSelTypes*3][np] = bgdDecay[nModel][ns+nSelTypes*1][np] + bgdDecay[nModel][ns+nSelTypes*2][np];
+         weiDecay[nModel][ns+nSelTypes*3][np] = weiDecay[nModel][ns+nSelTypes*1][np] + weiDecay[nModel][ns+nSelTypes*2][np];
+         printf("(%6s): %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f\n",
+         processName[np].Data(),bgdDecay[nModel][ns+nSelTypes*0][np],sqrt(weiDecay[nModel][ns+nSelTypes*0][np]),bgdDecay[nModel][ns+nSelTypes*1][np],sqrt(weiDecay[nModel][ns+nSelTypes*1][np]),
+                                bgdDecay[nModel][ns+nSelTypes*2][np],sqrt(weiDecay[nModel][ns+nSelTypes*2][np]),bgdDecay[nModel][ns+nSelTypes*3][np],sqrt(weiDecay[nModel][ns+nSelTypes*3][np]));
+         if(np!=0 && np!=6 && np!=7){
+           sumEventsType[0] = sumEventsType[0] + bgdDecay[nModel][ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[nModel][ns+nSelTypes*0][np];
+           sumEventsType[1] = sumEventsType[1] + bgdDecay[nModel][ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[nModel][ns+nSelTypes*1][np];
+           sumEventsType[2] = sumEventsType[2] + bgdDecay[nModel][ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[nModel][ns+nSelTypes*2][np];
+           sumEventsType[3] = sumEventsType[3] + bgdDecay[nModel][ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[nModel][ns+nSelTypes*3][np];
+         }
+      }
+      printf("(...bkg): %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f\n",
+             sumEventsType[0],sqrt(sumEventsTypeE[0]),sumEventsType[1],sqrt(sumEventsTypeE[1]),
+  	   sumEventsType[2],sqrt(sumEventsTypeE[2]),sumEventsType[3],sqrt(sumEventsTypeE[3]));
+      printf("-----------------------------------------------------------------------------------------------------------\n");
+    }
   }
 
   // This is the alternative method
-  double kEoverM  = sqrt(bgdDecay[ZSEL+nSelTypes*2][0]/bgdDecay[ZSEL+nSelTypes*1][0]);
+  double kEoverM  = sqrt(bgdDecay[0][ZSEL+nSelTypes*2][0]/bgdDecay[0][ZSEL+nSelTypes*1][0]);
   double NemFact[3] = {(1.0/kEoverM)*0.5, (kEoverM)*0.5, (kEoverM+1.0/kEoverM)*0.5};
 
   // This is the default method
   double NemFact_FromMLLSB[3] = {NemFact[0], NemFact[1], NemFact[2]}; double NemFact_FromMLLSBE[3] = {1.0, 1.0, 1.0};
-  if(bgdDecay[WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[WWLOOSESEL+nSelTypes*1][0]) > 0) {
-    NemFact_FromMLLSB[0]  = (bgdDecay[WWLOOSESEL+nSelTypes*1][0])/bgdDecay[WWLOOSESEL+nSelTypes*0][0];
-    NemFact_FromMLLSBE[0] = sqrt(1./bgdDecay[WWLOOSESEL+nSelTypes*1][0]+1./bgdDecay[WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[0];
+  if(bgdDecay[0][WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[0][WWLOOSESEL+nSelTypes*1][0]) > 0) {
+    NemFact_FromMLLSB[0]  = (bgdDecay[0][WWLOOSESEL+nSelTypes*1][0])/bgdDecay[0][WWLOOSESEL+nSelTypes*0][0];
+    NemFact_FromMLLSBE[0] = sqrt(1./bgdDecay[0][WWLOOSESEL+nSelTypes*1][0]+1./bgdDecay[0][WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[0];
   }
-  if(bgdDecay[WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[WWLOOSESEL+nSelTypes*2][0]) > 0) {
-    NemFact_FromMLLSB[1]  = (bgdDecay[WWLOOSESEL+nSelTypes*2][0])/bgdDecay[WWLOOSESEL+nSelTypes*0][0];
-    NemFact_FromMLLSBE[1] = sqrt(1./bgdDecay[WWLOOSESEL+nSelTypes*2][0]+1./bgdDecay[WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[1];
+  if(bgdDecay[0][WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[0][WWLOOSESEL+nSelTypes*2][0]) > 0) {
+    NemFact_FromMLLSB[1]  = (bgdDecay[0][WWLOOSESEL+nSelTypes*2][0])/bgdDecay[0][WWLOOSESEL+nSelTypes*0][0];
+    NemFact_FromMLLSBE[1] = sqrt(1./bgdDecay[0][WWLOOSESEL+nSelTypes*2][0]+1./bgdDecay[0][WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[1];
   }
-  if(bgdDecay[WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[WWLOOSESEL+nSelTypes*3][0]) > 0) {
-    NemFact_FromMLLSB[2]  = (bgdDecay[WWLOOSESEL+nSelTypes*3][0])/bgdDecay[WWLOOSESEL+nSelTypes*0][0];
-    NemFact_FromMLLSBE[2] = sqrt(1./bgdDecay[WWLOOSESEL+nSelTypes*3][0]+1./bgdDecay[WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[2];
+  if(bgdDecay[0][WWLOOSESEL+nSelTypes*0][0] > 0 && (bgdDecay[0][WWLOOSESEL+nSelTypes*3][0]) > 0) {
+    NemFact_FromMLLSB[2]  = (bgdDecay[0][WWLOOSESEL+nSelTypes*3][0])/bgdDecay[0][WWLOOSESEL+nSelTypes*0][0];
+    NemFact_FromMLLSBE[2] = sqrt(1./bgdDecay[0][WWLOOSESEL+nSelTypes*3][0]+1./bgdDecay[0][WWLOOSESEL+nSelTypes*0][0])*NemFact_FromMLLSB[2];
   }
 
   printf("(mm) kEoverM: %f ---> NemFact: %f | NemFact_FromMLLSB = %f +/- %f\n", kEoverM,NemFact[0],NemFact_FromMLLSB[0],NemFact_FromMLLSBE[0]);
@@ -1471,13 +1502,13 @@ void zhAnalysis(
   // Only the second item is used as systematic uncertainty
   double EMSystTotal[3] = {1.0,1.0,1.0}; double EMSyst[2][3] = {0.0,0.0,0.0,0.0,0.0,0.0};
 
-  EMSyst[0][0] = bgdDecay[SIGSEL+nSelTypes*1][1]/bgdDecay[SIGSEL+nSelTypes*0][1]/NemFact[0];
+  EMSyst[0][0] = bgdDecay[0][SIGSEL+nSelTypes*1][1]/bgdDecay[0][SIGSEL+nSelTypes*0][1]/NemFact[0];
   if(EMSyst[0][0] < 1.0) EMSyst[0][0] = 1/EMSyst[0][0]; EMSyst[0][0] = EMSyst[0][0] - 1.0;
 
-  EMSyst[0][1] = bgdDecay[SIGSEL+nSelTypes*2][1]/bgdDecay[SIGSEL+nSelTypes*0][1]/NemFact[1];
+  EMSyst[0][1] = bgdDecay[0][SIGSEL+nSelTypes*2][1]/bgdDecay[0][SIGSEL+nSelTypes*0][1]/NemFact[1];
   if(EMSyst[0][1] < 1.0) EMSyst[0][1] = 1/EMSyst[0][1]; EMSyst[0][1] = EMSyst[0][1] - 1.0;
 
-  EMSyst[0][2] = bgdDecay[SIGSEL+nSelTypes*3][1]/bgdDecay[SIGSEL+nSelTypes*0][1]/NemFact[2];
+  EMSyst[0][2] = bgdDecay[0][SIGSEL+nSelTypes*3][1]/bgdDecay[0][SIGSEL+nSelTypes*0][1]/NemFact[2];
   if(EMSyst[0][2] < 1.0) EMSyst[0][2] = 1/EMSyst[0][2]; EMSyst[0][2] = EMSyst[0][2] - 1.0;
 
   EMSyst[1][0] = NemFact_FromMLLSB[0]/NemFact[0];
@@ -1489,28 +1520,28 @@ void zhAnalysis(
   EMSyst[1][2] = NemFact_FromMLLSB[2]/NemFact[2];
   if(EMSyst[1][2] < 1.0) EMSyst[1][2] = 1/EMSyst[1][2]; EMSyst[1][2] = EMSyst[1][2] - 1.0;
 
-  if(bgdDecay[SIGSEL][0] > 0) EMSystTotal[0] = sqrt(EMSyst[0][0]*EMSyst[0][0] + EMSyst[1][0]*EMSyst[1][0] + 1/bgdDecay[SIGSEL][0]);
+  if(bgdDecay[0][SIGSEL][0] > 0) EMSystTotal[0] = sqrt(EMSyst[0][0]*EMSyst[0][0] + EMSyst[1][0]*EMSyst[1][0] + 1/bgdDecay[0][SIGSEL][0]);
   else                        EMSystTotal[0] = sqrt(EMSyst[0][0]*EMSyst[0][0] + EMSyst[1][0]*EMSyst[1][0] + 1.0);
 
-  if(bgdDecay[SIGSEL][0] > 0) EMSystTotal[1] = sqrt(EMSyst[0][1]*EMSyst[0][1] + EMSyst[1][1]*EMSyst[1][1] + 1/bgdDecay[SIGSEL][0]);
+  if(bgdDecay[0][SIGSEL][0] > 0) EMSystTotal[1] = sqrt(EMSyst[0][1]*EMSyst[0][1] + EMSyst[1][1]*EMSyst[1][1] + 1/bgdDecay[0][SIGSEL][0]);
   else                        EMSystTotal[1] = sqrt(EMSyst[0][1]*EMSyst[0][1] + EMSyst[1][1]*EMSyst[1][1] + 1.0);
 
-  if(bgdDecay[SIGSEL][0] > 0) EMSystTotal[2] = sqrt(EMSyst[0][2]*EMSyst[0][2] + EMSyst[1][2]*EMSyst[1][2] + 1/bgdDecay[SIGSEL][0]);
+  if(bgdDecay[0][SIGSEL][0] > 0) EMSystTotal[2] = sqrt(EMSyst[0][2]*EMSyst[0][2] + EMSyst[1][2]*EMSyst[1][2] + 1/bgdDecay[0][SIGSEL][0]);
   else                        EMSystTotal[2] = sqrt(EMSyst[0][2]*EMSyst[0][2] + EMSyst[1][2]*EMSyst[1][2] + 1.0);
 
-  double EMbkg = bgdDecay[SIGSEL][2]+bgdDecay[SIGSEL][3]+bgdDecay[SIGSEL][4]+bgdDecay[SIGSEL][5];
+  double EMbkg = bgdDecay[0][SIGSEL][2]+bgdDecay[0][SIGSEL][3]+bgdDecay[0][SIGSEL][4]+bgdDecay[0][SIGSEL][5];
 
   printf("(mm) EM MC: %8.3f +/- %5.3f --> EM Prediction: %8.3f +/- %5.3f, EM data/bkg: %f/%f --> syst: %f (%f,%f,%f)\n",
-         bgdDecay[SIGSEL+nSelTypes*1][1],sqrt(weiDecay[SIGSEL+nSelTypes*1][4]),
-	 bgdDecay[SIGSEL][1]*NemFact_FromMLLSB[0]  ,sqrt(weiDecay[SIGSEL][4])*NemFact_FromMLLSB[0],bgdDecay[SIGSEL][0],EMbkg,EMSystTotal[0],EMSyst[0][0],EMSyst[1][0],sqrt(EMSystTotal[0]*EMSystTotal[0] - EMSyst[0][0]*EMSyst[0][0] - EMSyst[1][0]*EMSyst[1][0]));
+         bgdDecay[0][SIGSEL+nSelTypes*1][1],sqrt(weiDecay[0][SIGSEL+nSelTypes*1][4]),
+	 bgdDecay[0][SIGSEL][1]*NemFact_FromMLLSB[0]  ,sqrt(weiDecay[0][SIGSEL][4])*NemFact_FromMLLSB[0],bgdDecay[0][SIGSEL][0],EMbkg,EMSystTotal[0],EMSyst[0][0],EMSyst[1][0],sqrt(EMSystTotal[0]*EMSystTotal[0] - EMSyst[0][0]*EMSyst[0][0] - EMSyst[1][0]*EMSyst[1][0]));
 
   printf("(ee) EM MC: %8.3f +/- %5.3f --> EM Prediction: %8.3f +/- %5.3f, EM data/bkg: %f/%f --> syst: %f (%f,%f,%f)\n",
-         bgdDecay[SIGSEL+nSelTypes*2][1],sqrt(weiDecay[SIGSEL+nSelTypes*2][4]),
-	 bgdDecay[SIGSEL][1]*NemFact_FromMLLSB[1]  ,sqrt(weiDecay[SIGSEL][4])*NemFact_FromMLLSB[1],bgdDecay[SIGSEL][0],EMbkg,EMSystTotal[1],EMSyst[0][1],EMSyst[1][1],sqrt(EMSystTotal[1]*EMSystTotal[1] - EMSyst[0][1]*EMSyst[0][1] - EMSyst[1][1]*EMSyst[1][1]));
+         bgdDecay[0][SIGSEL+nSelTypes*2][1],sqrt(weiDecay[0][SIGSEL+nSelTypes*2][4]),
+	 bgdDecay[0][SIGSEL][1]*NemFact_FromMLLSB[1]  ,sqrt(weiDecay[0][SIGSEL][4])*NemFact_FromMLLSB[1],bgdDecay[0][SIGSEL][0],EMbkg,EMSystTotal[1],EMSyst[0][1],EMSyst[1][1],sqrt(EMSystTotal[1]*EMSystTotal[1] - EMSyst[0][1]*EMSyst[0][1] - EMSyst[1][1]*EMSyst[1][1]));
 
   printf("(ll) EM MC: %8.3f +/- %5.3f --> EM Prediction: %8.3f +/- %5.3f, EM data/bkg: %f/%f --> syst: %f (%f,%f,%f)\n",
-         bgdDecay[SIGSEL+nSelTypes*3][1],sqrt(weiDecay[SIGSEL+nSelTypes*3][4]),
-	 bgdDecay[SIGSEL][1]*NemFact_FromMLLSB[2]  ,sqrt(weiDecay[SIGSEL][4])*NemFact_FromMLLSB[2],bgdDecay[SIGSEL][0],EMbkg,EMSystTotal[2],EMSyst[0][2],EMSyst[1][2],sqrt(EMSystTotal[2]*EMSystTotal[2] - EMSyst[0][2]*EMSyst[0][2] - EMSyst[1][2]*EMSyst[1][2]));
+         bgdDecay[0][SIGSEL+nSelTypes*3][1],sqrt(weiDecay[0][SIGSEL+nSelTypes*3][4]),
+	 bgdDecay[0][SIGSEL][1]*NemFact_FromMLLSB[2]  ,sqrt(weiDecay[0][SIGSEL][4])*NemFact_FromMLLSB[2],bgdDecay[0][SIGSEL][0],EMbkg,EMSystTotal[2],EMSyst[0][2],EMSyst[1][2],sqrt(EMSystTotal[2]*EMSystTotal[2] - EMSyst[0][2]*EMSyst[0][2] - EMSyst[1][2]*EMSyst[1][2]));
 
   // DY background estimation
   histo_Zjets_CMS_ZjetsSystUp->Add(fhDZjets);
@@ -1533,6 +1564,7 @@ void zhAnalysis(
     else if(nJetsType == 1) histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[1]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
     else                    histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[2]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
   }
+
 
   double mean,up,diff;
   for(int i=1; i<=histo_ZH_hinv[0]->GetNbinsX(); i++){
@@ -1571,19 +1603,19 @@ void zhAnalysis(
   if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
   else  			      systEM[0] = 2.;
   if(useEMFromData == true){
-    double EMNormFact[3] = {((bgdDecay[SIGSEL][0]-EMbkg)*NemFact[0])/bgdDecay[SIGSEL+nSelTypes*(1)][1],
-                            ((bgdDecay[SIGSEL][0]-EMbkg)*NemFact[1])/bgdDecay[SIGSEL+nSelTypes*(2)][1],
-                            ((bgdDecay[SIGSEL][0]-EMbkg)*NemFact[2])/bgdDecay[SIGSEL+nSelTypes*(3)][1]};
+    double EMNormFact[3] = {((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[0])/bgdDecay[0][SIGSEL+nSelTypes*(1)][1],
+                            ((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[1])/bgdDecay[0][SIGSEL+nSelTypes*(2)][1],
+                            ((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[2])/bgdDecay[0][SIGSEL+nSelTypes*(3)][1]};
                             
-    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[SIGSEL+nSelTypes*1][1],bgdDecay[SIGSEL][0],EMbkg,NemFact[0],bgdDecay[SIGSEL+nSelTypes*(1)][1],bgdDecay[SIGSEL+nSelTypes*1][1]*EMNormFact[0],bgdDecay[SIGSEL+nSelTypes*1][1]*EMNormFact[0]*EMSystTotal[0]);
-    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[SIGSEL+nSelTypes*2][1],bgdDecay[SIGSEL][0],EMbkg,NemFact[1],bgdDecay[SIGSEL+nSelTypes*(2)][1],bgdDecay[SIGSEL+nSelTypes*2][1]*EMNormFact[1],bgdDecay[SIGSEL+nSelTypes*2][1]*EMNormFact[1]*EMSystTotal[1]);
-    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[SIGSEL+nSelTypes*3][1],bgdDecay[SIGSEL][0],EMbkg,NemFact[2],bgdDecay[SIGSEL+nSelTypes*(3)][1],bgdDecay[SIGSEL+nSelTypes*3][1]*EMNormFact[2],bgdDecay[SIGSEL+nSelTypes*3][1]*EMNormFact[2]*EMSystTotal[2]);
+    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*1][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[0],bgdDecay[0][SIGSEL+nSelTypes*(1)][1],bgdDecay[0][SIGSEL+nSelTypes*1][1]*EMNormFact[0],bgdDecay[0][SIGSEL+nSelTypes*1][1]*EMNormFact[0]*EMSystTotal[0]);
+    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*2][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[1],bgdDecay[0][SIGSEL+nSelTypes*(2)][1],bgdDecay[0][SIGSEL+nSelTypes*2][1]*EMNormFact[1],bgdDecay[0][SIGSEL+nSelTypes*2][1]*EMNormFact[1]*EMSystTotal[1]);
+    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*3][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[2],bgdDecay[0][SIGSEL+nSelTypes*(3)][1],bgdDecay[0][SIGSEL+nSelTypes*3][1]*EMNormFact[2],bgdDecay[0][SIGSEL+nSelTypes*3][1]*EMNormFact[2]*EMSystTotal[2]);
 
     //systEM[0] = 1. + EMSystTotal[typeSel-1];
     //systEM[0] = 1. + EMSyst[1][typeSel-1];
     systEM[0] = 1. + 0.20;
-    systEM[1] = TMath::Max(bgdDecay[SIGSEL][0],1.0);
-    if(bgdDecay[SIGSEL][0] > 0) histo_EM->Scale(EMNormFact[typeSel-1]);
+    systEM[1] = TMath::Max(bgdDecay[0][SIGSEL][0],1.0);
+    if(bgdDecay[0][SIGSEL][0] > 0) histo_EM->Scale(EMNormFact[typeSel-1]);
   }
 
   histo[allPlots-1][0]->Add(histo_Data);
@@ -1592,7 +1624,7 @@ void zhAnalysis(
   histo[allPlots-1][3]->Add(histo_WZ);
   histo[allPlots-1][4]->Add(histo_ZZ);
   histo[allPlots-1][5]->Add(histo_VVV);
-  histo[allPlots-1][6]->Add(histo_ZH_hinv[0]);
+  histo[allPlots-1][6]->Add(histo_ZH_hinv[plotModel]);
   histo[allPlots-1][7]->Add(histo_ggZH_hinv);
   
   double qcdScaleTotal[2] = {0.035, 0.231};
@@ -1600,7 +1632,7 @@ void zhAnalysis(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[0].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -1947,4 +1979,38 @@ void zhAnalysis(
   
     }
   }
+  bool doABCDstudy=false;  
+  if(doABCDstudy) { // Output result of ABCD study for DY 
+    // Calculate <x>, <y>, <xy>
+    double meanVar1=sumVar1/sumWeights, meanVar2=sumVar2/sumWeights, meanProductOfDiscriminants=sumProductOfDiscriminants/(sumWeights*sumWeights);
+    // Find the sample covariance from these quantities -- last factor is correction to make it the sample covariance.
+    double sampleCovarianceOfDiscriminants = (meanProductOfDiscriminants - meanVar1*meanVar2) / (1. - sumWeightsSquared / (sumWeights*sumWeights));
+    // Calculate sigma x, sigma y
+    double sumSquareDiffVar1=0, sumSquareDiffVar2=0;
+    double nABCD = (double) weight_.size();
+    assert(var1_.size()==var2_.size() && var2_.size()==weight_.size());
+    for(int i=0; i < nABCD; i++) {
+      sumSquareDiffVar1 += weight_[i] * pow(var1_[i] - meanVar1, 2);
+      sumSquareDiffVar2 += weight_[i] * pow(var2_[i] - meanVar2, 2);
+    }
+    double sigmaVar1 = sqrt( sumSquareDiffVar1 / (sumWeights - sumWeightsSquared/sumWeights) );
+    double sigmaVar2 = sqrt( sumSquareDiffVar2 / (sumWeights - sumWeightsSquared/sumWeights) );
+    double correlationOfDiscriminants = sampleCovarianceOfDiscriminants / (sigmaVar1 * sigmaVar2);
+    printf("meanVar1 = %f\n", meanVar1);
+    printf("meanVar2 = %f\n", meanVar2);
+    printf("meanProductOfDiscriminants = %f\n", meanProductOfDiscriminants);
+    printf("sampleCovarianceOfDiscriminants = %f\n", sampleCovarianceOfDiscriminants);
+    printf("sigmaVar1 = %f\n", sigmaVar1);
+    printf("sigmaVar2 = %f\n", sigmaVar2);
+    printf("number of events (without weights) = %d\n", (int)nABCD);
+    //printf("= %f\n", );
+    printf("Correlation coefficient between var1 and var2 = %f\n", correlationOfDiscriminants);
+    printf("N_A                       = %f\n", N_A);
+    printf("N_B                       = %f\n", N_B);
+    printf("N_C                       = %f\n", N_C);
+    printf("N_D                       = %f\n", N_D);
+    printf("N_B*N_C/N_D - N_A         = %f\n", (N_B*N_C/N_D)-N_A);
+    printf("(N_B*N_C/N_D - N_A) / N_A = %f\n", ((N_B*N_C/N_D)-N_A)/N_A);
+  }
+
 }

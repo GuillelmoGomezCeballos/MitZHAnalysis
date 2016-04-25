@@ -1018,7 +1018,7 @@ void zhAnalysis(
                                      passZMassSB    && !passZMass && passNjets && passMETMin                                      && !passBtagVeto             &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // WWLOOSESEL
                                                         passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // BTAGSEL
                                                         passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,                                                      // WZSEL
-							passZMass && passNjets && passMETMin                                      &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
+							passZMass && passNjets && passMETMin                      && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto &&                 ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
 							passZMass && passNjets && passMT && passMET &&!passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // CR1SEL
 							passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,     // CR2SEL
 							passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto      // CR12SEL

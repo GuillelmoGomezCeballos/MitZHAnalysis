@@ -120,10 +120,6 @@ void zgAnalysis(
   infilenamev.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
   }
 
-  if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
-  infilenamev.push_back(Form("%sDYJetsToNuNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));              infilecatv.push_back(3);
-  }
-
   infilenamev.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                  infilecatv.push_back(3);
   infilenamev.push_back(Form("%sZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                   infilecatv.push_back(3);
 
@@ -174,9 +170,9 @@ void zgAnalysis(
   double dataPrescale[4] = {21.479639,4.339259,2.163135,1};
 
   const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000};
-  //const int MVAVarType = 1; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {100, 125, 150, 175, 200, 225, 250};
+  //const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350};
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000};
-  //const int MVAVarType = 3; const int nBinMVA = 23; Float_t xbins[nBinMVA+1] = {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200};
+  //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350};
   //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
@@ -531,8 +527,9 @@ void zgAnalysis(
         passBtagVeto = bDiscrMax < 0.800 && idSoft.size() == 0;
       }
       double metMIN = 100; double mtMIN = 200;
-      if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 45; mtMIN = 0;}
-      bool passMET = theMET.Pt() > metMIN && mtW > mtMIN;
+      if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 50; mtMIN = 0;}
+      else if(MVAVarType == 1)                                       {metMIN = 50; mtMIN = 200;}
+      bool passMET = theMET.Pt() > metMIN && (mtW > mtMIN || theMET.Pt() < 100);
 
       bool passPTFrac    = ptFrac[0] < 0.4;
       if(MVAVarType == 4) passPTFrac = ptFrac[0] < 1.0;
@@ -668,9 +665,9 @@ void zgAnalysis(
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
 	double MVAVar = 0.0;
 	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),200.001);
-	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),249.999);
+	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,999.999);
-	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),199.999);
+	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
 	
@@ -814,6 +811,12 @@ void zgAnalysis(
     histo_ZjetsRec1->SetBinContent(i,TMath::Max(histo_ZjetsRec1->GetBinContent(i),0.000001));
     histo_ZjetsRec2->SetBinContent(i,TMath::Max(histo_ZjetsRec2->GetBinContent(i),0.000001));
   }
+  histo_Zjets0   ->Scale(1./histo_Zjets0   ->GetSumOfWeights());
+  histo_Zjets1   ->Scale(1./histo_Zjets1   ->GetSumOfWeights());
+  histo_Zjets2   ->Scale(1./histo_Zjets2   ->GetSumOfWeights());
+  histo_ZjetsRec0->Scale(1./histo_ZjetsRec0->GetSumOfWeights());
+  histo_ZjetsRec1->Scale(1./histo_ZjetsRec1->GetSumOfWeights());
+  histo_ZjetsRec2->Scale(1./histo_ZjetsRec2->GetSumOfWeights());
 
   char output[200];
   sprintf(output,"zjets_13TeV_25ns.root");	  

@@ -482,7 +482,7 @@ void zhAnalysis(
   TH1D *fhDZjets;
   if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
-  else if(nJetsType == 3) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
+  else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
   assert(fhDZjets);
   fhDZjets->SetDirectory(0);
 

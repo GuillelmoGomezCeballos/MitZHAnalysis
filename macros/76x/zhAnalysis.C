@@ -474,7 +474,7 @@ void zhAnalysis(
 
   if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
   else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met.root";
-  else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
+  else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt_morebins.root";
   else if(MVAVarType == 3) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met_morebins.root";
   else if(MVAVarType == 4) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_ptfraclt1_ptfrac.root";
   else {printf("PROBLEM with MVAVarType\n");}

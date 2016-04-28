@@ -68,11 +68,11 @@ void zgAnalysis(
   if      (period==1){
   puPath = "MitAnalysisRunII/data/76x/puWeights_76x.root";
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
-  infilenamev.push_back(Form("%sSinglePhoton+Run2015C_25ns-16Dec2015-v1+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2015C_25ns-16Dec2015-v1+AOD.root",filesPathDA.Data())); 											 infilecatv.push_back(0);
   infilenamev.push_back(Form("%sSinglePhoton+Run2015D-16Dec2015-v1+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
   } else {
-  infilenamev.push_back(Form("%sdata_AOD_Run2015C_25ns.root",filesPathDA.Data()));											      infilecatv.push_back(0);
-  infilenamev.push_back(Form("%sdata_AOD_Run2015D_25ns.root",filesPathDA.Data()));											      infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_AOD_Run2015C_25ns.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_AOD_Run2015D_25ns.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
   }  
 
   infilenamev.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                                            infilecatv.push_back(1);
@@ -93,6 +93,7 @@ void zgAnalysis(
   infilenamev.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));			   infilecatv.push_back(1);
   infilenamev.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));           infilecatv.push_back(1);
   infilenamev.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v3+AODSIM.root",filesPathMC.Data())); 			   infilecatv.push_back(1);
+  infilenamev.push_back(Form("%stZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 		   infilecatv.push_back(1);
 
   if(nsel == 2 || nsel == 5) {
   infilenamev.push_back(Form("%sGJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));	   infilecatv.push_back(2);
@@ -114,10 +115,11 @@ void zgAnalysis(
   infilenamev.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		 	   infilecatv.push_back(2);
   infilenamev.push_back(Form("%sGluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
   infilenamev.push_back(Form("%sGluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
-  //infilenamev.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 			   infilecatv.push_back(2);
+  infilenamev.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 			   infilecatv.push_back(2);
   infilenamev.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                           infilecatv.push_back(2);
   //infilenamev.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                         infilecatv.push_back(2);
   infilenamev.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infilecatv.push_back(2);
+  infilenamev.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 		           infilecatv.push_back(2);
   }
 
   infilenamev.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                  infilecatv.push_back(3);
@@ -169,7 +171,7 @@ void zgAnalysis(
   double eventsTrg[4] = {0,0,0,0};
   double dataPrescale[4] = {21.479639,4.339259,2.163135,1};
 
-  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000};
+  const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000};
   //const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350};
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000};
   //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350};
@@ -528,7 +530,7 @@ void zgAnalysis(
       }
       double metMIN = 100; double mtMIN = 200;
       if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 50; mtMIN = 0;}
-      else if(MVAVarType == 1)                                       {metMIN = 50; mtMIN = 200;}
+      else if(MVAVarType == 0 || MVAVarType == 1)                    {metMIN = 50; mtMIN = 200;}
       bool passMET = theMET.Pt() > metMIN && (mtW > mtMIN || theMET.Pt() < 100);
 
       bool passPTFrac    = ptFrac[0] < 0.4;
@@ -664,13 +666,15 @@ void zgAnalysis(
 
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
 	double MVAVar = 0.0;
-	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),200.001);
+	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),50.001);
 	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,999.999);
 	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
 	else {assert(0); return;}
-	
+
+        if((MVAVarType == 0 || MVAVarType == 1) && (theMET.Pt() < 100 || mtW < 200)) MVAVar = 55.0;
+
 	double theTemplateWeight = totalWeight;
 	if     (theCategory == 0) theTemplateWeight = theTemplateWeight;
 	else if(theCategory == 3) theTemplateWeight = -1.0 * theTemplateWeight;

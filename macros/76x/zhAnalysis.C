@@ -22,7 +22,7 @@
 
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 
-bool useZjetsTemplate = true;
+bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
 double mcPrescale = 1.;
@@ -82,6 +82,7 @@ void zhAnalysis(
   infileName_.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
   infileName_.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));           infileCategory_.push_back(1);
   infileName_.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v3+AODSIM.root",filesPathMC.Data())); 			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%stZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 		   infileCategory_.push_back(1);
 
   infileName_.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1+AODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(2);
   infileName_.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(2);
@@ -102,10 +103,11 @@ void zhAnalysis(
   infileName_.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
   infileName_.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
 
-  //infileName_.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 			   infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 			   infileCategory_.push_back(5);
   infileName_.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
   //infileName_.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));                         infileCategory_.push_back(5);
   infileName_.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(5);
+  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1+AODSIM.root",filesPathMC.Data())); 		           infileCategory_.push_back(5);
   
   for(int ifile=0; ifile<(int)infileName_.size(); ifile++) {
     signalIndex_.push_back(-1); // Populate vector of signal indices with -1 for the non-MC-signal files
@@ -462,7 +464,7 @@ void zhAnalysis(
   delete fMuSF;
 
   TString ECMsb  = "13TeV2015";
-  const int MVAVarType = 0; const int nBinMVA = 6; Float_t xbins[nBinMVA+1] = {200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
+  const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350}; TString addChan = "3";
@@ -470,7 +472,7 @@ void zhAnalysis(
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
-  if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt100_mt.root";
+  if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
   else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met.root";
   else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
   else if(MVAVarType == 3) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met_morebins.root";
@@ -997,7 +999,7 @@ void zhAnalysis(
 
       double metMIN = 100; double mtMIN = 200;
       if     (MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {metMIN = 50; mtMIN = 0;}
-      else if(MVAVarType == 1)                                       {metMIN = 50; mtMIN = 200;}
+      else if(MVAVarType == 0 || MVAVarType == 1)                    {metMIN = 50; mtMIN = 200;}
       bool passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
       bool passMT = mtW > mtMIN || !passMETTight;
       if(infileCategory_[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100;
@@ -1020,7 +1022,7 @@ void zhAnalysis(
                   passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT &&	       passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT && passZMass &&  	    passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT && passZMass && passNjets &&	       passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
+                  passZMass && passNjets &&	       passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
         passMT && passZMass && passNjets && passMET &&  	     passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT && passZMass && passNjets && passMET && passPTFrac		  && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET		  && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
@@ -1254,12 +1256,14 @@ void zhAnalysis(
         }
 
 	double MVAVar = 0.0;
-	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),200.001);
+	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),50.001);
 	else if(MVAVarType == 1) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999);
 	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,999.999);
 	else if(MVAVarType == 3) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999);
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac,0.999);
 	else {assert(0); return;}
+
+        if((MVAVarType == 0 || MVAVarType == 1) && ((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || mtW < 200)) MVAVar = 55.0;
 
         if     (theCategory == 0){
 	  if(passAllCuts[SIGSEL]) histo_Data->Fill(MVAVar,totalWeight);
@@ -1593,7 +1597,7 @@ void zhAnalysis(
     histo_ZjetsNoW->Scale(0.0);
     histo_ZjetsNoW->Add(fhDZjets);
     double ZJetsNorm[3] = {0.56, 0.52, 1.};
-    if     (MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {
+    if     (MVAVarType == 0 || MVAVarType == 1 ||MVAVarType == 2 || MVAVarType == 3 || MVAVarType == 4) {
       ZJetsNorm[0] = 1.; ZJetsNorm[1] = 1.; ZJetsNorm[2] = 1.; 
     }
     if     (nJetsType == 0) histo_Zjets->Scale(TMath::Abs(ZJetsNorm[0]/histo_Zjets->GetSumOfWeights()));
@@ -1608,13 +1612,21 @@ void zhAnalysis(
   }
 
   // computing DY scale factor using the first bin
-  if(MVAVarType == 1){
+  if(MVAVarType == 0 || MVAVarType == 1){
     double the_bck = histo_EM->GetBinContent(1) + histo_WZ->GetBinContent(1) + histo_ZZ->GetBinContent(1) + histo_VVV->GetBinContent(1);
     double the_data = histo_Data->GetBinContent(1);
     double the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(1);
     printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(1),the_sf);
     histo_Zjets->Scale(the_sf);
     histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
+  }
+
+  double nZjetsNorm = histo_Zjets->GetSumOfWeights();
+  if(nZjetsNorm > 0){
+    for(int i=1; i<=histo_Zjets->GetNbinsX(); i++){
+      histo_Zjets->SetBinContent(i,TMath::Max(histo_Zjets->GetBinContent(i),0.000001));
+    }
+    histo_Zjets->Scale(nZjetsNorm/histo_Zjets->GetSumOfWeights());
   }
 
   double mean,up,diff;

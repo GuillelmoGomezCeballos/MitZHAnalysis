@@ -1827,7 +1827,9 @@ void zhAnalysis(
     double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
     double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
     double syst_btag = 1.02;
-    
+    double syst_WZl[2] = {1.010, 1.003};
+    if(nJetsType > 0) syst_WZl[1] = 1.012;
+
     for(int nb=1; nb<=nBinMVA; nb++){
       double nggZHEvt = histo_ggZH_hinv->GetBinContent(nb);
       if(nModel != 0) nggZHEvt = 0.0;
@@ -1997,6 +1999,8 @@ void zhAnalysis(
       newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -    -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
       newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
+      newcardShape << Form("CMS_zllhinv_WZ_lep                     lnN     -     -     -   %7.5f   -      -    -  \n",syst_WZl[0]);		
+      newcardShape << Form("CMS_zllhinv_WZ_tau                     lnN     -     -     -   %7.5f   -      -    -  \n",syst_WZl[1]);		
       if(nb != 1){
       newcardShape << Form("CMS_zllhinv_ZLLNorm_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
       //newcardShape << Form("CMS_zllhinv_ZLLShape_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    

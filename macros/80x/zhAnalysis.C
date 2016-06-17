@@ -550,7 +550,7 @@ void zhAnalysis(
   // ABCD variables
   double sumWeights=0, sumWeightsSquared=0, sumProductOfDiscriminants=0, sumVar1=0, sumVar2=0;
   vector<double> var1_, var2_, weight_;
-  double N_A, N_B, N_C, N_D;
+  double N_A = 0; double N_B = 0; double N_C = 0; double N_D = 0;
 
   double bgdDecay[nSigModels][nSelTypes*4][histBins],weiDecay[nSigModels][nSelTypes*4][histBins];
   for(int nModel=0; nModel<nSigModels; nModel++) { for(unsigned int i=0; i<nSelTypes*4; i++) { for(int j=0; j<histBins; j++) {       
@@ -731,11 +731,11 @@ void zhAnalysis(
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 15) continue;
         bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
-        //if(passId == false) continue;        
+        //if(passId == false) continue;
 
         Bool_t isLepton = kFALSE;
         for(unsigned int nl=0; nl<idLep.size(); nl++){
-          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3) isLepton = kTRUE;
+          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.4) isLepton = kTRUE;
 	}
 	if(isLepton == kTRUE) continue;
 
@@ -1056,7 +1056,7 @@ void zhAnalysis(
 	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac,0.999);
 	else {assert(0); return;}
 
-        if((MVAVarType == 0 || MVAVarType == 1) && ((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || mtW < 200)) MVAVar = 55.0;
+        //if((MVAVarType == 0 || MVAVarType == 1) && ((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || mtW < 200)) MVAVar = 55.0;
 
         if     (theCategory == 0){
 	  if(passAllCuts[SIGSEL]) histo_Data->Fill(MVAVar,totalWeight);
@@ -1825,7 +1825,7 @@ void zhAnalysis(
   
     }
   }
-  bool doABCDstudy=false;  
+  bool doABCDstudy=true;  
   if(doABCDstudy) { // Output result of ABCD study for DY 
     // Calculate <x>, <y>, <xy>
     double meanVar1=sumVar1/sumWeights, meanVar2=sumVar2/sumWeights, meanProductOfDiscriminants=sumProductOfDiscriminants/(sumWeights*sumWeights);

@@ -36,7 +36,9 @@ const TString typeLepSel = "medium";
 void zhAnalysis(
  unsigned int nJetsType = 1,
  bool isBlinded = false,
- Int_t typeSel = 3
+ Int_t typeSel = 3,
+ string plotSignalName="sm"
+ //string plotSignalName="DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1"
  ){
 
   system("mkdir -p MitZHAnalysis/datacards");
@@ -1016,7 +1018,7 @@ void zhAnalysis(
       }
 
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
-	if(nModel <= 0){
+	if(signalName=="" || signalName==plotSignalName){
 	  for(int thePlot=0; thePlot<allPlots-2; thePlot++){
 	    double theVar = 0.0;
 	    bool makePlot = false;

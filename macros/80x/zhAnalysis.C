@@ -47,7 +47,7 @@ void zhAnalysis(
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/";
   TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/";
   TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 1.8;
+  Double_t lumi = 2.6;
   TString processTag = "";
 
   //*******************************************************
@@ -345,8 +345,8 @@ void zhAnalysis(
   }
 
   char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
-  sprintf(effMName,"CMS_eff_m");sprintf(momMName,"CMS_scale_m");
-  sprintf(effEName,"CMS_eff_e");sprintf(momEName,"CMS_scale_e");
+  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
+  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
   if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
   else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
   else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
@@ -1765,16 +1765,16 @@ void zhAnalysis(
       newcardShape << Form("process ZH_hinv Zjets VVV WZ ZZ EM ggZH_hinv\n");
       newcardShape << Form("process 0 1 2 3 4 5 -1\n");
       newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n",histo_ZH_hinv[nModel]->GetBinContent(nb),histo_Zjets->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_EM->GetBinContent(nb),nggZHEvt);
-      newcardShape << Form("lumi_%4s                               lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
+      newcardShape << Form("lumi2106_%4s                           lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
-      newcardShape << Form("CMS_pu                                 lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
+      newcardShape << Form("CMS_pu2016                             lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_met                          lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2],systMetUp[3],systMetDown[3],systMetUp[0],systMetDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_j                            lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2],systJesUp[3],systJesDown[3],systJesUp[0],systJesDown[0]); // 0 --> 4		 
-      newcardShape << Form("UEPS			                 lnN  1.030   -     -     -     -     -   1.030\n");
-      newcardShape << Form("CMS_eff_b                              lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",syst_btag,syst_btag,syst_btag,syst_btag,syst_btag);
+      newcardShape << Form("UEPS			           lnN  1.030   -     -     -     -     -   1.030\n");
+      newcardShape << Form("CMS_eff_b2016                          lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",syst_btag,syst_btag,syst_btag,syst_btag,syst_btag);
       newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  %7.5f   -   %7.5f %7.5f %7.5f   -     -  \n",systPDF[0],systPDF[1],systPDF[2],systPDF[3]);
       if(systPDF[4] != 1.0)
       newcardShape << Form("pdf_gg_ACCEPT                          lnN    -     -     -     -     -     -   %7.5f\n",systPDF[4]);
@@ -1793,37 +1793,37 @@ void zhAnalysis(
       newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -    -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
       newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
-      newcardShape << Form("CMS_zllhinv_WZ_lep                     lnN     -     -     -   %7.5f   -      -    -  \n",syst_WZl[0]);		
-      newcardShape << Form("CMS_zllhinv_WZ_tau                     lnN     -     -     -   %7.5f   -      -    -  \n",syst_WZl[1]);		
+      newcardShape << Form("CMS_zllhinv_WZ_lep2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[0]);	    
+      newcardShape << Form("CMS_zllhinv_WZ_tau2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[1]);	    
       if(nb != 1){
-      newcardShape << Form("CMS_zllhinv_ZLLNorm_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
-      //newcardShape << Form("CMS_zllhinv_ZLLShape_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    
+      newcardShape << Form("CMS_zllhinv_ZLLNorm2016_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
+      //newcardShape << Form("CMS_zllhinv_ZLLShape2016_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    
       }
       if(MVAVarType == 1){
-      newcardShape << Form("CMS_zllhinv_ZLLFit_%s_%s               lnU	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
+      newcardShape << Form("CMS_zllhinv_ZLLFit2016_%s_%s               lnU	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
       }
-      newcardShape << Form("CMS_zllhinv_EMSyst_%s_%s               lnN	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),systEM[0]);	       
+      newcardShape << Form("CMS_zllhinv_EMSyst2016_%s_%s               lnN	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),systEM[0]);	       
       if(useEMFromData == true)
-      newcardShape << Form("CMS_zllhinv_EMNorm_%s_%s      gmN %d  	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),(int)systEM[1],histo_EM->GetBinContent(nb)/systEM[1]);	       
+      newcardShape << Form("CMS_zllhinv_EMNorm2016_%s_%s      gmN %d  	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),(int)systEM[1],histo_EM->GetBinContent(nb)/systEM[1]);	       
   
-      if     (histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinvNoW[nModel]->GetBinContent(nb) < 20  ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding_%s_Bin%d	  gmN %d  %7.5f -      -    -	 -    -      -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb)  ,histo_ZH_hinv[nModel]  ->GetBinContent(nb)/histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb));
-      else if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0                                                      ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding_%s_Bin%d	    lnN    %7.5f -      -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb)  );
+      if     (histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinvNoW[nModel]->GetBinContent(nb) < 20  ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d	  gmN %d  %7.5f -      -    -	 -    -      -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb)  ,histo_ZH_hinv[nModel]  ->GetBinContent(nb)/histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb));
+      else if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0                                                      ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d	    lnN    %7.5f -      -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb)  );
   
-      if     (histo_Zjets->GetBinContent(nb)     > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%d  lnN      -  %7.5f   -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb)    );
+      if     (histo_Zjets->GetBinContent(nb)     > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAZjetsSatBounding2016_%s_Bin%d  lnN      -  %7.5f   -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb)    );
   
-      if     (histo_VVV->GetBinContent(nb)       > 0 && histo_VVVNoW->GetBinContent(nb) < 20      ) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%d    gmN %d    -	  -  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_VVVNoW      ->GetBinContent(nb)  ,histo_VVV	 ->GetBinContent(nb)/histo_VVVNoW      ->GetBinContent(nb));
-      else if(histo_VVV->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%d    lnN      -	-  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)      /histo_VVV->GetBinContent(nb)      );
+      if     (histo_VVV->GetBinContent(nb)       > 0 && histo_VVVNoW->GetBinContent(nb) < 20      ) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d    gmN %d    -	  -  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_VVVNoW      ->GetBinContent(nb)  ,histo_VVV	 ->GetBinContent(nb)/histo_VVVNoW      ->GetBinContent(nb));
+      else if(histo_VVV->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d    lnN      -	-  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)      /histo_VVV->GetBinContent(nb)      );
   
-      if     (histo_WZ->GetBinContent(nb)        > 0 && histo_WZNoW->GetBinContent(nb) < 20       ) newcardShape << Form("CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%d	  gmN %d    -	  -	-  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_WZNoW	    ->GetBinContent(nb)  ,histo_WZ	 ->GetBinContent(nb)/histo_WZNoW       ->GetBinContent(nb));
-      else if(histo_WZ->GetBinContent(nb)        > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%d	    lnN      -	-     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_WZ->GetBinError(nb)       /histo_WZ->GetBinContent(nb)       );
+      if     (histo_WZ->GetBinContent(nb)        > 0 && histo_WZNoW->GetBinContent(nb) < 20       ) newcardShape << Form("CMS_zllhinv%s_MVAWZSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_WZNoW	    ->GetBinContent(nb)  ,histo_WZ	 ->GetBinContent(nb)/histo_WZNoW       ->GetBinContent(nb));
+      else if(histo_WZ->GetBinContent(nb)        > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAWZSatBounding2016_%s_Bin%d	    lnN      -	-     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_WZ->GetBinError(nb)       /histo_WZ->GetBinContent(nb)       );
   
-      if     (histo_ZZ->GetBinContent(nb)       > 0 && histo_ZZNoW->GetBinContent(nb) < 20        ) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%d	  gmN %d    -	  -	-    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZZNoW	    ->GetBinContent(nb)  ,histo_ZZ	 ->GetBinContent(nb)/histo_ZZNoW       ->GetBinContent(nb));
-      else if(histo_ZZ->GetBinContent(nb)	       > 0                                        ) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%d	    lnN      -	-     -    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ->GetBinError(nb)       /histo_ZZ->GetBinContent(nb)       );
+      if     (histo_ZZ->GetBinContent(nb)       > 0 && histo_ZZNoW->GetBinContent(nb) < 20        ) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZZNoW	    ->GetBinContent(nb)  ,histo_ZZ	 ->GetBinContent(nb)/histo_ZZNoW       ->GetBinContent(nb));
+      else if(histo_ZZ->GetBinContent(nb)	       > 0                                        ) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d	    lnN      -	-     -    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ->GetBinError(nb)       /histo_ZZ->GetBinContent(nb)       );
   
-      if      (histo_EM->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%d	    lnN      -	-     -    -    -  %7.5f   -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_EM->GetBinError(nb)       /histo_EM->GetBinContent(nb)	  );
+      if      (histo_EM->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAEMSatBounding2016_%s_Bin%d	    lnN      -	-     -    -    -  %7.5f   -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_EM->GetBinError(nb)       /histo_EM->GetBinContent(nb)	  );
   
-      if     (histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinvNoW->GetBinContent(nb) < 20) newcardShape << Form("CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%d	  gmN %d    -	  -	-    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ggZH_hinvNoW->GetBinContent(nb)  ,histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinvNoW->GetBinContent(nb));
-      else if(histo_ggZH_hinv->GetBinContent(nb) > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
+      if     (histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinvNoW->GetBinContent(nb) < 20) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ggZH_hinvNoW->GetBinContent(nb)  ,histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinvNoW->GetBinContent(nb));
+      else if(histo_ggZH_hinv->GetBinContent(nb) > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
   
     }
   }

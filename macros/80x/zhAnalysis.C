@@ -44,9 +44,9 @@ void zhAnalysis(
   system("mkdir -p MitZHAnalysis/datacards");
   system("mkdir -p MitZHAnalysis/plots");
   Int_t period = 1;
-  TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/";
-  TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
+  TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
+  TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
+  TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
   Double_t lumi = 2.6;
   TString processTag = "";
 
@@ -67,7 +67,8 @@ void zhAnalysis(
   // Monte carlo backgrounds
   infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
   infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
+  //infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTT_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));    infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));infileCategory_.push_back(1);
 
@@ -252,7 +253,7 @@ void zhAnalysis(
 
   if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
   //if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt_13bins.root";
-  else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met.root";
+  else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/80x/zjets_13TeV_25ns_metgt50_met.root";
   else if(MVAVarType == 2) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt_morebins.root";
   else if(MVAVarType == 3) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_met_morebins.root";
   else if(MVAVarType == 4) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_ptfraclt1_ptfrac.root";
@@ -261,14 +262,14 @@ void zhAnalysis(
   TFile *fZjetsTemplatesFile = TFile::Open(Form("%s",zjetsTemplatesPath.Data()));
 
   TH1D *fhDZjets;
-  if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
+  if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
   else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
   assert(fhDZjets);
   fhDZjets->SetDirectory(0);
 
   TH1D *fhDZjetsSyst;
-  if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
+  if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   else if(nJetsType == 1) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
   else if(nJetsType == 2) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
   assert(fhDZjetsSyst);
@@ -289,7 +290,7 @@ void zhAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 25;
+  const int allPlots = 26;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
@@ -315,6 +316,7 @@ void zhAnalysis(
     else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
     else if(thePlot >= 21 && thePlot <= 21) {nBinPlot = 500; xminPlot = 0.0; xmaxPlot =1000.0;}
     else if(thePlot >= 22 && thePlot <= 22) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot >= 23 && thePlot <= 23) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot =   2.0;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -573,7 +575,7 @@ void zhAnalysis(
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
     TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
-    TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
+    //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
     TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
     TTree *the_SelBit_tree= (TTree*)the_input_file.FindObjectAny("SelBit_tree");
 
@@ -679,13 +681,16 @@ void zhAnalysis(
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoTkMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele22_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele23_WPLoose_Gsf_v*")			      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele27_WPLoose_Gsf_v*")			      == 0)
+             (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}
@@ -698,7 +703,8 @@ void zhAnalysis(
         if(selectIdIsoCut(typeLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
 	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
 	                                                                                               {idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep);}
+        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep);}
+        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepLoose)  == BareLeptons::LepLoose ) {idTight.push_back(0); idLep.push_back(nlep);}
         else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
       }
       if(idLep.size()!=idTight.size()) {assert(1); return;}
@@ -768,6 +774,16 @@ void zhAnalysis(
            (double)(*eventTaus.iso)[ntau] < 5.0){
           numberGoodTaus++;
         }
+      }
+
+      TLorentzVector theCaloMET;
+      theCaloMET.SetPx(eventMet.caloMet_Pt*cos(eventMet.caloMet_Phi));
+      theCaloMET.SetPy(eventMet.caloMet_Pt*sin(eventMet.caloMet_Phi));
+      for(unsigned int nl=0; nl<idLep.size(); nl++){
+        if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]])==13) {
+	  theCaloMET.SetPx(theCaloMET.Px()-((TLorentzVector*)(*eventLeptons.p4)[nl])->Px());
+	  theCaloMET.SetPy(theCaloMET.Py()-((TLorentzVector*)(*eventLeptons.p4)[nl])->Py());
+	}
       }
 
       int typePair = 0;
@@ -1040,11 +1056,12 @@ void zhAnalysis(
 	    else if(thePlot == 15 && passAllCuts[PRESEL])  {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
 	    else if(thePlot == 16 && passAllCuts[PRESEL])  {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	    else if(thePlot == 17 && passAllCuts[PRESEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
-	    else if(thePlot == 18 && passAllCuts[TIGHTSEL]){makePlot = true;theVar = (double)(numberGoodGenLep[0]+10*numberGoodGenLep[1]+100*numberGoodGenLep[2]);}
+	    else if(thePlot == 18 && passAllCuts[TIGHTSEL]){makePlot = true;theVar = (double)(numberGoodGenLep[2]+10*numberGoodGenLep[0]+100*numberGoodGenLep[1]);}
 	    else if(thePlot == 19 && passNMinusOne[10])    {makePlot = true;theVar = TMath::Min((double)numberGoodTaus,3.499);}
 	    else if(thePlot == 20 && passAllCuts[TIGHTSEL]){makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
 	    else if(thePlot == 21 && passNMinusOne[0])     {makePlot = true;theVar = TMath::Min(mtW,999.999);}
 	    else if(thePlot == 22 && passAllCuts[TIGHTSEL]){makePlot = true;theVar = TMath::Min(the_rho,0.999);}
+	    else if(thePlot == 23 && passAllCuts[TIGHTSEL]){makePlot = true;theVar = TMath::Min(TMath::Abs((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt()-theCaloMET.Pt())/theCaloMET.Pt(),1.999);}
 
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
@@ -1369,19 +1386,19 @@ void zhAnalysis(
   if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
   else  			      systEM[0] = 2.;
   if(useEMFromData == true){
-    double EMNormFact[3] = {((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[0])/bgdDecay[0][SIGSEL+nSelTypes*(1)][1],
-                            ((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[1])/bgdDecay[0][SIGSEL+nSelTypes*(2)][1],
-                            ((bgdDecay[0][SIGSEL][0]-EMbkg)*NemFact[2])/bgdDecay[0][SIGSEL+nSelTypes*(3)][1]};
+    double EMNormFact[3] = {((bgdDecay[0][TIGHTSEL][0]-EMbkg)*NemFact[0])/bgdDecay[0][TIGHTSEL+nSelTypes*(1)][1],
+                            ((bgdDecay[0][TIGHTSEL][0]-EMbkg)*NemFact[1])/bgdDecay[0][TIGHTSEL+nSelTypes*(2)][1],
+                            ((bgdDecay[0][TIGHTSEL][0]-EMbkg)*NemFact[2])/bgdDecay[0][TIGHTSEL+nSelTypes*(3)][1]};
 
-    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*1][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[0],bgdDecay[0][SIGSEL+nSelTypes*(1)][1],bgdDecay[0][SIGSEL+nSelTypes*1][1]*EMNormFact[0],bgdDecay[0][SIGSEL+nSelTypes*1][1]*EMNormFact[0]*EMSystTotal[0]);
-    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*2][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[1],bgdDecay[0][SIGSEL+nSelTypes*(2)][1],bgdDecay[0][SIGSEL+nSelTypes*2][1]*EMNormFact[1],bgdDecay[0][SIGSEL+nSelTypes*2][1]*EMNormFact[1]*EMSystTotal[1]);
-    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][SIGSEL+nSelTypes*3][1],bgdDecay[0][SIGSEL][0],EMbkg,NemFact[2],bgdDecay[0][SIGSEL+nSelTypes*(3)][1],bgdDecay[0][SIGSEL+nSelTypes*3][1]*EMNormFact[2],bgdDecay[0][SIGSEL+nSelTypes*3][1]*EMNormFact[2]*EMSystTotal[2]);
+    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][TIGHTSEL+nSelTypes*1][1],bgdDecay[0][TIGHTSEL][0],EMbkg,NemFact[0],bgdDecay[0][TIGHTSEL+nSelTypes*(1)][1],bgdDecay[0][TIGHTSEL+nSelTypes*1][1]*EMNormFact[0],bgdDecay[0][TIGHTSEL+nSelTypes*1][1]*EMNormFact[0]*EMSystTotal[0]);
+    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][TIGHTSEL+nSelTypes*2][1],bgdDecay[0][TIGHTSEL][0],EMbkg,NemFact[1],bgdDecay[0][TIGHTSEL+nSelTypes*(2)][1],bgdDecay[0][TIGHTSEL+nSelTypes*2][1]*EMNormFact[1],bgdDecay[0][TIGHTSEL+nSelTypes*2][1]*EMNormFact[1]*EMSystTotal[1]);
+    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][TIGHTSEL+nSelTypes*3][1],bgdDecay[0][TIGHTSEL][0],EMbkg,NemFact[2],bgdDecay[0][TIGHTSEL+nSelTypes*(3)][1],bgdDecay[0][TIGHTSEL+nSelTypes*3][1]*EMNormFact[2],bgdDecay[0][TIGHTSEL+nSelTypes*3][1]*EMNormFact[2]*EMSystTotal[2]);
 
     //systEM[0] = 1. + EMSystTotal[typeSel-1];
     //systEM[0] = 1. + EMSyst[1][typeSel-1];
     systEM[0] = 1. + 0.20;
-    systEM[1] = TMath::Max(bgdDecay[0][SIGSEL][0],1.0);
-    if(bgdDecay[0][SIGSEL][0] > 0) histo_EM->Scale(EMNormFact[typeSel-1]);
+    systEM[1] = TMath::Max(bgdDecay[0][TIGHTSEL][0],1.0);
+    if(bgdDecay[0][TIGHTSEL][0] > 0) histo_EM->Scale(EMNormFact[typeSel-1]);
   }
 
   // DY background estimation

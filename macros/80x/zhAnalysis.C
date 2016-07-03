@@ -27,8 +27,8 @@ bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
 double mcPrescale = 1.;
-enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL,   DYSANESEL2,  nSelTypes};
-TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL", "DYSANESEL2"};
+enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
+TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
@@ -36,7 +36,8 @@ const TString typeLepSel = "medium";
 void zhAnalysis(
  unsigned int nJetsType = 1,
  bool isBlinded = false,
- Int_t typeSel = 3
+ Int_t typeSel = 3,
+ Int_t plotModel = 0
  ){
 
   system("mkdir -p MitZHAnalysis/datacards");
@@ -60,7 +61,6 @@ void zhAnalysis(
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
 
   // Data files
-  //infileName_.push_back(Form("%sdata.root",filesPathDA.Data()));											                                           infileCategory_.push_back(0);
   infileName_.push_back(Form("%sdata.root",filesPathDA.Data()));											                                           infileCategory_.push_back(0);
   
   // Monte carlo backgrounds
@@ -99,7 +99,7 @@ void zhAnalysis(
   infileName_.push_back(Form("%sZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(4);
   infileName_.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(4);
   //infileName_.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(4);
-  //infileName_.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(4);
   infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	 	   infileCategory_.push_back(4);
   infileName_.push_back(Form("%sGluGluToContinToZZTo4e_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
   infileName_.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
@@ -115,7 +115,6 @@ void zhAnalysis(
     signalIndex_.push_back(-1); // Populate vector of signal indices with -1 for the non-MC-signal files
   }
 
-  int plotModel=0;  
   // Monte Carlo signals
   { // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;
@@ -185,7 +184,7 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); plotModel=i; i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
@@ -578,7 +577,6 @@ void zhAnalysis(
     TFile the_input_file(infileName_[ifile]);
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
-    if(nModel>=0 && nModel!=plotModel) continue; //temporary for quick running!
     TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
     TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
@@ -684,18 +682,18 @@ void zhAnalysis(
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*") 	      == 0) ||
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*")	      == 0) ||
-             //(strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
-             //(strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
-             //(strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
-             //(strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoTkMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
-             //(strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
-             //(strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) 
-             //(strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
+             (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}
@@ -858,7 +856,7 @@ void zhAnalysis(
 	   		   passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR2SEL
 	   		   passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR12SEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight, // TIGHTSEL
-	   		   passZMass && passNjets &&           passMET &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto,                                                       // DYSANESEL
+	   		   passZMass && passNjets &&           passMET &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto,                                                      // DYSANESEL1
 	   		   passZMass && passNjets &&           passMET               &&!passDPhiZMET   		      && passPTLL &&  pass3rdLVeto                                                       // DYSANESEL2
                                     };
 

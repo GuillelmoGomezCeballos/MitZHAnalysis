@@ -1068,9 +1068,9 @@ void zhAnalysis(
 	    else if(thePlot == 20 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
 	    else if(thePlot == 21 && passNMinusOne[0])       {makePlot = true;theVar = TMath::Min(mtW,999.999);}
 	    else if(thePlot == 22 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(the_rho,0.999);}
-	    else if(thePlot == 23 && passAllCuts[DYSANESEL]) {makePlot = true;theVar = TMath::Min(dPhiJetMET,3.099);}
-	    else if(thePlot == 24 && passAllCuts[DYSANESEL]) {makePlot = true;theVar = caloMinusPFMETRel;}
-	    else if(thePlot == 25 && passAllCuts[DYSANESEL]) {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
+	    else if(thePlot == 23 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.099);}
+	    else if(thePlot == 24 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = caloMinusPFMETRel;}
+	    else if(thePlot == 25 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
 	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.099);}
 	    else if(thePlot == 27 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = caloMinusPFMETRel;}
 	    else if(thePlot == 28 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}

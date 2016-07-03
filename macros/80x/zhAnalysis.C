@@ -684,18 +684,18 @@ void zhAnalysis(
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*") 	      == 0) ||
              (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
+             //(strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
+             //(strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
+             //(strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
+             //(strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_IsoTkMu24_v*")				      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
              (strcmp(tokens[nt],"HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
+             //(strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
+             //(strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
              (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
+             //(strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}

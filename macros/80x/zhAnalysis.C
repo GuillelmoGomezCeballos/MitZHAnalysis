@@ -314,10 +314,10 @@ void zhAnalysis(
     else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
     else if(thePlot >= 21 && thePlot <= 21) {nBinPlot = 500; xminPlot = 0.0; xmaxPlot =1000.0;}
     else if(thePlot >= 22 && thePlot <= 22) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 23 && thePlot <= 23) {nBinPlot =  31; xminPlot = 0.0; xmaxPlot =   3.1;} // Delta phi jet met agreement
+    else if(thePlot >= 23 && thePlot <= 23) {nBinPlot =  32; xminPlot = 0.0; xmaxPlot =   3.2;} // Delta phi jet met agreement
     else if(thePlot >= 24 && thePlot <= 24) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
     else if(thePlot >= 25 && thePlot <= 25) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
-    else if(thePlot >= 26 && thePlot <= 26) {nBinPlot =  31; xminPlot = 0.0; xmaxPlot =   3.1;} // Delta phi jet met agreement
+    else if(thePlot >= 26 && thePlot <= 26) {nBinPlot =  32; xminPlot = 0.0; xmaxPlot =   3.2;} // Delta phi jet met agreement
     else if(thePlot >= 27 && thePlot <= 27) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
     else if(thePlot >= 28 && thePlot <= 28) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
@@ -856,8 +856,8 @@ void zhAnalysis(
 	   		   passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR2SEL
 	   		   passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR12SEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight, // TIGHTSEL
-	   		   passZMass && passNjets &&           passMET &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto,                                                      // DYSANESEL1
-	   		   passZMass && passNjets &&           passMET               &&!passDPhiZMET   		      && passPTLL &&  pass3rdLVeto                                                       // DYSANESEL2
+	   		   passZMass && passNjets &&      passMETTight &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto,                                                      // DYSANESEL1
+	   		   passZMass && passNjets &&      passMETTight               &&!passDPhiZMET   		      && passPTLL &&  pass3rdLVeto                                                       // DYSANESEL2
                                     };
 
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
@@ -1068,10 +1068,10 @@ void zhAnalysis(
 	    else if(thePlot == 20 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
 	    else if(thePlot == 21 && passNMinusOne[0])       {makePlot = true;theVar = TMath::Min(mtW,999.999);}
 	    else if(thePlot == 22 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(the_rho,0.999);}
-	    else if(thePlot == 23 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.099);}
+	    else if(thePlot == 23 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.199);}
 	    else if(thePlot == 24 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = caloMinusPFMETRel;}
 	    else if(thePlot == 25 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
-	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.099);}
+	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(dPhiJetMET,3.199);}
 	    else if(thePlot == 27 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = caloMinusPFMETRel;}
 	    else if(thePlot == 28 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);

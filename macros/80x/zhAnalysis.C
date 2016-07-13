@@ -862,8 +862,7 @@ void zhAnalysis(
 
 
       bool passAllCuts[nSelTypes] = {                   
-//        		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
-        		   passZMass                                                                                                                                                               ,     // ZSEL
+            		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // SIGSEL
         passZMassLarge && !passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWSEL
         passZMassSB    && !passZMass && passNjets && passMETMin 				     && !passBtagVeto		  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWLOOSESEL
@@ -1115,11 +1114,10 @@ void zhAnalysis(
 	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(TMath::Max(dPhiJetMET,-0.05),3.099);}
 	    else if(thePlot == 27 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(caloMinusPFMETRel,1.999);}
 	    else if(thePlot == 28 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
-
-	    else if(thePlot == 29 && passAllCuts[ZSEL])      {makePlot = true;theVar = idJet.size();}
-	    else if(thePlot == 30 && passAllCuts[ZSEL])      {makePlot = true;theVar = idBJet.size();}
-	    else if(thePlot == 31 && passAllCuts[ZSEL])      {makePlot = true;theVar = idLep.size();;}
-	    else if(thePlot == 32 && passAllCuts[ZSEL])      {makePlot = true;theVar = TMath::Min(TMath::Max(dPhiDiLepMET,-0.05),3.099);}
+	    else if(thePlot == 29 && passZMass)              {makePlot = true;theVar = idJet.size();}
+	    else if(thePlot == 30 && passZMass)              {makePlot = true;theVar = idBJet.size();}
+	    else if(thePlot == 31 && passZMass)              {makePlot = true;theVar = idLep.size();;}
+	    else if(thePlot == 32 && passZMass)              {makePlot = true;theVar = TMath::Min(TMath::Max(dPhiDiLepMET,-0.05),3.099);}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }

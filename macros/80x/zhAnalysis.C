@@ -299,38 +299,44 @@ void zhAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 31;
+  const int allPlots = 35;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
 
   for(int thePlot=0; thePlot<allPlots; thePlot++){
-    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =1000.0;}
-    else if(thePlot >=  1 && thePlot <=  1) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
-    else if(thePlot >=  2 && thePlot <=  2) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
-    else if(thePlot >=  3 && thePlot <=  3) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
-    else if(thePlot >=  4 && thePlot <=  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >=  5 && thePlot <=  5) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
-    else if(thePlot >=  6 && thePlot <=  6) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >=  7 && thePlot <=  7) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
-    else if(thePlot >=  8 && thePlot <=  9) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >= 10 && thePlot <= 10) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =  40.0;}
-    else if(thePlot >= 11 && thePlot <= 11) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
-    else if(thePlot >= 12 && thePlot <= 14) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
-    else if(thePlot >= 15 && thePlot <= 15) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot >= 16 && thePlot <= 16) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
-    else if(thePlot >= 18 && thePlot <= 18) {nBinPlot = 500; xminPlot =-0.5; xmaxPlot = 499.5;}
-    else if(thePlot >= 19 && thePlot <= 19) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
-    else if(thePlot >= 20 && thePlot <= 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
-    else if(thePlot >= 21 && thePlot <= 21) {nBinPlot = 500; xminPlot = 0.0; xmaxPlot =1000.0;}
-    else if(thePlot >= 22 && thePlot <= 22) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot >= 23 && thePlot <= 23) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi jet met agreement
-    else if(thePlot >= 24 && thePlot <= 24) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
-    else if(thePlot >= 25 && thePlot <= 25) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
-    else if(thePlot >= 26 && thePlot <= 26) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi jet met agreement
-    else if(thePlot >= 27 && thePlot <= 27) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
-    else if(thePlot >= 28 && thePlot <= 28) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
+    if     (thePlot ==  0) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =1000.0;}
+    else if(thePlot ==  1) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
+    else if(thePlot ==  2) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
+    else if(thePlot ==  3) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
+    else if(thePlot ==  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot ==  5) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot ==  6) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot ==  7) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
+    else if(thePlot ==  8) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot == 10) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =  40.0;}
+    else if(thePlot == 11) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
+    else if(thePlot == 12) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot == 13) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot == 14) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot == 15) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot == 16) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot == 17) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
+    else if(thePlot == 18) {nBinPlot = 500; xminPlot =-0.5; xmaxPlot = 499.5;}
+    else if(thePlot == 19) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
+    else if(thePlot == 20) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
+    else if(thePlot == 21) {nBinPlot = 500; xminPlot = 0.0; xmaxPlot =1000.0;}
+    else if(thePlot == 22) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot == 23) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi jet met agreement
+    else if(thePlot == 24) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
+    else if(thePlot == 25) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
+    else if(thePlot == 26) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi jet met agreement
+    else if(thePlot == 27) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =   2.0;} // Calo and PF met agreement
+    else if(thePlot == 28) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 500.0;} // MET
+    else if(thePlot == 29) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;} // Jet multiplicity
+    else if(thePlot == 30) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;} // B-tagged jets
+    else if(thePlot == 31) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;} // Lepton multiplicity
+    else if(thePlot == 32) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi Z MET
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -674,7 +680,6 @@ void zhAnalysis(
       the_SelBit_tree->GetEntry(i);
       if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
       if((selBit_ & 0x1<<whichSkim) == 0) continue;
-
       the_input_tree->GetEntry(i);
 
       Bool_t passFilter[4] = {kFALSE,kFALSE,kFALSE,kFALSE};
@@ -744,7 +749,7 @@ void zhAnalysis(
 
       TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
 
-      vector<int> idJet,idJetUp,idJetDown;
+      vector<int> idJet,idJetUp,idJetDown,idBJet;
       bool isBtag = kFALSE;
       double bDiscrMax = 0.0;
       double dPhiJetMET = -1.0;
@@ -763,9 +768,10 @@ void zhAnalysis(
 
         if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
 
-	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
-	   (float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
-
+	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) { 
+	   if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
+           if ((float)(*eventJets.bDiscr)[nj] > 0.8) idBJet.push_back(nj);
+        }
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) {idJet.push_back(nj); dilepJet = dilepJet + ( *(TLorentzVector*)(eventJets.p4->At(nj)) );}
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.03 > 30) idJetUp.push_back(nj);
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
@@ -856,7 +862,8 @@ void zhAnalysis(
 
 
       bool passAllCuts[nSelTypes] = {                   
-        		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
+//        		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
+        		   passZMass                                                                                                                                                               ,     // ZSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // SIGSEL
         passZMassLarge && !passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWSEL
         passZMassSB    && !passZMass && passNjets && passMETMin 				     && !passBtagVeto		  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWLOOSESEL
@@ -1108,6 +1115,11 @@ void zhAnalysis(
 	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(TMath::Max(dPhiJetMET,-0.05),3.099);}
 	    else if(thePlot == 27 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(caloMinusPFMETRel,1.999);}
 	    else if(thePlot == 28 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
+
+	    else if(thePlot == 29 && passAllCuts[ZSEL])      {makePlot = true;theVar = idJet.size();}
+	    else if(thePlot == 30 && passAllCuts[ZSEL])      {makePlot = true;theVar = idBJet.size();}
+	    else if(thePlot == 31 && passAllCuts[ZSEL])      {makePlot = true;theVar = idLep.size();;}
+	    else if(thePlot == 32 && passAllCuts[ZSEL])      {makePlot = true;theVar = TMath::Min(TMath::Max(dPhiDiLepMET,-0.05),3.099);}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }
@@ -2359,6 +2371,10 @@ void zhAnalysis(
        processName[np].Data(),
          bgdDecay[nModel][ns+nSelTypes*typeSel][np], sqrt(weiDecay[nModel][ns+nSelTypes*typeSel][np]), syst_processTypes[nModel][np]
        );
+       sumEventsType[0] = sumEventsType[0] + bgdDecay[nModel][ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[nModel][ns+nSelTypes*0][np];
+       sumEventsType[1] = sumEventsType[1] + bgdDecay[nModel][ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[nModel][ns+nSelTypes*1][np];
+       sumEventsType[2] = sumEventsType[2] + bgdDecay[nModel][ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[nModel][ns+nSelTypes*2][np];
+       sumEventsType[3] = sumEventsType[3] + bgdDecay[nModel][ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[nModel][ns+nSelTypes*3][np];
     }
     printf("(...bkg): %9.2f +/- %7.2f +/- %7.2f\n",
          sumEventsType[typeSel], sqrt(sumEventsTypeE[typeSel]), syst_processTypes[nModel][histBins] 

@@ -44,7 +44,7 @@ void zgAnalysis(
 
   TString filesPathDA  = "/scratch/ceballos/ntuples_weightsDA_80x/";
   TString filesPathMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 2.6;
+  Double_t lumi = 5.7;
 
   double denFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   double numFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -70,13 +70,15 @@ void zgAnalysis(
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
   infilenamev.push_back(Form("%sSinglePhoton+Run2016B-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2016C-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
   } else {
-  infilenamev.push_back(Form("%sdata.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
   }  
 
   infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-40to130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));         infilecatv.push_back(3);
   infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data())); infilecatv.push_back(3);
-  //infilenamev.push_back(Form("%sZLLGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));   infilecatv.push_back(3);
+  infilenamev.push_back(Form("%sZLLGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));   infilecatv.push_back(3);
   infilenamev.push_back(Form("%sWGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));     infilecatv.push_back(3);
 
   //infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));  infilecatv.push_back(4);
@@ -108,13 +110,13 @@ void zgAnalysis(
   delete fElSF;
 
   TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
-  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Medium_Muon"));
+  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon"));
   assert(fhDMuMediumSF);
   fhDMuMediumSF->SetDirectory(0);
   delete fMuSF;
 
   double eventsTrg[5] = {0,0,0,0,0};
-  double dataPrescale[5] = {34.735361,7.310302,3.421504,1.440482,1.0};
+  double dataPrescale[5] = {42.056226,8.326800,3.998918,1.629775,1.0};
 
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000};
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000};

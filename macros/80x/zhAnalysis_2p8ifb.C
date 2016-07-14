@@ -26,7 +26,7 @@ int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
-double mcPrescale = 100.;
+double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -2319,7 +2319,7 @@ void zhAnalysis_2p8ifb(
     yield_processTypes[nModel][6] = histo_ZH_hinv[nModel]->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][6]);
     yield_processTypes[nModel][7] = histo_ggZH_hinv      ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][7]);
     yield_processTypes[nModel][histBins] = yield_processTypes[nModel][1] + yield_processTypes[nModel][2] + yield_processTypes[nModel][3] + yield_processTypes[nModel][4] + yield_processTypes[nModel][5];
-    yield_processTypes[nModel][histBins] = sqrt(
+    stat_processTypes[nModel][histBins] = sqrt(
       pow(stat_processTypes[nModel][1], 2) + 
       pow(stat_processTypes[nModel][2], 2) + 
       pow(stat_processTypes[nModel][3], 2) + 

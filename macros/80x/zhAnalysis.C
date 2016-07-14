@@ -2319,7 +2319,7 @@ void zhAnalysis(
     yield_processTypes[nModel][6] = histo_ZH_hinv[nModel]->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][6]);
     yield_processTypes[nModel][7] = histo_ggZH_hinv      ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][7]);
     yield_processTypes[nModel][histBins] = yield_processTypes[nModel][1] + yield_processTypes[nModel][2] + yield_processTypes[nModel][3] + yield_processTypes[nModel][4] + yield_processTypes[nModel][5];
-    yield_processTypes[nModel][histBins] = sqrt(
+    stat_processTypes[nModel][histBins] = sqrt(
       pow(stat_processTypes[nModel][1], 2) + 
       pow(stat_processTypes[nModel][2], 2) + 
       pow(stat_processTypes[nModel][3], 2) + 

@@ -41,8 +41,8 @@ void zhAnalysis_2p8ifb(
  bool verbose = false
  ){
 
-  system("mkdir -p MitZHAnalysis/datacards_2p6ifb");
-  system("mkdir -p MitZHAnalysis/plots_2p6ifb");
+  system("mkdir -p MitZHAnalysis/datacards_2p8ifb");
+  system("mkdir -p MitZHAnalysis/plots_2p8ifb");
   Int_t period = 1;
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
   TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
@@ -59,10 +59,10 @@ void zhAnalysis_2p8ifb(
   TString puPath = "";
   TString zjetsTemplatesPath = "";
 
-  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_2p6ifb.root";
+  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_2p8ifb.root";
 
   // Data files
-  infileName_.push_back(Form("%sdata_2p6ifb.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_2p8ifb.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   
   // Monte carlo backgrounds
   infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
@@ -202,6 +202,19 @@ void zhAnalysis_2p8ifb(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
   } 
 
+  { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep scalarmonoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
+    int i=signalName_.size();
+    signalName_.push_back("scalarmonoz_med-25_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-25_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-100_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-300_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-600_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1000_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1300_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1500_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1800_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-2000_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+  }
+
   int nSigModels=signalName_.size();
 
   if(infileName_.size() != infileCategory_.size()) {assert(0); return;}
@@ -226,7 +239,7 @@ void zhAnalysis_2p8ifb(
   fhDPU->SetDirectory(0);
   delete fPUFile;
 
-  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_2p6ifb.root"));
+  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_2p8ifb.root"));
   TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("scalefactors_Medium_Electron"));
   TH2D *fhDElTightSF = (TH2D*)(fElSF->Get("scalefactors_Tight_Electron"));
   assert(fhDElMediumSF);
@@ -235,7 +248,7 @@ void zhAnalysis_2p8ifb(
   fhDElTightSF->SetDirectory(0);
   delete fElSF;
 
-  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_2p6ifb.root"));
+  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_2p8ifb.root"));
   TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon"));
   assert(fhDMuMediumSF);
   fhDMuMediumSF->SetDirectory(0);
@@ -1357,7 +1370,7 @@ void zhAnalysis_2p8ifb(
       }
       printf("(...bkg): %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f | %9.2f +/- %7.2f\n",
              sumEventsType[0],sqrt(sumEventsTypeE[0]),sumEventsType[1],sqrt(sumEventsTypeE[1]),
-  	   sumEventsType[2],sqrt(sumEventsTypeE[2]),sumEventsType[3],sqrt(sumEventsTypeE[3]));
+  	     sumEventsType[2],sqrt(sumEventsTypeE[2]),sumEventsType[3],sqrt(sumEventsTypeE[3]));
     }
   }
 
@@ -2364,10 +2377,12 @@ void zhAnalysis_2p8ifb(
        processName[np].Data(),
          bgdDecay[nModel][ns+nSelTypes*typeSel][np], sqrt(weiDecay[nModel][ns+nSelTypes*typeSel][np]), syst_processTypes[nModel][np]
        );
-       sumEventsType[0] = sumEventsType[0] + bgdDecay[nModel][ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[nModel][ns+nSelTypes*0][np];
-       sumEventsType[1] = sumEventsType[1] + bgdDecay[nModel][ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[nModel][ns+nSelTypes*1][np];
-       sumEventsType[2] = sumEventsType[2] + bgdDecay[nModel][ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[nModel][ns+nSelTypes*2][np];
-       sumEventsType[3] = sumEventsType[3] + bgdDecay[nModel][ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[nModel][ns+nSelTypes*3][np];
+       if(np!=0 && np!=6 && np!=7) {
+         sumEventsType[0] = sumEventsType[0] + bgdDecay[nModel][ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[nModel][ns+nSelTypes*0][np];
+         sumEventsType[1] = sumEventsType[1] + bgdDecay[nModel][ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[nModel][ns+nSelTypes*1][np];
+         sumEventsType[2] = sumEventsType[2] + bgdDecay[nModel][ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[nModel][ns+nSelTypes*2][np];
+         sumEventsType[3] = sumEventsType[3] + bgdDecay[nModel][ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[nModel][ns+nSelTypes*3][np];
+       }
     }
     printf("(...bkg): %9.2f +/- %7.2f +/- %7.2f\n",
          sumEventsType[typeSel], sqrt(sumEventsTypeE[typeSel]), syst_processTypes[nModel][histBins] 

@@ -1600,6 +1600,8 @@ void zhAnalysis(
   }
 
   double process_syst[nSigModels][7];
+  double yield_processTypes[nSigModels][histBins+1];
+  double stat_processTypes[nSigModels][histBins+1];
   double syst_processTypes[nSigModels][histBins+1];
   double syst_types_allBackground[28];
   char outputLimits[200];
@@ -2291,15 +2293,6 @@ void zhAnalysis(
       else if(histo_ggZH_hinv->GetBinContent(nb) > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
   
     }
-    double totalProcessYield[7] = {
-      histo_ZH_hinv[nModel]->Integral(1,nBinMVA),
-      histo_Zjets->Integral(1,nBinMVA),
-      histo_VVV->Integral(1,nBinMVA),
-      histo_WZ->Integral(1,nBinMVA),
-      histo_ZZ->Integral(1,nBinMVA),
-      histo_EM->Integral(1,nBinMVA),
-      histo_ggZH_hinv->Integral(1,nBinMVA)
-    };
     syst_processTypes[nModel][histBins] =0;
     for(int systType=0; systType<28; systType++) {
       syst_processTypes[nModel][histBins] += pow(
@@ -2310,7 +2303,6 @@ void zhAnalysis(
         process_syst_type[5][systType] 
       ,2);
     }
-    //double syst_types_allBackground[28];
     for(int processType=0; processType<7; processType++) {
       process_syst[nModel][processType]=0;
       for(int systType=0; systType<28; systType++) {
@@ -2318,6 +2310,22 @@ void zhAnalysis(
       }
       process_syst[nModel][processType] = sqrt(process_syst[nModel][processType]);
     }
+    yield_processTypes[nModel][0] = histo_Data           ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][0]);
+    yield_processTypes[nModel][1] = histo_EM             ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][1]);
+    yield_processTypes[nModel][2] = histo_Zjets          ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][2]);
+    yield_processTypes[nModel][3] = histo_WZ             ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][3]);
+    yield_processTypes[nModel][4] = histo_ZZ             ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][4]);
+    yield_processTypes[nModel][5] = histo_VVV            ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][5]);
+    yield_processTypes[nModel][6] = histo_ZH_hinv[nModel]->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][6]);
+    yield_processTypes[nModel][7] = histo_ggZH_hinv      ->IntegralAndError(2, nBinMVA, stat_processTypes[nModel][7]);
+    yield_processTypes[nModel][histBins] = yield_processTypes[nModel][1] + yield_processTypes[nModel][2] + yield_processTypes[nModel][3] + yield_processTypes[nModel][4] + yield_processTypes[nModel][5];
+    yield_processTypes[nModel][histBins] = sqrt(
+      pow(stat_processTypes[nModel][1], 2) + 
+      pow(stat_processTypes[nModel][2], 2) + 
+      pow(stat_processTypes[nModel][3], 2) + 
+      pow(stat_processTypes[nModel][4], 2) + 
+      pow(stat_processTypes[nModel][5], 2)
+    );
     syst_processTypes[nModel][0] = 0;
     syst_processTypes[nModel][1] = process_syst[nModel][5];
     syst_processTypes[nModel][2] = process_syst[nModel][1];
@@ -2327,8 +2335,6 @@ void zhAnalysis(
     syst_processTypes[nModel][6] = process_syst[nModel][0];
     syst_processTypes[nModel][7] = process_syst[nModel][6];
     syst_processTypes[nModel][histBins] = sqrt(syst_processTypes[nModel][8]); //all background
-
-    //TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
   }
   
   bool doABCDstudy=false;  
@@ -2370,25 +2376,18 @@ void zhAnalysis(
   for(int nModel=0; nModel<nSigModels; nModel++) {
     printf("Model: %s (# %d)\n", signalName_[nModel].Data(), nModel); 
     printf("-----------------------------------------------------------------------------------------------------------\n");
-    int ns=SIGSEL;
-    printf("Selection: %s\n",selTypeName[ns].Data());
-    double sumEventsType[4] = {0,0,0,0}; double sumEventsTypeE[4] = {0,0,0,0};
+    printf("Selection: %s\n",selTypeName[TIGHTSEL].Data());
     for(int np=0; np<histBins; np++) {       
        printf("(%6s): %9.2f +/- %7.2f +/- %7.2f\n",
        processName[np].Data(),
-         bgdDecay[nModel][ns+nSelTypes*typeSel][np], sqrt(weiDecay[nModel][ns+nSelTypes*typeSel][np]), syst_processTypes[nModel][np]
+         yield_processTypes[nModel][np], stat_processTypes[nModel][np], syst_processTypes[nModel][np]
        );
-       if(np!=0 && np!=6 && np!=7) {
-         sumEventsType[0] = sumEventsType[0] + bgdDecay[nModel][ns+nSelTypes*0][np]; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[nModel][ns+nSelTypes*0][np];
-         sumEventsType[1] = sumEventsType[1] + bgdDecay[nModel][ns+nSelTypes*1][np]; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[nModel][ns+nSelTypes*1][np];
-         sumEventsType[2] = sumEventsType[2] + bgdDecay[nModel][ns+nSelTypes*2][np]; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[nModel][ns+nSelTypes*2][np];
-         sumEventsType[3] = sumEventsType[3] + bgdDecay[nModel][ns+nSelTypes*3][np]; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[nModel][ns+nSelTypes*3][np];
-       }
     }
     printf("(...bkg): %9.2f +/- %7.2f +/- %7.2f\n",
-         sumEventsType[typeSel], sqrt(sumEventsTypeE[typeSel]), syst_processTypes[nModel][histBins] 
+      yield_processTypes[nModel][histBins], stat_processTypes[nModel][histBins], syst_processTypes[nModel][histBins] 
     );
     printf("-----------------------------------------------------------------------------------------------------------\n");
-    
+
   }
 }
+

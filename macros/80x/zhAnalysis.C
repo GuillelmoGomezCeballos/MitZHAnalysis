@@ -255,6 +255,34 @@ void zhAnalysis(
   fhDMuMediumSF->SetDirectory(0);
   delete fMuSF;
 
+  // Dilepton trigger efficiencies
+  TFile *fEffDilepTrigs = TFile::Open(Form("MitAnalysisRunII/data/80x/dilepton_trigger_efficiencies_80x.root")); 
+  TH2D *fhDEffDimuonSoup_pt0     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_0"));
+  TH2D *fhDEffDimuonSoup_pt1     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_1"));
+  TH2D *fhDEffDimuonSoup_pt2     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_2"));
+  TH2D *fhDEffDimuonSoup_pt3     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_3"));
+  TH2D *fhDEffDielectronSoup_pt0 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_0"));
+  TH2D *fhDEffDielectronSoup_pt1 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_1"));
+  TH2D *fhDEffDielectronSoup_pt2 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_2"));
+  TH2D *fhDEffDielectronSoup_pt3 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_3"));
+  assert(fhDEffDimuonSoup_pt0    );  
+  assert(fhDEffDimuonSoup_pt1    ); 
+  assert(fhDEffDimuonSoup_pt2    ); 
+  assert(fhDEffDimuonSoup_pt3    ); 
+  assert(fhDEffDielectronSoup_pt0); 
+  assert(fhDEffDielectronSoup_pt1); 
+  assert(fhDEffDielectronSoup_pt2); 
+  assert(fhDEffDielectronSoup_pt3); 
+  fhDEffDimuonSoup_pt0     ->SetDirectory(0); 
+  fhDEffDimuonSoup_pt1     ->SetDirectory(0); 
+  fhDEffDimuonSoup_pt2     ->SetDirectory(0); 
+  fhDEffDimuonSoup_pt3     ->SetDirectory(0); 
+  fhDEffDielectronSoup_pt0 ->SetDirectory(0); 
+  fhDEffDielectronSoup_pt1 ->SetDirectory(0); 
+  fhDEffDielectronSoup_pt2 ->SetDirectory(0); 
+  fhDEffDielectronSoup_pt3 ->SetDirectory(0); 
+  delete fEffDilepTrigs;
+
   TString ECMsb  = "13TeV2015";
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
@@ -978,6 +1006,21 @@ void zhAnalysis(
 
       // trigger efficiency
       double trigEff = 1.0;
+      if(infileCategory_[ifile] != 0) { 
+        if(typePair==1) {
+          int nbin = fhDEffDimuonSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDimuonSoup_pt0->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDimuonSoup_pt1->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDimuonSoup_pt2->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDimuonSoup_pt3->GetBinContent(nbin);
+        } else if(typePair==2) {
+          int nbin = fhDEffDielectronSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDielectronSoup_pt0->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDielectronSoup_pt1->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDielectronSoup_pt2->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDielectronSoup_pt3->GetBinContent(nbin);
+        }
+      }
       //if(infileCategory_[ifile] != 0) {
       //  trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
       //  						  ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),
@@ -2189,7 +2232,7 @@ void zhAnalysis(
         process_syst_type[5][24] +=  0;                                                            //WZ_tau2016
         process_syst_type[5][25] +=  0;                                                            //ZLLNorm2016
         process_syst_type[5][26] +=  TMath::Abs(1.-systEM[0])*histo_EM->GetBinContent(nb);         //EMSyst
-        process_syst_type[5][27] +=  histo_EM->GetBinContent(nb) * (systEM[1]!=0 ? 1 : sqrt(systEM[1]));                //EMNorm
+        process_syst_type[5][27] +=  histo_EM->GetBinContent(nb) / sqrt(systEM[1]);                //EMNorm
         // gg signal systs by type
         process_syst_type[6][0]  +=  TMath::Abs(1.-lumiE)*histo_ggZH_hinv->GetBinContent(nb);                           //lumi2016
         process_syst_type[6][1]  +=  TMath::Abs(1.-systLepEffM[4])*histo_ggZH_hinv->GetBinContent(nb);                  //eff_m

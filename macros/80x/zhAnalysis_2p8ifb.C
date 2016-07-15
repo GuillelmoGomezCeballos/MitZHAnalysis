@@ -1020,6 +1020,7 @@ void zhAnalysis_2p8ifb(
           if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDielectronSoup_pt3->GetBinContent(nbin);
         }
       }
+      trigEff = 1.0;
       //if(infileCategory_[ifile] != 0) {
       //  trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
       //  						  ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),
@@ -1599,7 +1600,7 @@ void zhAnalysis_2p8ifb(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"MitZHAnalysis/plots/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots_2p8ifb/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -1650,7 +1651,7 @@ void zhAnalysis_2p8ifb(
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
 
-    sprintf(outputLimits,"MitZHAnalysis/plots/zll%shinv%s_%s_input_%s.root", addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
+    sprintf(outputLimits,"MitZHAnalysis/plots_2p8ifb/zll%shinv%s_%s_input_%s.root", addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
     
@@ -2263,7 +2264,7 @@ void zhAnalysis_2p8ifb(
         process_syst_type[6][27] +=  0;                                                                                 //EMNorm
       }                                                                       
       char outputLimitsShape[200];                                            
-      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards_2p8ifb/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
       ofstream newcardShape;
       newcardShape.open(outputLimitsShape);
       newcardShape << Form("imax 1 number of channels\n");
@@ -2335,7 +2336,6 @@ void zhAnalysis_2p8ifb(
       else if(histo_ggZH_hinv->GetBinContent(nb) > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
   
     }
-    
     syst_processTypes[nModel][histBins] =0;
     for(int systType=0; systType<28; systType++) {
       syst_processTypes[nModel][histBins] += pow(

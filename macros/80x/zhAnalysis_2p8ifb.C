@@ -1008,16 +1008,16 @@ void zhAnalysis_2p8ifb(
       if(infileCategory_[ifile] != 0) { 
         if(typePair==1) {
           int nbin = fhDEffDimuonSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDimuonSoup_pt0->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDimuonSoup_pt1->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDimuonSoup_pt2->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDimuonSoup_pt3->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDimuonSoup_pt0->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDimuonSoup_pt1->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDimuonSoup_pt2->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDimuonSoup_pt3->GetBinContent(nbin);
         } else if(typePair==2) {
           int nbin = fhDEffDielectronSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDielectronSoup_pt0->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDielectronSoup_pt1->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  35) trigEff=fhDEffDielectronSoup_pt2->GetBinContent(nbin);
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 35 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 35) trigEff=fhDEffDielectronSoup_pt3->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDielectronSoup_pt0->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDielectronSoup_pt1->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDielectronSoup_pt2->GetBinContent(nbin);
+          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDielectronSoup_pt3->GetBinContent(nbin);
         }
       }
       trigEff = 1.0;

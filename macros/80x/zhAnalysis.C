@@ -203,17 +203,46 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
   } 
 
-  { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep scalarmonoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
+  { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep monoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
-    signalName_.push_back("scalarmonoz_med-25_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-25_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-100_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-300_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-600_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1000_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1300_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1500_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1800_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-2000_dm-50_gq-0.25.root"); infileName_.push_back(Form("%sscalarmonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-10_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-10_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-110_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-110_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-160_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-160_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-210_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-210_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-260_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-260_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-310_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-310_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-360_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-360_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-410_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-410_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-500_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-500_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-600_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-600_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-60_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-60_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("pseudoscalarmonoz_med-700_dm-50"); infileName_.push_back(Form("%spseudoscalarmonoz_med-700_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1000_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-100_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-10_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-10_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-110_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-110_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1300_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1500_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-160_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-160_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-1800_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-2000_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-210_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-210_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-25_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-25_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-260_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-260_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-300_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-410_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-410_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-600_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-600_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-600_dm-50_gq-0.25"); infileName_.push_back(Form("%sscalarmonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-60_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-60_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("scalarmonoz_med-700_dm-50"); infileName_.push_back(Form("%sscalarmonoz_med-700_dm-50.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-1000_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-100_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-1300_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-1500_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-1800_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-2000_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-300_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
+    signalName_.push_back("vectormonoz_med-600_dm-50_gq-0.25"); infileName_.push_back(Form("%svectormonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
   }
 
   int nSigModels=signalName_.size();

@@ -1225,6 +1225,22 @@ void zhAnalysis_lxplus(
 
         if     (theCategory == 0){
 	  if(passAllCuts[SIGSEL]) histo_Data->Fill(MVAVar,totalWeight);
+          if(passAllCuts[TIGHTSEL] && verbose) {
+            if      (typePair==1) printf("mm data event: ");
+            else if (typePair==2) printf("ee data event: " );
+            else if (typePair==3) printf("em data event: " );
+            printf("runnumber %d lumisection %d eventnumber %lld ptll %f MET %f njets %d l1_pt %f l1_eta %f l2_pt %f l2_eta %f balance %f\n",
+              eventEvent.runNum,
+              eventEvent.lumiNum,
+              eventEvent.eventNum,
+              dilep.Pt(),
+              ((TLorentzVector*)(*eventMet.p4)[0])->Pt(),
+              idJet.size(),
+              ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(), ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),
+              ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(), ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),
+              ptFrac
+            );
+          }
         }
         else if(theCategory == 1){
 	  if(passAllCuts[SIGSEL]) histo_EM   ->Fill(MVAVar,totalWeight);

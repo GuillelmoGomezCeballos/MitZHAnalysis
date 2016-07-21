@@ -63,7 +63,8 @@ void zhAnalysis_lxplus(
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
 
   // Data files
-  infileName_.push_back(Form("%sSingleElectron/SingleElectron_0/160720_115510/0000/NeroNtuples_369.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
+  infileName_.push_back(Form("eos/cms/store/user/zdemirag/ForMonoZ/zey_base/MuonEG/MounEG-Run2016D-v2/160721_115108/0000/NeroNtuples_150.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
+  //infileName_.push_back(Form("%sSingleElectron/SingleElectron_0/160720_115510/0000/NeroNtuples_369.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   //infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   //infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
  
@@ -787,7 +788,28 @@ void zhAnalysis_lxplus(
              (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v")                    == 0) ||
              (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v")                    == 0) ||
              (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v")			      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v")			      == 0)
+             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v")			      == 0) ||
+             (strcmp(tokens[nt],"Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v")  == 0) ||
+             (strcmp(tokens[nt],"Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v")  == 0) ||
+             (strcmp(tokens[nt],"Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v") == 0) ||
+             (strcmp(tokens[nt],"Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v") == 0) ||
+             (strcmp(tokens[nt],"Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v")  == 0) ||
+             (strcmp(tokens[nt],"Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v") 	              == 0) ||
+             (strcmp(tokens[nt],"Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v")	      == 0) ||
+             (strcmp(tokens[nt],"Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v") 	      == 0) ||
+             (strcmp(tokens[nt],"Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v")	      == 0) ||
+             (strcmp(tokens[nt],"IsoMu20_v") 				      == 0) ||
+             (strcmp(tokens[nt],"IsoTkMu20_v") 				      == 0) ||
+             (strcmp(tokens[nt],"IsoMu22_v") 				      == 0) ||
+             (strcmp(tokens[nt],"IsoTkMu22_v") 				      == 0) ||
+             (strcmp(tokens[nt],"IsoMu24_v")				      == 0) ||
+             (strcmp(tokens[nt],"IsoTkMu24_v")				      == 0) ||
+             (strcmp(tokens[nt],"Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v")	      == 0) ||
+             (strcmp(tokens[nt],"Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v")	      == 0) ||
+             (strcmp(tokens[nt],"Ele25_eta2p1_WPTight_Gsf_v")                    == 0) ||
+             (strcmp(tokens[nt],"Ele27_eta2p1_WPLoose_Gsf_v")                    == 0) ||
+             (strcmp(tokens[nt],"Ele27_WPTight_Gsf_v")			      == 0) ||
+             (strcmp(tokens[nt],"Ele35_WPLoose_Gsf_v")			      == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}

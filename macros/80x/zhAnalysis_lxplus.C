@@ -33,7 +33,7 @@ enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystType
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
 
-void zhAnalysis(
+void zhAnalysis_lxplus(
  unsigned int nJetsType = 1,
  bool isBlinded = false,
  Int_t typeSel = 3,

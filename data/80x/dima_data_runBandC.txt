@@ -1,0 +1,2 @@
+/afs/cern.ch/work/d/dhsu/nero/data_Run2016B.root
+/afs/cern.ch/work/d/dhsu/nero/data_Run2016C.root

@@ -19,6 +19,7 @@
 #include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
+#include "MitZHAnalysis/macros/80x/goodrun_ichep.h"
 
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 
@@ -63,7 +64,14 @@ void zhAnalysis_lxplus(
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
 
   // Data files
-  infileName_.push_back(Form("eos/cms/store/user/zdemirag/ForMonoZ/zey_base/MuonEG/MounEG-Run2016D-v2/160721_115108/0000/NeroNtuples_150.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
+  ifstream ifs("MitZHAnalysis/data/80x/dima_data_runD.txt");
+  assert(ifs);
+  string input_file_name;
+  while(getline(ifs,input_file_name)) {
+    infileName_.push_back(input_file_name);
+    infileCategory_.push_back(0);
+  }
+  //infileName_.push_back(Form("eos/cms/store/user/zdemirag/ForMonoZ/zey_base/MuonEG/MounEG-Run2016D-v2/160721_115108/0000/NeroNtuples_150.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   //infileName_.push_back(Form("%sSingleElectron/SingleElectron_0/160720_115510/0000/NeroNtuples_369.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   //infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
   //infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));																 infileCategory_.push_back(0);
@@ -670,12 +678,20 @@ void zhAnalysis_lxplus(
   //*******************************************************
   for(UInt_t ifile=0; ifile<infileName_.size(); ifile++) {
 
-    TFile the_input_file(infileName_[ifile]);
+    TFile *the_input_file=0;
+    the_input_file=TFile::Open(infileName_[ifile],"READ");
+    if(!the_input_file) {
+      printf("Issue reading the file, waiting 30 seconds and retrying...\n");
+      usleep(30*1000*1000);
+      the_input_file=TFile::Open(infileName_[ifile],"READ");
+    }
+    if(!the_input_file) continue;
+    //TFile the_input_file(infileName_[ifile]);
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
-    TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
+    TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
-    TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
+    TTree *the_PDF_tree   = (TTree*)the_input_file->FindObjectAny("pdfReweight");
     //TTree *the_SelBit_tree= (TTree*)the_input_file.FindObjectAny("SelBit_tree");
 
     BareEvent eventEvent;
@@ -704,7 +720,7 @@ void zhAnalysis_lxplus(
     BareMonteCarlo eventMonteCarlo;
     eventMonteCarlo.setBranchAddresses(the_input_tree);
 
-    TNamed *triggerNames = (TNamed*)the_input_file.FindObjectAny("triggerNames");
+    TNamed *triggerNames = (TNamed*)the_input_file->FindObjectAny("triggerNames");
     char **tokens;
     size_t numtokens;
     tokens = strsplit(triggerNames->GetTitle(), ",", &numtokens);
@@ -755,12 +771,41 @@ void zhAnalysis_lxplus(
     histoZHSEL[3]->Scale(0.0);
     double theMCPrescale = mcPrescale;
     if(infileCategory_[ifile] == 0) theMCPrescale = 1.0;
+
+    std::map<ULong64_t, std::set<ULong64_t> > DoubleChecker;
+    ULong64_t doubleCount = 0;
+          
     for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
       //the_SelBit_tree->GetEntry(i);
       if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
       //if((selBit_ & 0x1<<whichSkim) == 0) continue;
       the_input_tree->GetEntry(i);
 
+      if(infileCategory_[ifile] == 0) {
+        // start duplicate event removal
+        Bool_t DuplicateEvent = kFALSE;
+        std::map<ULong64_t, std::set<ULong64_t> >::iterator runner = DoubleChecker.find(eventEvent.runNum);
+        if (runner == DoubleChecker.end()){
+          std::set<ULong64_t> evtTemp;
+          evtTemp.insert(eventEvent.runNum);
+          DoubleChecker.insert( make_pair(eventEvent.runNum, evtTemp));
+        }
+        else{
+          std::set<ULong64_t>::iterator evter = (*runner).second.find(eventEvent.eventNum);
+          if (evter == (*runner).second.end()){
+            (*runner).second.insert(eventEvent.eventNum);
+          }
+          else { DuplicateEvent = kTRUE;
+          }
+        }
+        if(DuplicateEvent) doubleCount++;
+        if(DuplicateEvent) continue;
+        // end duplicate event removal
+        // good run list
+        if(!goodrun_ichep(eventEvent.runNum, eventEvent.lumiNum)) continue;
+
+      }
+      
       Bool_t passFilter[4] = {kFALSE,kFALSE,kFALSE,kFALSE};
       if(eventLeptons.p4->GetEntriesFast() >= 2 &&
      	 ((TLorentzVector*)(*eventLeptons.p4)[0])->Pt() > 20 && 

@@ -44,7 +44,7 @@ void zgAnalysis(
 
   TString filesPathDA  = "/scratch/ceballos/ntuples_weightsDA_80x/";
   TString filesPathMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 5.7;
+  Double_t lumi = 12.9;
 
   double denFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   double numFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -71,9 +71,11 @@ void zgAnalysis(
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
   infilenamev.push_back(Form("%sSinglePhoton+Run2016B-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
   infilenamev.push_back(Form("%sSinglePhoton+Run2016C-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2016D-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
   } else {
   infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
   infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
   }  
 
   infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-40to130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));         infilecatv.push_back(3);
@@ -99,12 +101,11 @@ void zgAnalysis(
   TH1D *fhDPUDown = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPUDown);fhDPUDown->SetDirectory(0);
   delete fPUFile;
 
-  TFile *fTrackReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/trackReco_SF.root"));
-  TH1D *fhDmutrksfptg10 = (TH1D*)(fTrackReco_SF->Get("mutrksfptg10")); assert(fhDmutrksfptg10); fhDmutrksfptg10->SetDirectory(0);
-  //TH1D *fhDmutrksfptl10 = (TH1D*)(fTrackReco_SF->Get("mutrksfptl10")); assert(fhDmutrksfptl10); fhDmutrksfptl10->SetDirectory(0);
-  delete fTrackReco_SF;
+  TFile *fTrackElectronReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_13p0ifb.root"));
+  TH2D *fhDeltrksf= (TH2D*)(fTrackElectronReco_SF->Get("scalefactors_Reco_Electron")); assert(fhDeltrksf); fhDeltrksf->SetDirectory(0);
+  delete fTrackElectronReco_SF;
 
-  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
+  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_13p0ifb.root"));
   TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("scalefactors_Medium_Electron"));
   TH2D *fhDElTightSF = (TH2D*)(fElSF->Get("scalefactors_Tight_Electron"));
   assert(fhDElMediumSF);
@@ -112,6 +113,11 @@ void zgAnalysis(
   fhDElMediumSF->SetDirectory(0);
   fhDElTightSF->SetDirectory(0);
   delete fElSF;
+
+  TFile *fTrackMuonReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/trackMuReco_SF.root"));
+  TH1D *fhDmutrksfptg10 = (TH1D*)(fTrackMuonReco_SF->Get("mutrksfptg10")); assert(fhDmutrksfptg10); fhDmutrksfptg10->SetDirectory(0);
+  //TH1D *fhDmutrksfptl10 = (TH1D*)(fTrackMuonReco_SF->Get("mutrksfptl10")); assert(fhDmutrksfptl10); fhDmutrksfptl10->SetDirectory(0);
+  delete fTrackMuonReco_SF;
 
   TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
   TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon"));
@@ -554,7 +560,7 @@ void zgAnalysis(
         for(unsigned int nl=0; nl<idLep.size(); nl++){
           effSF = effSF * effhDScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),
 	        ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),
-		typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10);
+		typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF);
         }
       }
 

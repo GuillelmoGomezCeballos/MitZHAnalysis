@@ -119,14 +119,18 @@ void zgAnalysis(
   //TH1D *fhDmutrksfptl10 = (TH1D*)(fTrackMuonReco_SF->Get("mutrksfptl10")); assert(fhDmutrksfptl10); fhDmutrksfptl10->SetDirectory(0);
   delete fTrackMuonReco_SF;
 
-  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
-  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon"));
-  assert(fhDMuMediumSF);
-  fhDMuMediumSF->SetDirectory(0);
+  //TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
+  //TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
+  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonID_Z_RunBCD_prompt80X_7p65.root"));
+  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
   delete fMuSF;
 
+  TFile *fMuIsoSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonIso_Z_RunBCD_prompt80X_7p65.root"));
+  TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
+  delete fMuIsoSF;
+
   double eventsTrg[5] = {0,0,0,0,0};
-  double dataPrescale[5] = {42.056226,8.326800,3.998918,1.629775,1.0};
+  double dataPrescale[5] = {49.564493,9.465889,4.641124,1.807337,1.0};
 
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000};
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000};

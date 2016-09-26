@@ -45,8 +45,8 @@ void zhAnalysis(
 
   system("mkdir -p MitZHAnalysis/datacards");
   system("mkdir -p MitZHAnalysis/plots");
-  bool makeMVAtrees=false;
-  bool useBDT=true;
+  bool makeMVAtrees=true;
+  bool useBDT=false;
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
@@ -92,8 +92,8 @@ void zhAnalysis(
   // Monte carlo backgrounds
   infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
   infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
-  //infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTT_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
+  //infileName_.push_back(Form("%sTT_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));    infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));infileCategory_.push_back(1);
 
@@ -351,12 +351,12 @@ void zhAnalysis(
   TString ECMsb  = "13TeV2015";
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  // const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   ////const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00}; TString addChan = "4";
-  const int MVAVarType = 5; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] =  {-1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6}; TString addChan = "5";
+  // const int MVAVarType = 5; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] =  {-1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6}; TString addChan = "5";
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
@@ -697,17 +697,25 @@ void zhAnalysis(
   TTree *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
+           mva_cos_theta_star_l1,
+           mva_cos_theta_star_l2,
            mva_delphi_ptll_MET,
            mva_delphi_ll,
            mva_delphi_jet_MET,
+           mva_deltaR_ll,
+           mva_etall,
+           mva_etal1,
+           mva_etal2,
            mva_MET,
-           mva_mll,
+           mva_mll_minus_mZ,
+           mva_mTjetMET,
            mva_mTll,
            mva_mTl1MET,
            mva_mTl2MET,
            mva_ptll,
            mva_ptl1,
            mva_ptl2,
+           mva_ptl1mptl2_over_ptll,
            mva_response,
            mva_weight;
   UChar_t  mva_njets,
@@ -719,7 +727,7 @@ void zhAnalysis(
            mva_reader_delphi_ll,
            mva_reader_delphi_jet_MET,
            mva_reader_MET,
-           mva_reader_mll,
+           mva_reader_mll_minus_mZ,
            mva_reader_mTll,
            mva_reader_mTl1MET,
            mva_reader_mTl2MET,
@@ -735,24 +743,33 @@ void zhAnalysis(
   if(makeMVAtrees) {
     mva_trees=new TFile("MitZHAnalysis/mva/mva_input_trees.root", "RECREATE");
     Zjets_mva_tree = new TTree("bkg_mva_tree_Zjets", "MVA input tree with Drell-Yan background events");
-    Zjets_mva_tree->Branch( "mva_balance"         , &mva_balance         , "mva_balance/F"         ); 
-    Zjets_mva_tree->Branch( "mva_delphi_ptll_MET" , &mva_delphi_ptll_MET , "mva_delphi_ptll_MET/F" ); 
-    Zjets_mva_tree->Branch( "mva_delphi_ll"       , &mva_delphi_ll       , "mva_delphi_ll/F"       ); 
-    Zjets_mva_tree->Branch( "mva_delphi_jet_MET"  , &mva_delphi_jet_MET  , "mva_delphi_jet_MET/F"  ); 
-    Zjets_mva_tree->Branch( "mva_MET"             , &mva_MET             , "mva_MET/F"             ); 
-    Zjets_mva_tree->Branch( "mva_mll"             , &mva_mll             , "mva_mll/F"             ); 
-    Zjets_mva_tree->Branch( "mva_mTll"            , &mva_mTll            , "mva_mTll/F"            ); 
-    Zjets_mva_tree->Branch( "mva_mTl1MET"         , &mva_mTl1MET         , "mva_mTl1MET/F"         ); 
-    Zjets_mva_tree->Branch( "mva_mTl2MET"         , &mva_mTl2MET         , "mva_mTl2MET/F"         ); 
-    Zjets_mva_tree->Branch( "mva_njets"           , &mva_njets           , "mva_njets/O"           ); 
-    Zjets_mva_tree->Branch( "mva_3lveto"          , &mva_3lveto          , "mva_3lveto/b"          ); 
-    Zjets_mva_tree->Branch( "mva_btag_veto"       , &mva_btag_veto       , "mva_btag_veto/b"       ); 
-    Zjets_mva_tree->Branch( "mva_ntaus"           , &mva_ntaus           , "mva_ntaus/O"           ); 
-    Zjets_mva_tree->Branch( "mva_ptll"            , &mva_ptll            , "mva_ptll/F"            ); 
-    Zjets_mva_tree->Branch( "mva_ptl1"            , &mva_ptl1            , "mva_ptl1/F"            ); 
-    Zjets_mva_tree->Branch( "mva_ptl2"            , &mva_ptl2            , "mva_ptl2/F"            ); 
-    Zjets_mva_tree->Branch( "mva_response"        , &mva_response        , "mva_response/F"        ); 
-    Zjets_mva_tree->Branch( "mva_weight"          , &mva_weight          , "mva_weight/F"          ); 
+    Zjets_mva_tree->Branch( "mva_balance"          , &mva_balance          , "mva_balance/F"           ); 
+    Zjets_mva_tree->Branch( "mva_cos_theta_star_l1", &mva_cos_theta_star_l1, "mva_cos_theta_star_l1/F" ); 
+    Zjets_mva_tree->Branch( "mva_cos_theta_star_l2", &mva_cos_theta_star_l2, "mva_cos_theta_star_l2/F" ); 
+    Zjets_mva_tree->Branch( "mva_delphi_ptll_MET"  , &mva_delphi_ptll_MET  , "mva_delphi_ptll_MET/F"   ); 
+    Zjets_mva_tree->Branch( "mva_delphi_ll"        , &mva_delphi_ll        , "mva_delphi_ll/F"         ); 
+    Zjets_mva_tree->Branch( "mva_delphi_jet_MET"   , &mva_delphi_jet_MET   , "mva_delphi_jet_MET/F"    ); 
+    Zjets_mva_tree->Branch( "mva_deltaR_ll"        , &mva_deltaR_ll        , "mva_deltaR_ll/F"         ); 
+    //Zjets_mva_tree->Branch( "mva_deltaR_jet_MET"   , &mva_deltaR_jet_MET   , "mva_deltaR_jet_MET/F"    ); 
+    Zjets_mva_tree->Branch( "mva_etall"            , &mva_etall            , "mva_etall/F"             ); 
+    Zjets_mva_tree->Branch( "mva_etal1"            , &mva_etal1            , "mva_etal1/F"             ); 
+    Zjets_mva_tree->Branch( "mva_etal2"            , &mva_etal2            , "mva_etal2/F"             ); 
+    Zjets_mva_tree->Branch( "mva_MET"              , &mva_MET              , "mva_MET/F"               ); 
+    Zjets_mva_tree->Branch( "mva_mll_minus_mZ"     , &mva_mll_minus_mZ     , "mva_mll_minus_mZ/F"      ); 
+    Zjets_mva_tree->Branch( "mva_mTjetMET"         , &mva_mTjetMET         , "mva_mTjetMET/F"          ); 
+    Zjets_mva_tree->Branch( "mva_mTll"             , &mva_mTll             , "mva_mTll/F"              ); 
+    Zjets_mva_tree->Branch( "mva_mTl1MET"          , &mva_mTl1MET          , "mva_mTl1MET/F"           ); 
+    Zjets_mva_tree->Branch( "mva_mTl2MET"          , &mva_mTl2MET          , "mva_mTl2MET/F"           ); 
+    Zjets_mva_tree->Branch( "mva_njets"            , &mva_njets            , "mva_njets/O"             ); 
+    Zjets_mva_tree->Branch( "mva_3lveto"           , &mva_3lveto           , "mva_3lveto/b"            ); 
+    Zjets_mva_tree->Branch( "mva_btag_veto"        , &mva_btag_veto        , "mva_btag_veto/b"         ); 
+    Zjets_mva_tree->Branch( "mva_ntaus"            , &mva_ntaus            , "mva_ntaus/O"             ); 
+    Zjets_mva_tree->Branch( "mva_ptll"             , &mva_ptll             , "mva_ptll/F"              ); 
+    Zjets_mva_tree->Branch( "mva_ptl1"             , &mva_ptl1             , "mva_ptl1/F"              ); 
+    Zjets_mva_tree->Branch( "mva_ptl2"             , &mva_ptl2             , "mva_ptl2/F"              ); 
+    Zjets_mva_tree->Branch( "ptl1mptl2_over_ptll"  , &mva_ptl1mptl2_over_ptll  , "mva_ptl1mptl2_over_ptll/F"); 
+    Zjets_mva_tree->Branch( "mva_response"         , &mva_response         , "mva_response/F"          ); 
+    Zjets_mva_tree->Branch( "mva_weight"           , &mva_weight           , "mva_weight/F"            ); 
     EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree  ->SetName("bkg_mva_tree_EM" ); EM_mva_tree  ->SetTitle( "MVA input tree with WW/top background events" );
     WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree  ->SetName("bkg_mva_tree_WZ" ); WZ_mva_tree  ->SetTitle( "MVA input tree with WZ background events"     );
     ZZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); ZZ_mva_tree  ->SetName("bkg_mva_tree_ZZ" ); ZZ_mva_tree  ->SetTitle( "MVA input tree with ZZ background events"     );
@@ -770,7 +787,7 @@ void zhAnalysis(
     reader->AddVariable( "mva_delphi_ll"       , &mva_reader_delphi_ll       ); 
     reader->AddVariable( "mva_delphi_jet_MET"  , &mva_reader_delphi_jet_MET  ); 
     reader->AddVariable( "mva_MET"             , &mva_reader_MET             ); 
-    reader->AddVariable( "mva_mll"             , &mva_reader_mll             ); 
+    reader->AddVariable( "mva_mll_minus_mZ"    , &mva_reader_mll_minus_mZ    ); 
     reader->AddVariable( "mva_mTll"            , &mva_reader_mTll            ); 
     reader->AddVariable( "mva_mTl1MET"         , &mva_reader_mTl1MET         ); 
     reader->AddVariable( "mva_mTl2MET"         , &mva_reader_mTl2MET         ); 
@@ -961,6 +978,7 @@ void zhAnalysis(
       double bDiscrMax = 0.0;
       double dPhiJetMET = -1.0;
       double dPhiJetDiLep = -1.0;
+      double mTJetMET = -1.0;
       TLorentzVector dilepJet = dilep;
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 15) continue;
@@ -973,8 +991,10 @@ void zhAnalysis(
 	}
 	if(isLepton == kTRUE) continue;
 
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30 && passId) {
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+          mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))))));
+        }
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) { 
 	   if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
            if ((float)(*eventJets.bDiscr)[nj] > 0.8) idBJet.push_back(nj);
@@ -1029,6 +1049,14 @@ void zhAnalysis(
       TVector2 utv = -1.*(metv+dilv);
       double phiv = utv.DeltaPhi(dilv);
       double the_upara = TMath::Abs(utv.Mod()*TMath::Cos(phiv))/dilep.Pt();
+      
+      TLorentzVector p4_l1_star = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
+      TLorentzVector p4_l2_star = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
+      p4_l1_star.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
+      p4_l2_star.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
+      TVector3 p3_dilep = dilep.Vect(), p3_l1_star = p4_l1_star.Vect(), p3_l2_star = p4_l2_star.Vect();
+      double cos_theta_star_l1 = TMath::Cos( p3_dilep.Dot(p3_l1_star) / ( p3_dilep.Mag() * p3_l1_star.Mag() ) );
+      double cos_theta_star_l2 = TMath::Cos( p3_dilep.Dot(p3_l2_star) / ( p3_dilep.Mag() * p3_l2_star.Mag() ) );
 
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;
@@ -1291,31 +1319,39 @@ void zhAnalysis(
       //totalWeight = 1;
 
       // Save values for MVA trees
-      mva_balance         = ptFrac;
-      mva_delphi_ptll_MET = dPhiDiLepMET; 
-      mva_delphi_ll       = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
-      mva_delphi_jet_MET  = dPhiJetMET; 
-      mva_MET             = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
-      mva_mll             = dilep.M(); 
-      mva_mTll            = mtW; 
-      mva_mTl1MET         = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-      mva_mTl2MET         = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-      mva_ptll            = dilep.Pt(); 
-      mva_ptl1            = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(); 
-      mva_ptl2            = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(); 
-      mva_response        = the_upara; 
-      mva_weight          = totalWeight; 
-      mva_njets           = idJet.size(); 
-      mva_ntaus           = (unsigned char) numberGoodTaus; 
-      mva_btag_veto       = passBtagVeto; 
-      mva_3lveto          = pass3rdLVeto;
+      mva_balance             = ptFrac;
+      mva_delphi_ptll_MET     = dPhiDiLepMET; 
+      mva_cos_theta_star_l1   = cos_theta_star_l1;
+      mva_cos_theta_star_l2   = cos_theta_star_l2;
+      mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
+      mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
+      mva_delphi_jet_MET      = dPhiJetMET;
+      mva_etal1               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta();
+      mva_etal2               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta();
+      mva_etall               = dilep.Eta(); 
+      mva_MET                 = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
+      mva_mll_minus_mZ        = TMath::Abs(dilep.M() - 91.1876); 
+      mva_mTjetMET            = mTJetMET;
+      mva_mTll                = mtW; 
+      mva_mTl1MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+      mva_mTl2MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+      mva_ptll                = dilep.Pt(); 
+      mva_ptl1                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(); 
+      mva_ptl2                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(); 
+      mva_ptl1mptl2_over_ptll = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() - ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()) / dilep.Pt();
+      mva_response            = the_upara; 
+      mva_weight              = totalWeight; 
+      mva_njets               = idJet.size(); 
+      mva_ntaus               = (unsigned char) numberGoodTaus; 
+      mva_btag_veto           = passBtagVeto; 
+      mva_3lveto              = pass3rdLVeto;
 
       mva_reader_balance         = mva_balance;
       mva_reader_delphi_ptll_MET = mva_delphi_ptll_MET;
       mva_reader_delphi_ll       = mva_delphi_ll;
       mva_reader_delphi_jet_MET  = mva_delphi_jet_MET;
       mva_reader_MET             = mva_MET;
-      mva_reader_mll             = mva_mll;
+      mva_reader_mll_minus_mZ    = mva_mll_minus_mZ;
       mva_reader_mTll            = mva_mTll;
       mva_reader_mTl1MET         = mva_mTl1MET;
       mva_reader_mTl2MET         = mva_mTl2MET;

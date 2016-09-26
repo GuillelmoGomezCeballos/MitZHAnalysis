@@ -972,6 +972,7 @@ void zhAnalysis(
       if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
 
       TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
+      TLorentzVector dilepMET( dilep + *((TLorentzVector*)(*eventMet.p4)[0]) );
 
       vector<int> idJet,idJetUp,idJetDown,idBJet;
       bool isBtag = kFALSE;
@@ -991,7 +992,7 @@ void zhAnalysis(
 	}
 	if(isLepton == kTRUE) continue;
 
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30 && passId) {
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
           dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
           mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))))));
         }
@@ -1050,13 +1051,24 @@ void zhAnalysis(
       double phiv = utv.DeltaPhi(dilv);
       double the_upara = TMath::Abs(utv.Mod()*TMath::Cos(phiv))/dilep.Pt();
       
-      TLorentzVector p4_l1_star = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
-      TLorentzVector p4_l2_star = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
-      p4_l1_star.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
-      p4_l2_star.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
-      TVector3 p3_dilep = dilep.Vect(), p3_l1_star = p4_l1_star.Vect(), p3_l2_star = p4_l2_star.Vect();
-      double cos_theta_star_l1 = TMath::Cos( p3_dilep.Dot(p3_l1_star) / ( p3_dilep.Mag() * p3_l1_star.Mag() ) );
-      double cos_theta_star_l2 = TMath::Cos( p3_dilep.Dot(p3_l2_star) / ( p3_dilep.Mag() * p3_l2_star.Mag() ) );
+      // Helicity angle calculation
+      double cos_theta_star_l1, cos_theta_star_l2;
+      {
+        // Leptons in laboratory frame
+        TLorentzVector p4_l1_mother = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
+        TLorentzVector p4_l2_mother = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
+        // Boost back to dilepton (mother) rest frame
+        p4_l1_mother.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
+        p4_l2_mother.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
+        // Z in laboratory frame
+        TLorentzVector p4_mother_grandma = dilep;
+        // Boost back to Z+MET (grandmother) rest frame
+        p4_mother_grandma.Boost( -dilepMET.X()/dilepMET.T(), -dilepMET.Y()/dilepMET.T(), -dilepMET.Z()/dilepMET.T());
+        // Get the 3 vectors of the leptons in the mother's rest frame, and the mother in the grandmother's rest frame
+        TVector3 p3_mother_grandma = p4_mother_grandma.Vect(), p3_l1_mother = p4_l1_mother.Vect(), p3_l2_mother = p4_l2_mother.Vect();
+        cos_theta_star_l1 = p3_mother_grandma.Dot(p3_l1_mother) / ( p3_mother_grandma.Mag() * p3_l1_mother.Mag() );
+        cos_theta_star_l2 = p3_mother_grandma.Dot(p3_l2_mother) / ( p3_mother_grandma.Mag() * p3_l2_mother.Mag() );
+      }
 
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;

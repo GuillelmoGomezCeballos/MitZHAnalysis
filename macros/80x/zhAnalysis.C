@@ -20,6 +20,7 @@
 #include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
+#include "MitAnalysisRunII/macros/80x/helicity.h"
 
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 
@@ -699,6 +700,8 @@ void zhAnalysis(
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
            mva_cos_theta_star_l2,
+           mva_cos_theta_CS_l1,
+           mva_cos_theta_CS_l2,
            mva_delphi_ptll_MET,
            mva_delphi_ll,
            mva_delphi_jet_MET,
@@ -746,6 +749,8 @@ void zhAnalysis(
     Zjets_mva_tree->Branch( "mva_balance"          , &mva_balance          , "mva_balance/F"           ); 
     Zjets_mva_tree->Branch( "mva_cos_theta_star_l1", &mva_cos_theta_star_l1, "mva_cos_theta_star_l1/F" ); 
     Zjets_mva_tree->Branch( "mva_cos_theta_star_l2", &mva_cos_theta_star_l2, "mva_cos_theta_star_l2/F" ); 
+    Zjets_mva_tree->Branch( "mva_cos_theta_CS_l1"  , &mva_cos_theta_CS_l1  , "mva_cos_theta_CS_l1/F"   ); 
+    Zjets_mva_tree->Branch( "mva_cos_theta_CS_l2"  , &mva_cos_theta_CS_l2  , "mva_cos_theta_CS_l2/F"   ); 
     Zjets_mva_tree->Branch( "mva_delphi_ptll_MET"  , &mva_delphi_ptll_MET  , "mva_delphi_ptll_MET/F"   ); 
     Zjets_mva_tree->Branch( "mva_delphi_ll"        , &mva_delphi_ll        , "mva_delphi_ll/F"         ); 
     Zjets_mva_tree->Branch( "mva_delphi_jet_MET"   , &mva_delphi_jet_MET   , "mva_delphi_jet_MET/F"    ); 
@@ -1052,24 +1057,9 @@ void zhAnalysis(
       double the_upara = TMath::Abs(utv.Mod()*TMath::Cos(phiv))/dilep.Pt();
       
       // Helicity angle calculation
-      double cos_theta_star_l1, cos_theta_star_l2;
-      {
-        // Leptons in laboratory frame
-        TLorentzVector p4_l1_mother = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
-        TLorentzVector p4_l2_mother = (*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
-        // Boost back to dilepton (mother) rest frame
-        p4_l1_mother.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
-        p4_l2_mother.Boost(-dilep.X()/dilep.T(), -dilep.Y()/dilep.T(), -dilep.Z()/dilep.T());
-        // Z in laboratory frame
-        TLorentzVector p4_mother_grandma = dilep;
-        // Boost back to Z+MET (grandmother) rest frame
-        p4_mother_grandma.Boost( -dilepMET.X()/dilepMET.T(), -dilepMET.Y()/dilepMET.T(), -dilepMET.Z()/dilepMET.T());
-        // Get the 3 vectors of the leptons in the mother's rest frame, and the mother in the grandmother's rest frame
-        TVector3 p3_mother_grandma = p4_mother_grandma.Vect(), p3_l1_mother = p4_l1_mother.Vect(), p3_l2_mother = p4_l2_mother.Vect();
-        cos_theta_star_l1 = p3_mother_grandma.Dot(p3_l1_mother) / ( p3_mother_grandma.Mag() * p3_l1_mother.Mag() );
-        cos_theta_star_l2 = p3_mother_grandma.Dot(p3_l2_mother) / ( p3_mother_grandma.Mag() * p3_l2_mother.Mag() );
-      }
-
+      double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
+      double cos_theta_star_l2 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
+      
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;
 
@@ -1335,6 +1325,8 @@ void zhAnalysis(
       mva_delphi_ptll_MET     = dPhiDiLepMET; 
       mva_cos_theta_star_l1   = cos_theta_star_l1;
       mva_cos_theta_star_l2   = cos_theta_star_l2;
+      mva_cos_theta_CS_l1     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
+      mva_cos_theta_CS_l2     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
       mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
       mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
       mva_delphi_jet_MET      = dPhiJetMET;
@@ -2739,3 +2731,4 @@ void zhAnalysis(
 
   }
 }
+

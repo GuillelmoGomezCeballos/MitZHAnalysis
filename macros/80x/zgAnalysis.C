@@ -69,13 +69,13 @@ void zgAnalysis(
   if      (period==1){
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) {
-  infilenamev.push_back(Form("%sSinglePhoton+Run2016B-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
-  infilenamev.push_back(Form("%sSinglePhoton+Run2016C-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
-  infilenamev.push_back(Form("%sSinglePhoton+Run2016D-PromptReco-v2+AOD.root",filesPathDA.Data())); 												 infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2016B-PromptReco-v2+AOD.root",filesPathDA.Data())); infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2016C-PromptReco-v2+AOD.root",filesPathDA.Data())); infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sSinglePhoton+Run2016D-PromptReco-v2+AOD.root",filesPathDA.Data())); infilecatv.push_back(0);
   } else {
-  infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
-  infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
-  infilenamev.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));											                         infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data())); infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data())); infilecatv.push_back(0);
+  infilenamev.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data())); infilecatv.push_back(0);
   }  
 
   infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-40to130_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));         infilecatv.push_back(3);

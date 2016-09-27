@@ -22,7 +22,7 @@
 
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 
-bool isMINIAOD[5] = {false, false, true, true, true};
+bool isMINIAOD[3] = {false, false, true};
 int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
@@ -34,7 +34,7 @@ enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystType
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
 
-void zhAnalysis(
+void zhAnalysis_13ifb(
  unsigned int nJetsType = 1,
  bool isBlinded = false,
  Int_t typeSel = 3,
@@ -49,7 +49,7 @@ void zhAnalysis(
   TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
   TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
   TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 20.0;
+  Double_t lumi = 12.9;
   TString processTag = "";
 
   //*******************************************************
@@ -60,14 +60,13 @@ void zhAnalysis(
 
   TString puPath = "";
   TString zjetsTemplatesPath = "";
-  TString triggerSuffix[5] = {"*", "*", "*", "*", "*"};
+  TString triggerSuffix[3] = {"*", "*", "*"};
   if(isMINIAOD[0]) triggerSuffix[0] = "";
   if(isMINIAOD[1]) triggerSuffix[1] = "";
   if(isMINIAOD[2]) triggerSuffix[2] = "";
-  if(isMINIAOD[3]) triggerSuffix[3] = "";
-  if(isMINIAOD[4]) triggerSuffix[4] = "";
 
-  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_20p0ifb.root";
+  //puPath = "MitAnalysisRunII/data/80x/puWeights_80x_13p0ifb.root";
+  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_13p0ifb_62_64_66.root";
 
   // Data files
   if(isMINIAOD[0]) {infileName_.push_back(Form("%sdata_Run2016B_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
@@ -78,12 +77,6 @@ void zhAnalysis(
 
   if(isMINIAOD[2]) {infileName_.push_back(Form("%sdata_Run2016D_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
   else             {infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[3]) {infileName_.push_back(Form("%sdata_Run2016E_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[4]) {infileName_.push_back(Form("%sdata_Run2016F_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
   
   // Monte carlo backgrounds
   infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
@@ -403,7 +396,7 @@ void zhAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 38;
+  const int allPlots = 36;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
@@ -442,8 +435,6 @@ void zhAnalysis(
     else if(thePlot == 31) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;} // Lepton multiplicity
     else if(thePlot == 32) {nBinPlot =  32; xminPlot =-0.1; xmaxPlot =   3.1;} // Delta phi Z MET
     else if(thePlot == 33) {nBinPlot =  60; xminPlot =40.0; xmaxPlot = 100.0;}
-    else if(thePlot == 34) {nBinPlot =  60; xminPlot = 0.0; xmaxPlot =   3.0;}
-    else if(thePlot == 35) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -927,7 +918,7 @@ void zhAnalysis(
 
       double caloMinusPFMETRel = TMath::Abs( eventMet.caloMet_Pt - ((TLorentzVector*)(*eventMet.p4)[0])->Pt() ) / ((TLorentzVector*)(*eventMet.p4)[0])->Pt();
 
-      bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
+      bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 101.1876;
       bool passNjets     = idJet.size() <= nJetsType;
 
       bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 50.;
@@ -948,10 +939,7 @@ void zhAnalysis(
       bool passBtagVeto  = bDiscrMax < 0.800;
       bool passPTLL      = dilep.Pt() > 60;
       bool pass3rdLVeto  = idLep.size() == numberOfLeptons && TMath::Abs(signQ) == 0;
-      double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));
-      double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta());
-      double drll = sqrt(dphill*dphill+detall*detall);
-      bool passDelphiLL  = drll < 2.0;//dphill < TMath::Pi()/2.;
+      bool passDelphiLL  = true; //TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])) < TMath::Pi()/2.;
 
       bool passZMassLarge = TMath::Abs(dilep.M()-91.1876) < 30.0;
       bool passZMassSB    = (dilep.M() > 110.0 && dilep.M() < 200.0);
@@ -1222,7 +1210,7 @@ void zhAnalysis(
 	    else if(thePlot == 11 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
 	    else if(thePlot == 12 && passNMinusOne[9])       {makePlot = true;theVar = dPhiJetMET;}
 	    else if(thePlot == 13 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = dPhiLepMETMin;}
-	    else if(thePlot == 14 && passNMinusOne[8])       {makePlot = true;theVar = dphill;}
+	    else if(thePlot == 14 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));}
 	    else if(thePlot == 15 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
 	    else if(thePlot == 16 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	    else if(thePlot == 17 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
@@ -1242,8 +1230,6 @@ void zhAnalysis(
 	    else if(thePlot == 31 && passZMass)              {makePlot = true;theVar = idLep.size();;}
 	    else if(thePlot == 32 && passZMass)              {makePlot = true;theVar = TMath::Min(TMath::Max(dPhiDiLepMET,-0.05),3.099);}
 	    else if(thePlot == 33 && passNMinusOne[3])       {makePlot = true;theVar = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt();}
-	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
-	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }

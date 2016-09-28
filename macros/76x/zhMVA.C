@@ -25,7 +25,7 @@ void zhMVA(string signal_model) {
   factory->AddBackgroundTree(ZZ_mva_tree    , 1);
   factory->AddBackgroundTree(VVV_mva_tree   , 1);
   
-  factory->AddVariable( "mva_balance"         , "#zeta_{ll}", "", 'F');
+  factory->AddVariable( "mva_balance"         , "Balance", "", 'F');
   factory->AddVariable( "mva_delphi_ptll_MET" , "#Delta#Phi(p^{ll}, p^{miss})", "rad", 'F');
   factory->AddVariable( "mva_delphi_ll"       , "#Delta#Phi^{ll}", "rad", 'F');
   factory->AddVariable( "mva_delphi_jet_MET"  , "#Delta#Phi(jet, p^{miss})", "rad", 'F');
@@ -40,10 +40,11 @@ void zhMVA(string signal_model) {
   factory->AddVariable( "mva_response"        , "Response", "", 'F');
   factory->AddVariable( "mva_njets"           , "n_{jets}", "", 'I');
   factory->AddVariable( "mva_ntaus"           , "n_{taus}", "", 'I');
-  factory->AddVariable( "mva_btag"            , "b-tag (0|1)", "", 'I');
+  factory->AddVariable( "mva_btag_veto"       , "b-tag veto (0|1)", "", 'I');
+  //factory->AddVariable( "mva_3lveto"          , "3rd lep. veto (0|1)", "", 'I');
 
   factory->SetWeightExpression( "mva_weight");
-  TCut preselectionCut= "mva_MET>80 && mva_balance<5";
+  TCut preselectionCut= "mva_MET>80 && mva_balance<5 && mva_3lveto==1";
   factory->PrepareTrainingAndTestTree(preselectionCut, "");
   factory->BookMethod( TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=400:nEventsMin=400:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   factory->TrainAllMethods();

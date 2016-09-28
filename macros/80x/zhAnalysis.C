@@ -45,6 +45,9 @@ void zhAnalysis(
 
   system("mkdir -p MitZHAnalysis/datacards");
   system("mkdir -p MitZHAnalysis/plots");
+  bool makeMVAtrees=false;
+  bool useBDT=true;
+  if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
   TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
@@ -348,11 +351,13 @@ void zhAnalysis(
   TString ECMsb  = "13TeV2015";
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   ////const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00}; TString addChan = "4";
+  const int MVAVarType = 5; const int nBinMVA = 9; Float_t xbins[nBinMVA+1] =  {-1, 0, 0.08, 0.16, 0.24, 0.32, 0.40, 0.48, 0.56, 0.64}; TString addChan = "5";
+  
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
@@ -1798,8 +1803,13 @@ void zhAnalysis(
     printf("Computing the Drell-Yan data/MC scale factor using the first shape bin\n\n");
     double the_bck = histo_EM->GetBinContent(1) + histo_WZ->GetBinContent(1) + histo_ZZ->GetBinContent(1) + histo_VVV->GetBinContent(1);
     double the_data = histo_Data->GetBinContent(1);
-    double the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(1);
-    printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(1),the_sf);
+    double the_sf;
+    if(MVAVarType!=5) { 
+      the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(1);
+      printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(1),the_sf);
+    } else {
+      the_sf=1.068889;
+    }
     histo_Zjets->Scale(the_sf);
     histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
   }

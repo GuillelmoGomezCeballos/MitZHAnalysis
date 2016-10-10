@@ -48,6 +48,7 @@ void zhAnalysis(
   system("mkdir -p MitZHAnalysis/plots");
   bool makeMVAtrees=false;
   bool useBDT=false;
+  string the_BDT_weights="";
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
@@ -351,15 +352,30 @@ void zhAnalysis(
   delete fEffDilepTrigs;
 
   TString ECMsb  = "13TeV2016";
+  
+  // MVA variable types:
+  // 1: MET only
+  // 2: MET x mll
+  // 3: classifier only
+  // 4: MET x classifier
+
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   ////const int MVAVarType = 1; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 9; Float_t xbins[nBinMVA+1] =  {-1, 0, 0.08, 0.16, 0.24, 0.32, 0.40, 0.48, 0.56, 0.64}; TString addChan = "3";
+  const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
+                                                                                           1125,1150,1175,1200,1250,1350,
+                                                                                           2125,2150,2175,2200,2250,2350,
+                                                                                           3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
+  if (MVAVarType==3 || MVAVarType==4) useBDT=true;
+  if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_sm.weights.xml";
+  if (MVAVarType==4) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_sm_noMET.weights.xml";
+
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
@@ -410,7 +426,7 @@ void zhAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 38;
+  const int allPlots = 39;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
@@ -451,6 +467,7 @@ void zhAnalysis(
     else if(thePlot == 33) {nBinPlot =  60; xminPlot =40.0; xmaxPlot = 100.0;}
     else if(thePlot == 34) {nBinPlot =  60; xminPlot = 0.0; xmaxPlot =   3.0;}
     else if(thePlot == 35) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot == 36) {nBinPlot =  80; xminPlot =-0.4; xmaxPlot =   0.4;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -699,9 +716,7 @@ void zhAnalysis(
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
-           mva_cos_theta_star_l2,
            mva_cos_theta_CS_l1,
-           mva_cos_theta_CS_l2,
            mva_delphi_ptll_MET,
            mva_delphi_ll,
            mva_delphi_jet_MET,
@@ -725,32 +740,12 @@ void zhAnalysis(
            mva_ntaus;
   Bool_t   mva_btag_veto,
            mva_3lveto;
-  Float_t  mva_reader_balance,
-           mva_reader_delphi_ptll_MET,
-           mva_reader_delphi_ll,
-           mva_reader_delphi_jet_MET,
-           mva_reader_MET,
-           mva_reader_mll_minus_mZ,
-           mva_reader_mTll,
-           mva_reader_mTl1MET,
-           mva_reader_mTl2MET,
-           mva_reader_ptll,
-           mva_reader_ptl1,
-           mva_reader_ptl2,
-           mva_reader_response,
-           mva_reader_weight,
-           mva_reader_njets,
-           mva_reader_ntaus,
-           mva_reader_btag_veto;
-           //mva_reader_3lveto;
   if(makeMVAtrees) {
     mva_trees=new TFile("MitZHAnalysis/mva/mva_input_trees.root", "RECREATE");
     Zjets_mva_tree = new TTree("bkg_mva_tree_Zjets", "MVA input tree with Drell-Yan background events");
     Zjets_mva_tree->Branch( "mva_balance"          , &mva_balance          , "mva_balance/F"           ); 
     Zjets_mva_tree->Branch( "mva_cos_theta_star_l1", &mva_cos_theta_star_l1, "mva_cos_theta_star_l1/F" ); 
-    Zjets_mva_tree->Branch( "mva_cos_theta_star_l2", &mva_cos_theta_star_l2, "mva_cos_theta_star_l2/F" ); 
     Zjets_mva_tree->Branch( "mva_cos_theta_CS_l1"  , &mva_cos_theta_CS_l1  , "mva_cos_theta_CS_l1/F"   ); 
-    Zjets_mva_tree->Branch( "mva_cos_theta_CS_l2"  , &mva_cos_theta_CS_l2  , "mva_cos_theta_CS_l2/F"   ); 
     Zjets_mva_tree->Branch( "mva_delphi_ptll_MET"  , &mva_delphi_ptll_MET  , "mva_delphi_ptll_MET/F"   ); 
     Zjets_mva_tree->Branch( "mva_delphi_ll"        , &mva_delphi_ll        , "mva_delphi_ll/F"         ); 
     Zjets_mva_tree->Branch( "mva_delphi_jet_MET"   , &mva_delphi_jet_MET   , "mva_delphi_jet_MET/F"    ); 
@@ -787,24 +782,40 @@ void zhAnalysis(
   }
   if(useBDT) {
     reader=new TMVA::Reader();
-    reader->AddVariable( "mva_balance"         , &mva_reader_balance         ); 
-    reader->AddVariable( "mva_delphi_ptll_MET" , &mva_reader_delphi_ptll_MET ); 
-    reader->AddVariable( "mva_delphi_ll"       , &mva_reader_delphi_ll       ); 
-    reader->AddVariable( "mva_delphi_jet_MET"  , &mva_reader_delphi_jet_MET  ); 
-    reader->AddVariable( "mva_MET"             , &mva_reader_MET             ); 
-    reader->AddVariable( "mva_mll_minus_mZ"    , &mva_reader_mll_minus_mZ    ); 
-    reader->AddVariable( "mva_mTll"            , &mva_reader_mTll            ); 
-    reader->AddVariable( "mva_mTl1MET"         , &mva_reader_mTl1MET         ); 
-    reader->AddVariable( "mva_mTl2MET"         , &mva_reader_mTl2MET         ); 
-    reader->AddVariable( "mva_ptll"            , &mva_reader_ptll            ); 
-    reader->AddVariable( "mva_ptl1"            , &mva_reader_ptl1            ); 
-    reader->AddVariable( "mva_ptl2"            , &mva_reader_ptl2            ); 
-    reader->AddVariable( "mva_response"        , &mva_reader_response        ); 
-    reader->AddVariable( "mva_njets"           , &mva_reader_njets           ); 
-    reader->AddVariable( "mva_ntaus"           , &mva_reader_ntaus           ); 
-    reader->AddVariable( "mva_btag_veto"       , &mva_reader_btag_veto       ); 
-    //reader->AddVariable( "mva_3lveto"         , &mva_reader_3lveto       ); 
-    reader->BookMVA("BDT", "weights/bdt_BDT.weights.xml");
+    if(MVAVarType==3) {
+      reader->AddVariable( "mva_balance"           , &mva_balance            );
+      reader->AddVariable( "mva_cos_theta_star_l1" , &mva_cos_theta_star_l1  );
+      reader->AddVariable( "mva_cos_theta_CS_l1"   , &mva_cos_theta_CS_l1    );
+      reader->AddVariable( "mva_delphi_ptll_MET"   , &mva_delphi_ptll_MET    );
+      reader->AddVariable( "mva_delphi_ll"         , &mva_delphi_ll          );
+      reader->AddVariable( "mva_delphi_jet_MET"    , &mva_delphi_jet_MET     );
+      reader->AddVariable( "mva_deltaR_ll"         , &mva_deltaR_ll          );
+      reader->AddVariable( "mva_etall"             , &mva_etall              );
+      reader->AddVariable( "mva_etal1"             , &mva_etal1              );
+      reader->AddVariable( "mva_etal2"             , &mva_etal2              );
+      reader->AddVariable( "mva_MET"               , &mva_MET                );
+      reader->AddVariable( "mva_mll_minus_mZ"      , &mva_mll_minus_mZ       );
+      reader->AddVariable( "mva_mTjetMET"          , &mva_mTjetMET           );
+      reader->AddVariable( "mva_mTll"              , &mva_mTll               );
+      reader->AddVariable( "mva_mTl1MET"           , &mva_mTl1MET            );
+      reader->AddVariable( "mva_mTl2MET"           , &mva_mTl2MET            );
+      reader->AddVariable( "mva_ptll"              , &mva_ptll               );
+      reader->AddVariable( "mva_ptl1"              , &mva_ptl1               );
+      reader->AddVariable( "mva_ptl2"              , &mva_ptl2               );
+      reader->AddVariable( "ptl1mptl2_over_ptll"   , &mva_ptl1mptl2_over_ptll);
+    } else if(MVAVarType==4) {
+      reader->AddVariable( "mva_cos_theta_CS_l1"   , &mva_cos_theta_CS_l1    );
+      reader->AddVariable( "mva_deltaR_ll"         , &mva_deltaR_ll          );
+      reader->AddVariable( "mva_etall"             , &mva_etall              );
+      reader->AddVariable( "mva_etal1"             , &mva_etal1              );
+      reader->AddVariable( "mva_etal2"             , &mva_etal2              );
+      reader->AddVariable( "mva_mll_minus_mZ"      , &mva_mll_minus_mZ       );
+      reader->AddVariable( "mva_ptll"              , &mva_ptll               );
+      reader->AddVariable( "mva_ptl1"              , &mva_ptl1               );
+      reader->AddVariable( "mva_ptl2"              , &mva_ptl2               );
+      reader->AddVariable( "ptl1mptl2_over_ptll"   , &mva_ptl1mptl2_over_ptll);
+    }
+    reader->BookMVA("BDT", the_BDT_weights);
   }
 
   unsigned int numberOfLeptons = 2;
@@ -977,11 +988,13 @@ void zhAnalysis(
       if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
 
       TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
+      TLorentzVector dilepMET(dilep + (*((TLorentzVector*)(*eventMet.p4)[0]))); 
 
       vector<int> idJet,idJetUp,idJetDown,idBJet;
       bool isBtag = kFALSE;
       double bDiscrMax = 0.0;
       double dPhiJetMET = -1.0;
+      double mTJetMET = -1;
       double dPhiJetDiLep = -1.0;
       TLorentzVector dilepJet = dilep;
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
@@ -995,7 +1008,10 @@ void zhAnalysis(
 	}
 	if(isLepton == kTRUE) continue;
 
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+          mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+        }
 
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) { 
 	   if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
@@ -1053,8 +1069,8 @@ void zhAnalysis(
       double the_upara = TMath::Abs(utv.Mod()*TMath::Cos(phiv))/dilep.Pt();
       
       // Helicity angle calculation
-      double cos_theta_star_l1 = 0;//cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
-      double cos_theta_star_l2 = 0;//cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
+      double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
+      double cos_theta_star_l2 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
       
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;
@@ -1317,9 +1333,7 @@ void zhAnalysis(
       mva_balance             = ptFrac;
       mva_delphi_ptll_MET     = dPhiDiLepMET; 
       mva_cos_theta_star_l1   = cos_theta_star_l1;
-      mva_cos_theta_star_l2   = cos_theta_star_l2;
       mva_cos_theta_CS_l1     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
-      mva_cos_theta_CS_l2     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]]);
       mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
       mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
       mva_delphi_jet_MET      = dPhiJetMET;
@@ -1328,7 +1342,7 @@ void zhAnalysis(
       mva_etall               = dilep.Eta(); 
       mva_MET                 = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
       mva_mll_minus_mZ        = TMath::Abs(dilep.M() - 91.1876); 
-      mva_mTjetMET            = 0;//mTJetMET;
+      mva_mTjetMET            = mTJetMET;
       mva_mTll                = mtW; 
       mva_mTl1MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
       mva_mTl2MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
@@ -1342,26 +1356,8 @@ void zhAnalysis(
       mva_ntaus               = (unsigned char) numberGoodTaus; 
       mva_btag_veto           = passBtagVeto; 
       mva_3lveto              = pass3rdLVeto;
-
-      mva_reader_balance         = mva_balance;
-      mva_reader_delphi_ptll_MET = mva_delphi_ptll_MET;
-      mva_reader_delphi_ll       = mva_delphi_ll;
-      mva_reader_delphi_jet_MET  = mva_delphi_jet_MET;
-      mva_reader_MET             = mva_MET;
-      mva_reader_mll_minus_mZ    = mva_mll_minus_mZ;
-      mva_reader_mTll            = mva_mTll;
-      mva_reader_mTl1MET         = mva_mTl1MET;
-      mva_reader_mTl2MET         = mva_mTl2MET;
-      mva_reader_ptll            = mva_ptll;
-      mva_reader_ptl1            = mva_ptl1;
-      mva_reader_ptl2            = mva_ptl2;
-      mva_reader_response        = mva_response;
-      mva_reader_weight          = mva_weight;
-      mva_reader_njets           = mva_njets;
-      mva_reader_ntaus           = mva_ntaus;
-      mva_reader_btag_veto       = mva_btag_veto;
-      //mva_reader_3lveto          = mva_3lveto;
-
+      double bdt_value = 0;
+      if(useBDT) bdt_value = reader->EvaluateMVA("BDT");
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
 
       for(int nl=0; nl <=sumEvol; nl++) histo[allPlots-2][theCategory]->Fill((double)nl,totalWeight);
@@ -1420,6 +1416,7 @@ void zhAnalysis(
 	    else if(thePlot == 33 && passNMinusOne[3])       {makePlot = true;theVar = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt();}
 	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
 	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
+            else if(thePlot == 36 && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(0.399, TMath::Max(-0.4,bdt_value));}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }
@@ -1441,8 +1438,20 @@ void zhAnalysis(
 	      else                                        auxMll = 2000;
 	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001) + auxMll;
 	    }
-	  }
-	  else {assert(0); return;}
+	  } else if(MVAVarType == 3) {
+            MVAVar = bdt_value;
+          } else if(MVAVarType == 4) {
+	    if((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || bdt_value < 0.4) MVAVar = 80.;
+	    else {
+	      double auxBDT = 0;
+	      if     ( bdt_value >= 0.2 ) auxBDT = 0;
+              else if( bdt_value >= 0.1 ) auxBDT = 1000;
+              else if( bdt_value >= 0   ) auxBDT = 2000;
+              else                        auxBDT = 3000;
+	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001) + auxBDT;
+	    }
+          }
+          else {assert(0); return;}
         }
 
         if     (theCategory == 0){

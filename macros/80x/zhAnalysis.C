@@ -373,7 +373,7 @@ void zhAnalysis(
                                                                                            3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
-  if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_sm.weights.xml";
+  if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_mh125_full.weights.xml";
   if (MVAVarType==4) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_sm_noMET.weights.xml";
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
@@ -1436,19 +1436,19 @@ void zhAnalysis(
 	      if     (TMath::Abs(dilep.M()-91.1876) <  5) auxMll = 0;
 	      else if(TMath::Abs(dilep.M()-91.1876) < 10) auxMll = 1000;
 	      else                                        auxMll = 2000;
-	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001) + auxMll;
+	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999) + auxMll;
 	    }
 	  } else if(MVAVarType == 3) {
             MVAVar = bdt_value;
           } else if(MVAVarType == 4) {
-	    if((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || bdt_value < 0.4) MVAVar = 80.;
+	    if((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || bdt_value < -0.4) MVAVar = 80.;
 	    else {
 	      double auxBDT = 0;
 	      if     ( bdt_value >= 0.2 ) auxBDT = 0;
               else if( bdt_value >= 0.1 ) auxBDT = 1000;
               else if( bdt_value >= 0   ) auxBDT = 2000;
               else                        auxBDT = 3000;
-	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001) + auxBDT;
+	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999) + auxBDT;
 	    }
           }
           else {assert(0); return;}

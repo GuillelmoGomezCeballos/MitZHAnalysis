@@ -21,15 +21,15 @@
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitAnalysisRunII/macros/80x/helicity.h"
-
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
+#include "MitZHAnalysis/macros/80x/zhMVA.h"
 
 bool isMINIAOD[5] = {true, true, true, true, true};
 int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
-double mcPrescale = 1.;
+double mcPrescale = 100.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -366,11 +366,11 @@ void zhAnalysis(
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 9; Float_t xbins[nBinMVA+1] =  {-1, 0, 0.08, 0.16, 0.24, 0.32, 0.40, 0.48, 0.56, 0.64}; TString addChan = "3";
-  const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-                                                                                           1125,1150,1175,1200,1250,1350,
-                                                                                           2125,2150,2175,2200,2250,2350,
-                                                                                           3125,3150,3175,3200,3250,3350}; TString addChan = "4";
+  const int MVAVarType = 3; const int nBinMVA = 10; Float_t xbins[nBinMVA+1] =  {-2, -1, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
+  //                                                                                         1125,1150,1175,1200,1250,1350,
+  //                                                                                         2125,2150,2175,2200,2250,2350,
+  //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
   if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_mh125_full.weights.xml";
@@ -667,6 +667,50 @@ void zhAnalysis(
   TH1D* histo_ZH_hinv_CMS_MVAJESBoundingUp[nSigModels];  
   TH1D* histo_ZH_hinv_CMS_MVAJESBoundingDown[nSigModels];
 
+  TH1D* histo_VVV_CMS_BDTMuonScaleBoundingUp   	= new TH1D( Form("histo_VVV_CMS_bdt_muonUp")  , Form("histo_VVV_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_BDTMuonScaleBoundingDown 	= new TH1D( Form("histo_VVV_CMS_bdt_muonDown"), Form("histo_VVV_CMS_bdt_muonDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_BDTMuonScaleBoundingUp    	= new TH1D( Form("histo_WZ_CMS_bdt_muonUp")  , Form("histo_WZ_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_BDTMuonScaleBoundingDown  	= new TH1D( Form("histo_WZ_CMS_bdt_muonDown"), Form("histo_WZ_CMS_bdt_muonDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTMuonScaleBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_bdt_muonUp")  , Form("histo_ZZ_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTMuonScaleBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_bdt_muonDown"), Form("histo_ZZ_CMS_bdt_muonDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonDown"), Form("histo_ggZH_hinv_CMS_bdt_muonDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nSigModels];  
+  TH1D* histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nSigModels];
+
+  TH1D* histo_VVV_CMS_BDTElectronScaleBoundingUp   	= new TH1D( Form("histo_VVV_CMS_bdt_electronUp")  , Form("histo_VVV_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_BDTElectronScaleBoundingDown 	= new TH1D( Form("histo_VVV_CMS_bdt_electronDown"), Form("histo_VVV_CMS_bdt_electronDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_BDTElectronScaleBoundingUp    	= new TH1D( Form("histo_WZ_CMS_bdt_electronUp")  , Form("histo_WZ_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_BDTElectronScaleBoundingDown  	= new TH1D( Form("histo_WZ_CMS_bdt_electronDown"), Form("histo_WZ_CMS_bdt_electronDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTElectronScaleBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_bdt_electronUp")  , Form("histo_ZZ_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTElectronScaleBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_bdt_electronDown"), Form("histo_ZZ_CMS_bdt_electronDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronDown"), Form("histo_ggZH_hinv_CMS_bdt_electronDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nSigModels];  
+  TH1D* histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nSigModels];
+
+  TH1D* histo_VVV_CMS_BDTMETScaleBoundingUp   	= new TH1D( Form("histo_VVV_CMS_bdt_METUp")  , Form("histo_VVV_CMS_bdt_METUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_BDTMETScaleBoundingDown 	= new TH1D( Form("histo_VVV_CMS_bdt_METDown"), Form("histo_VVV_CMS_bdt_METDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_BDTMETScaleBoundingUp    	= new TH1D( Form("histo_WZ_CMS_bdt_METUp")  , Form("histo_WZ_CMS_bdt_METUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_BDTMETScaleBoundingDown  	= new TH1D( Form("histo_WZ_CMS_bdt_METDown"), Form("histo_WZ_CMS_bdt_METDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTMETScaleBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_bdt_METUp")  , Form("histo_ZZ_CMS_bdt_METUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTMETScaleBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_bdt_METDown"), Form("histo_ZZ_CMS_bdt_METDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METUp")  , Form("histo_ggZH_hinv_CMS_bdt_METUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METDown"), Form("histo_ggZH_hinv_CMS_bdt_METDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nSigModels];  
+  TH1D* histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nSigModels];
+
+  TH1D* histo_VVV_CMS_BDTJetScaleBoundingUp   	= new TH1D( Form("histo_VVV_CMS_bdt_JESUp")  , Form("histo_VVV_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_BDTJetScaleBoundingDown 	= new TH1D( Form("histo_VVV_CMS_bdt_JESDown"), Form("histo_VVV_CMS_bdt_JESDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_BDTJetScaleBoundingUp    	= new TH1D( Form("histo_WZ_CMS_bdt_JESUp")  , Form("histo_WZ_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_BDTJetScaleBoundingDown  	= new TH1D( Form("histo_WZ_CMS_bdt_JESDown"), Form("histo_WZ_CMS_bdt_JESDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTJetScaleBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_bdt_JESUp")  , Form("histo_ZZ_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_BDTJetScaleBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_bdt_JESDown"), Form("histo_ZZ_CMS_bdt_JESDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESDown"), Form("histo_ggZH_hinv_CMS_bdt_JESDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nSigModels];  
+  TH1D* histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nSigModels];
+
   TH1D* histo_VVV_CMS_PUBoundingUp           	= new TH1D( Form("histo_VVV_CMS_puUp")  , Form("histo_VVV_CMS_puUp")  , nBinMVA, xbins); histo_VVV_CMS_PUBoundingUp  ->Sumw2();
   TH1D* histo_VVV_CMS_PUBoundingDown         	= new TH1D( Form("histo_VVV_CMS_puDown"), Form("histo_VVV_CMS_puDown"), nBinMVA, xbins); histo_VVV_CMS_PUBoundingDown->Sumw2();
   TH1D* histo_WZ_CMS_PUBoundingUp            	= new TH1D( Form("histo_WZ_CMS_puUp")  , Form("histo_WZ_CMS_puUp")  , nBinMVA, xbins); histo_WZ_CMS_PUBoundingUp  ->Sumw2();
@@ -698,6 +742,14 @@ void zhAnalysis(
     histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
     histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
     histo_ZH_hinv_CMS_MVAJESBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->Sumw2();
     histo_ZH_hinv_CMS_PUBoundingUp [nModel]                    = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
     histo_ZH_hinv_CMS_PUBoundingDown [nModel]                  = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
 
@@ -768,7 +820,6 @@ void zhAnalysis(
     Zjets_mva_tree->Branch( "mva_ptl1"             , &mva_ptl1             , "mva_ptl1/F"              ); 
     Zjets_mva_tree->Branch( "mva_ptl2"             , &mva_ptl2             , "mva_ptl2/F"              ); 
     Zjets_mva_tree->Branch( "ptl1mptl2_over_ptll"  , &mva_ptl1mptl2_over_ptll  , "mva_ptl1mptl2_over_ptll/F"); 
-    Zjets_mva_tree->Branch( "mva_response"         , &mva_response         , "mva_response/F"          ); 
     Zjets_mva_tree->Branch( "mva_weight"           , &mva_weight           , "mva_weight/F"            ); 
     EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree  ->SetName("bkg_mva_tree_EM" ); EM_mva_tree  ->SetTitle( "MVA input tree with WW/top background events" );
     WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree  ->SetName("bkg_mva_tree_WZ" ); WZ_mva_tree  ->SetTitle( "MVA input tree with WZ background events"     );
@@ -1051,9 +1102,54 @@ void zhAnalysis(
 	}
       }
 
+      // Determine flavor of the pair (0 means e-mu pair, 1 means mu-mu, 2 means e-e)
       int typePair = 0;
       if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13) typePair = 1;
       else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11) typePair = 2;
+      
+      double bdt_value=-1, bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
+      // Do the BDT evaluations
+      if(useBDT) {
+        TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
+                       lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
+                       MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
+                       jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
+        double lepton1_scale_variation, lepton2_scale_variation;
+        // BDT variation with the muon scale variation (flat 1%)
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+        bdt_muonScaleUp=reader->EvaluateMVA("BDT");
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+        bdt_muonScaleDown=reader->EvaluateMVA("BDT");
+        // BDT variation with the electron scale variation (flat 1%)
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+        bdt_electronScaleUp=reader->EvaluateMVA("BDT");
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+        bdt_electronScaleDown=reader->EvaluateMVA("BDT");
+        // BDT variation with the MET scale variation (from Nero)
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESUP)[0] / MET.Pt() - 1., 0);
+        bdt_METScaleUp=reader->EvaluateMVA("BDT");
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESDOWN)[0] / MET.Pt() - 1., 0);
+        bdt_METScaleDown=reader->EvaluateMVA("BDT");
+        // BDT variation with the jet scale variation (flat 3%)
+//        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, 0, 0.03);
+//        bdt_jetScaleUp=reader->EvaluateMVA("BDT");
+//        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, 0, -0.03);
+//        bdt_jetScaleDown=reader->EvaluateMVA("BDT");
+        // Evaluate nominal BDT value
+        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
+        //printf("nominal %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n",  mva_balance            ,  mva_delphi_ptll_MET    ,  mva_cos_theta_star_l1  ,  mva_cos_theta_CS_l1    ,  mva_deltaR_ll          ,  mva_delphi_ll          ,  mva_delphi_jet_MET     ,  mva_etal1              ,  mva_etal2              ,  mva_etall              ,  mva_MET                ,  mva_mll_minus_mZ       ,  mva_mTjetMET           ,  mva_mTll               ,  mva_mTl1MET            ,  mva_mTl2MET            ,  mva_ptll               ,  mva_ptl1               ,  mva_ptl2               ,  mva_ptl1mptl2_over_ptll); 
+        bdt_value=reader->EvaluateMVA("BDT");
+      }
+
+      // Calculate a lot of physics quantities used for the rectangular selection
 
       double dPhiDiLepMET = TMath::Abs(dilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))); // TMath::Abs((*(TLorentzVector*)(*eventMet.p4)[0]).DeltaPhi(*eventMet.trackMet));
       double ptFrac = TMath::Abs(dilep.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilep.Pt(); // TMath::Abs(dilepJet.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepJet.Pt();
@@ -1070,17 +1166,19 @@ void zhAnalysis(
       
       // Helicity angle calculation
       double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
-      double cos_theta_star_l2 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
+      //double cos_theta_star_l2 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
       
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;
 
-      bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 50.;
-      bool passMETTight  = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 100.;
+      double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
+      
+      bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
+      bool passMETTight  = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metTIGHT;
 
-      double metMIN = 100; double mtMIN = 200;
       if(MVAVarType == 0)                         {metMIN = 50; mtMIN = 200;}
-      else if(MVAVarType == 1 || MVAVarType == 2) {metMIN = 50; mtMIN = 0;}
+      else if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 4) {metMIN = 50; mtMIN = 0;}
+      else if(MVAVarType ==3) { metMIN = 80; mtMIN = 0;}
       bool passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
       bool passMT = mtW > mtMIN || !passMETTight;
       if(infileCategory_[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100;
@@ -1132,7 +1230,12 @@ void zhAnalysis(
 	   		   passZMass && passNjets &&           passMET &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto                                                  && passMETTight, // DYSANESEL1
 	   		   passZMass && passNjets &&           passMET               &&!passDPhiZMET   		      && passPTLL &&  pass3rdLVeto                                                  && passMETTight  // DYSANESEL2
                                     };
-
+     if(MVAVarType==3) {
+       passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
+       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
+       passAllCuts[SIGSEL] = passAllCuts[PRESEL];
+       passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && bdt_value>-0.4;
+     }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
 
@@ -1150,8 +1253,8 @@ void zhAnalysis(
      bool passSystCuts[nSystTypes] = {
           passZMass && idJetUp.size() <= nJetsType  && passMET && passMT                                                                        && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
           passZMass && idJetDown.size()<= nJetsType && passMET && passMT                                                                        && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
-          passZMass && passNjets && (double)(*eventMet.ptJESUP)[0]   > metMIN && (mtWSyst[0] > mtMIN || (double)(*eventMet.ptJESUP)[0]   < 100) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
-          passZMass && passNjets && (double)(*eventMet.ptJESDOWN)[0] > metMIN && (mtWSyst[1] > mtMIN || (double)(*eventMet.ptJESDOWN)[0] < 100) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto
+          passZMass && passNjets && (double)(*eventMet.ptJESUP)[0]   > metMIN && (mtWSyst[0] > mtMIN || (double)(*eventMet.ptJESUP)[0]   < metTIGHT) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
+          passZMass && passNjets && (double)(*eventMet.ptJESDOWN)[0] > metMIN && (mtWSyst[1] > mtMIN || (double)(*eventMet.ptJESDOWN)[0] < metTIGHT) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto
      };
 
       // begin event weighting
@@ -1329,35 +1432,34 @@ void zhAnalysis(
       // end event weighting
       //totalWeight = 1;
 
-      // Save values for MVA trees
-      mva_balance             = ptFrac;
-      mva_delphi_ptll_MET     = dPhiDiLepMET; 
-      mva_cos_theta_star_l1   = cos_theta_star_l1;
-      mva_cos_theta_CS_l1     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
-      mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
-      mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
-      mva_delphi_jet_MET      = dPhiJetMET;
-      mva_etal1               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta();
-      mva_etal2               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta();
-      mva_etall               = dilep.Eta(); 
-      mva_MET                 = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
-      mva_mll_minus_mZ        = TMath::Abs(dilep.M() - 91.1876); 
-      mva_mTjetMET            = mTJetMET;
-      mva_mTll                = mtW; 
-      mva_mTl1MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-      mva_mTl2MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-      mva_ptll                = dilep.Pt(); 
-      mva_ptl1                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(); 
-      mva_ptl2                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(); 
-      mva_ptl1mptl2_over_ptll = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() - ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()) / dilep.Pt();
-      mva_response            = the_upara; 
-      mva_weight              = totalWeight; 
-      mva_njets               = idJet.size(); 
-      mva_ntaus               = (unsigned char) numberGoodTaus; 
-      mva_btag_veto           = passBtagVeto; 
-      mva_3lveto              = pass3rdLVeto;
-      double bdt_value = 0;
-      if(useBDT) bdt_value = reader->EvaluateMVA("BDT");
+      if(makeMVAtrees) {
+        // Save values for MVA trees
+        mva_balance             = ptFrac;
+        mva_delphi_ptll_MET     = dPhiDiLepMET; 
+        mva_cos_theta_star_l1   = cos_theta_star_l1;
+        mva_cos_theta_CS_l1     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
+        mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
+        mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
+        mva_delphi_jet_MET      = dPhiJetMET;
+        mva_etal1               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta();
+        mva_etal2               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta();
+        mva_etall               = dilep.Eta(); 
+        mva_MET                 = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
+        mva_mll_minus_mZ        = TMath::Abs(dilep.M() - 91.1876); 
+        mva_mTjetMET            = mTJetMET;
+        mva_mTll                = mtW; 
+        mva_mTl1MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+        mva_mTl2MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+        mva_ptll                = dilep.Pt(); 
+        mva_ptl1                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(); 
+        mva_ptl2                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(); 
+        mva_ptl1mptl2_over_ptll = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() - ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()) / dilep.Pt();
+        mva_weight              = totalWeight; 
+        mva_njets               = idJet.size(); 
+        mva_ntaus               = (unsigned char) numberGoodTaus; 
+        mva_btag_veto           = passBtagVeto; 
+        mva_3lveto              = pass3rdLVeto;
+      }
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
 
       for(int nl=0; nl <=sumEvol; nl++) histo[allPlots-2][theCategory]->Fill((double)nl,totalWeight);
@@ -1423,9 +1525,11 @@ void zhAnalysis(
       }
 
       if(typeSel == typePair || typeSel == 3) {
-	double MVAVar = -0.1;
-        if(passAllCuts[TIGHTSEL]) MVAVar = 0.1;
-
+	double MVAVar = -1000;
+        if(passAllCuts[TIGHTSEL]) { // Set initial value used by Same-sign bin
+          if(MVAVarType==0 || MVAVarType==1 || MVAVarType==2 || MVAVarType==4) MVAVar = 0.1; //first bin is [0,50]
+          else if(MVAVarType==3) MVAVar=-1.99; //first bin here is [-2, -1]
+        }
 	if(typePair == 1 || typePair == 2){
 	  if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,xbins[nBinMVA]-0.001),50.001);
 	  else if(MVAVarType == 1) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001);
@@ -1523,11 +1627,22 @@ void zhAnalysis(
              else if(typePair == 2) histo_WZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_WZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_WZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             if(useBDT) {
+               histo_WZ_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
+               histo_WZ_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
+               histo_WZ_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
+               histo_WZ_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
+               histo_WZ_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
+               histo_WZ_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
+               histo_WZ_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
+               histo_WZ_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+             }
 	  }
           if(passSystCuts[JESUP])  histo_WZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_WZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_WZ_CMS_MVAMETBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_WZ_CMS_MVAMETBoundingDown->Fill(MVAVar,totalWeight);
+          
 	}
         else if(theCategory == 4){
 	  if(passAllCuts[SIGSEL]) {
@@ -1561,6 +1676,16 @@ void zhAnalysis(
              else if(typePair == 2) histo_ZZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_ZZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             if(useBDT) {
+               histo_ZZ_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
+               histo_ZZ_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
+               histo_ZZ_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
+               histo_ZZ_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
+               histo_ZZ_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
+               histo_ZZ_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
+               histo_ZZ_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
+               histo_ZZ_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+             }
           }
           if(passSystCuts[JESUP])  histo_ZZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ZZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1591,6 +1716,16 @@ void zhAnalysis(
              else if(typePair == 2) histo_VVV_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_VVV_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_VVV_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             if(useBDT) {
+               histo_VVV_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
+               histo_VVV_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
+               histo_VVV_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
+               histo_VVV_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
+               histo_VVV_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
+               histo_VVV_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
+               histo_VVV_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
+               histo_VVV_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+             }
           }
           if(passSystCuts[JESUP])  histo_VVV_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1621,6 +1756,16 @@ void zhAnalysis(
              else if(typePair == 2) histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Fill(MVAVar,totalWeight*0.98);
              histo_ZH_hinv_CMS_PUBoundingUp  [nModel]->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             if(useBDT) {
+               histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]      ->Fill(bdt_muonScaleUp      , totalWeight);
+               histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]    ->Fill(bdt_muonScaleDown    , totalWeight);
+               histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Fill(bdt_electronScaleUp  , totalWeight);
+               histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Fill(bdt_electronScaleDown, totalWeight);
+               histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]       ->Fill(bdt_METScaleUp       , totalWeight);
+               histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]     ->Fill(bdt_METScaleDown     , totalWeight);
+               histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]       ->Fill(bdt_jetScaleUp       , totalWeight);
+               histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]     ->Fill(bdt_jetScaleDown     , totalWeight);
+             }
 	  }
           if(passSystCuts[JESUP])  histo_ZH_hinv_CMS_MVAJESBoundingUp  [nModel]->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Fill(MVAVar,totalWeight);
@@ -1651,6 +1796,16 @@ void zhAnalysis(
              else if(typePair == 2) histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_ggZH_hinv_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ggZH_hinv_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             if(useBDT) {
+               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
+               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
+               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
+               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
+               histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
+               histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
+               histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
+               histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+             }
 	  }
           if(passSystCuts[JESUP])  histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ggZH_hinv_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -2244,7 +2399,59 @@ void zhAnalysis(
       if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_MVAJESBoundingDown	->GetBinContent(nb) > 0) systJesDown[3] = histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_MVAJESBoundingUp	->GetBinContent(nb) > 0) systJesUp  [4] = histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
       if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_MVAJESBoundingDown ->GetBinContent(nb) > 0) systJesDown[4] = histo_ggZH_hinv_CMS_MVAJESBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
-  
+
+      double systBDTMuonUp  [5] = {1.0,1.0,1.0,1.0,1.0};
+      double systBDTMuonDown[5] = {1.0,1.0,1.0,1.0,1.0};
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTMuonUp  [0] = histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTMuonDown[0] = histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTMuonScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTMuonUp  [1] = histo_VVV_CMS_BDTMuonScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTMuonScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMuonDown[1] = histo_VVV_CMS_BDTMuonScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTMuonScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTMuonUp  [2] = histo_WZ_CMS_BDTMuonScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTMuonScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMuonDown[2] = histo_WZ_CMS_BDTMuonScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTMuonScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTMuonUp  [3] = histo_ZZ_CMS_BDTMuonScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTMuonScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMuonDown[3] = histo_ZZ_CMS_BDTMuonScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp	->GetBinContent(nb) > 0) systBDTMuonUp  [4] = histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown ->GetBinContent(nb) > 0) systBDTMuonDown[4] = histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+   
+      double systBDTElectronUp  [5] = {1.0,1.0,1.0,1.0,1.0};
+      double systBDTElectronDown[5] = {1.0,1.0,1.0,1.0,1.0};
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTElectronUp  [0] = histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTElectronDown[0] = histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTElectronScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTElectronUp  [1] = histo_VVV_CMS_BDTElectronScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTElectronScaleBoundingDown	->GetBinContent(nb) > 0) systBDTElectronDown[1] = histo_VVV_CMS_BDTElectronScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTElectronScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTElectronUp  [2] = histo_WZ_CMS_BDTElectronScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTElectronScaleBoundingDown	->GetBinContent(nb) > 0) systBDTElectronDown[2] = histo_WZ_CMS_BDTElectronScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTElectronScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTElectronUp  [3] = histo_ZZ_CMS_BDTElectronScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTElectronScaleBoundingDown	->GetBinContent(nb) > 0) systBDTElectronDown[3] = histo_ZZ_CMS_BDTElectronScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp	->GetBinContent(nb) > 0) systBDTElectronUp  [4] = histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown ->GetBinContent(nb) > 0) systBDTElectronDown[4] = histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+   
+      double systBDTMETUp  [5] = {1.0,1.0,1.0,1.0,1.0};
+      double systBDTMETDown[5] = {1.0,1.0,1.0,1.0,1.0};
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTMETUp  [0] = histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTMETDown[0] = histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTMETScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTMETUp  [1] = histo_VVV_CMS_BDTMETScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTMETScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMETDown[1] = histo_VVV_CMS_BDTMETScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTMETScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTMETUp  [2] = histo_WZ_CMS_BDTMETScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTMETScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMETDown[2] = histo_WZ_CMS_BDTMETScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTMETScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTMETUp  [3] = histo_ZZ_CMS_BDTMETScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTMETScaleBoundingDown	->GetBinContent(nb) > 0) systBDTMETDown[3] = histo_ZZ_CMS_BDTMETScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp	->GetBinContent(nb) > 0) systBDTMETUp  [4] = histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown ->GetBinContent(nb) > 0) systBDTMETDown[4] = histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+   
+      double systBDTJetUp  [5] = {1.0,1.0,1.0,1.0,1.0};
+      double systBDTJetDown[5] = {1.0,1.0,1.0,1.0,1.0};
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTJetUp  [0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTJetDown[0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTJetUp  [1] = histo_VVV_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[1] = histo_VVV_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [2] = histo_WZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[2] = histo_WZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [3] = histo_ZZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[3] = histo_ZZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp	->GetBinContent(nb) > 0) systBDTJetUp  [4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown ->GetBinContent(nb) > 0) systBDTJetDown[4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+   
       double systPUUp  [5] = {1.0,1.0,1.0,1.0,1.0};
       double systPUDown[5] = {1.0,1.0,1.0,1.0,1.0};
       if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_PUBoundingUp[nModel]     ->GetBinContent(nb) > 0) systPUUp  [0] = histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
@@ -2575,8 +2782,10 @@ void zhAnalysis(
       newcardShape << Form("lumi2106_%4s                           lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
+      if(MVAVarType != 3) {
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
+      }
       newcardShape << Form("CMS_pu2016                             lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_met                          lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2],systMetUp[3],systMetDown[3],systMetUp[0],systMetDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_j                            lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2],systJesUp[3],systJesDown[3],systJesUp[0],systJesDown[0]); // 0 --> 4		 
@@ -2603,11 +2812,17 @@ void zhAnalysis(
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
       newcardShape << Form("CMS_zllhinv_WZ_lep2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[0]);	    
       newcardShape << Form("CMS_zllhinv_WZ_tau2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[1]);	    
+      if(MVAVarType == 3) {
+      newcardShape << Form("CMS_BDT_scale_m                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMuonUp[0], systBDTMuonDown[0], systBDTMuonUp[1], systBDTMuonDown[1], systBDTMuonUp[2], systBDTMuonDown[2], systBDTMuonUp[3], systBDTMuonDown[3], systBDTMuonUp[4], systBDTMuonDown[4]);	    
+      newcardShape << Form("CMS_BDT_scale_e                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTElectronUp[0], systBDTElectronDown[0], systBDTElectronUp[1], systBDTElectronDown[1], systBDTElectronUp[2], systBDTElectronDown[2], systBDTElectronUp[3], systBDTElectronDown[3], systBDTElectronUp[4], systBDTElectronDown[4]);	    
+      newcardShape << Form("CMS_BDT_scale_MET                 lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2], systBDTMETUp[3], systBDTMETDown[3], systBDTMETUp[4], systBDTMETDown[4]);	    
+      newcardShape << Form("CMS_BDT_scale_j                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTJetUp[0], systBDTJetDown[0], systBDTJetUp[1], systBDTJetDown[1], systBDTJetUp[2], systBDTJetDown[2], systBDTJetUp[3], systBDTJetDown[3], systBDTJetUp[4], systBDTJetDown[4]);	    
+      }
       if(nb>=3){
       newcardShape << Form("CMS_zllhinv_ZLLNorm2016_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
       //newcardShape << Form("CMS_zllhinv_ZLLShape2016_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    
       }
-      if(MVAVarType == 1 || MVAVarType == 2){
+      if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 4){
       newcardShape << Form("CMS_zllhinv_ZLLFit2016_%s_%s               lnU	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
       }
       if(nb>=2)
@@ -2731,3 +2946,5 @@ void zhAnalysis(
     printf("-----------------------------------------------------------------------------------------------------------\n");
   }
 }
+
+

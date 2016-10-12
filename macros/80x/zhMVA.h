@@ -38,42 +38,46 @@ void mvaNuisances(
 ) {
   bool eventHasJet = jet1.E()>0;
   TLorentzVector d_lepton1(0,0,0,0), d_lepton2(0,0,0,0), d_jet1(0,0,0,0), d_MET; // Variations of the reconstructed objects
+  TLorentzVector lepton1_new, lepton2_new, MET_new, jet1_new;
   if(lepton1_scale_variation!=0) {
-    d_lepton1.SetPtEtaPhiE(
+    lepton1_new.SetPtEtaPhiE(
       lepton1.Pt() * (1.+lepton1_scale_variation),
       lepton1.Eta(),
       lepton1.Phi(),
       lepton1.E()  * (1.+lepton1_scale_variation)
     );
-    lepton1 = lepton1 + d_lepton1;
+    d_lepton1 = lepton1_new - lepton1;
+    lepton1 = lepton1_new;
   }
   if(lepton2_scale_variation!=0) {
-    d_lepton2.SetPtEtaPhiE(
+    lepton2_new.SetPtEtaPhiE(
       lepton2.Pt() * (1.+lepton2_scale_variation),
       lepton2.Eta(),
       lepton2.Phi(),
       lepton2.E()  * (1.+lepton2_scale_variation)
     );
-    lepton2 = lepton2 + d_lepton2;
+    d_lepton2 = lepton2_new - lepton2;
+    lepton2 = lepton2_new;
   }
   if(jet_scale_variation!=0 && eventHasJet) {
-    d_jet1.SetPtEtaPhiE(
+    jet1_new.SetPtEtaPhiE(
       jet1.Pt() * (1.+jet_scale_variation),
       jet1.Eta(),
       jet1.Phi(),
       jet1.E()  * (1.+jet_scale_variation)
     );
-    jet1 = jet1 + d_jet1;
+    d_jet1 = jet1_new - jet1;
+    jet1 = jet1_new;
   }
   if(MET_scale_variation!=0) {
-    d_MET.SetPtEtaPhiE(
-      MET.Pt() * (1.+jet_scale_variation),
+    MET_new.SetPtEtaPhiE(
+      MET.Pt() * (1.+MET_scale_variation),
       MET.Eta(),
       MET.Phi(),
-      MET.E()  * (1.+jet_scale_variation)
+      MET.E()  * (1.+MET_scale_variation)
     );
+    d_MET = MET_new - MET; 
   }
-  
   MET = MET + d_MET - d_lepton1 - d_lepton2 - d_jet1;
   TLorentzVector dilep = lepton1+lepton2;
   
@@ -97,4 +101,15 @@ void mvaNuisances(
   mva_ptl1                = lepton1.Pt();
   mva_ptl2                = lepton2.Pt();
   mva_ptl1mptl2_over_ptll = TMath::Abs(lepton1.Pt() - lepton2.Pt()) / dilep.Pt();
+
+  if(mva_cos_theta_star_l1 != mva_cos_theta_star_l1) {
+    printf("PROBLEM with mvaNuisances: mva_cos_theta_star_l1 = NaN (are we in an indian restaurant?)\n");
+    printf("(pt, eta, phi, E) lepton1 (%f, %f, %f, %f) lepton2 (%f, %f, %f, %f)\n", lepton1.Pt(), lepton1.Eta(), lepton1.Phi(), lepton1.E(), lepton2.Pt(), lepton2.Eta(), lepton2.Phi(), lepton2.E());
+    printf("(pt, eta, phi, E) d_lepton1 (%f, %f, %f, %f) d_lepton2 (%f, %f, %f, %f)\n", d_lepton1.Pt(), d_lepton1.Eta(), d_lepton1.Phi(), d_lepton1.E(), d_lepton2.Pt(), d_lepton2.Eta(), d_lepton2.Phi(), d_lepton2.E());
+  }
+  if(mva_cos_theta_CS_l1 != mva_cos_theta_CS_l1) {
+    printf("PROBLEM with mvaNuisances: mva_cos_theta_star_l1 = NaN (are we in an indian restaurant?)\n");
+    printf("(pt, eta, phi, E) lepton1 (%f, %f, %f, %f) lepton2 (%f, %f, %f, %f)\n", lepton1.Pt(), lepton1.Eta(), lepton1.Phi(), lepton1.E(), lepton2.Pt(), lepton2.Eta(), lepton2.Phi(), lepton2.E());
+    printf("(pt, eta, phi, E) d_lepton1 (%f, %f, %f, %f) d_lepton2 (%f, %f, %f, %f)\n", d_lepton1.Pt(), d_lepton1.Eta(), d_lepton1.Phi(), d_lepton1.E(), d_lepton2.Pt(), d_lepton2.Eta(), d_lepton2.Phi(), d_lepton2.E());
+  }
 }

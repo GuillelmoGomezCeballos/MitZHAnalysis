@@ -151,14 +151,14 @@ void zhAnalysis(
     infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); infileCategory_.push_back(6); signalIndex_.push_back(0);
     infileName_.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));       infileCategory_.push_back(7); signalIndex_.push_back(0);
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
-  //{ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
-  //  signalName_.push_back(Form("mh%d", mH));
-  //  infileName_.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); 
-  //  infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH));
-  //  infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
-  //  infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
-  //  iH++;
-  //}}
+  { int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
+    signalName_.push_back(Form("mh%d", mH));
+    infileName_.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); 
+    infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH));
+    infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
+    infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
+    iH++;
+  }}
 /*
   { // dark matter models () ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep DarkMatter_MonoZToLL|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
@@ -365,11 +365,11 @@ void zhAnalysis(
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
-  //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-  //                                                                                         1125,1150,1175,1200,1250,1350,
-  //                                                                                         2125,2150,2175,2200,2250,2350,
-  //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
+  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
+                                                                                           1125,1150,1175,1200,1250,1350,
+                                                                                           2125,2150,2175,2200,2250,2350,
+                                                                                           3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
   if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_mh125_full.weights.xml";
@@ -1106,47 +1106,6 @@ void zhAnalysis(
       if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13) typePair = 1;
       else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11) typePair = 2;
       
-      double bdt_value=-1, bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
-      // Do the BDT evaluations
-      if(useBDT) {
-        TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
-                       lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
-                       MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
-                       jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
-        double lepton1_scale_variation, lepton2_scale_variation;
-        // BDT variation with the muon scale variation (flat 1%)
-        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-        bdt_muonScaleUp=reader->EvaluateMVA("BDT");
-        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-        bdt_muonScaleDown=reader->EvaluateMVA("BDT");
-        // BDT variation with the electron scale variation (flat 1%)
-        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-        bdt_electronScaleUp=reader->EvaluateMVA("BDT");
-        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-        bdt_electronScaleDown=reader->EvaluateMVA("BDT");
-        // BDT variation with the MET scale variation (from Nero)
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESUP)[0] / MET.Pt() - 1., 0);
-        bdt_METScaleUp=reader->EvaluateMVA("BDT");
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESDOWN)[0] / MET.Pt() - 1., 0);
-        bdt_METScaleDown=reader->EvaluateMVA("BDT");
-        // BDT variation with the jet scale variation (flat 3%)
-//        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, 0, 0.03);
-//        bdt_jetScaleUp=reader->EvaluateMVA("BDT");
-//        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, 0, -0.03);
-//        bdt_jetScaleDown=reader->EvaluateMVA("BDT");
-        // Evaluate nominal BDT value
-        mvaNuisances(lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
-        //printf("nominal %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n",  mva_balance,  mva_delphi_ptll_MET,  mva_cos_theta_star_l1,  mva_cos_theta_CS_l1,  mva_deltaR_ll,  mva_delphi_ll,  mva_delphi_jet_MET,  mva_etal1,  mva_etal2,  mva_etall,  mva_MET,  mva_mll_minus_mZ,  mva_mTjetMET,  mva_mTll,  mva_mTl1MET,  mva_mTl2MET,  mva_ptll,  mva_ptl1,  mva_ptl2,  mva_ptl1mptl2_over_ptll); 
-        bdt_value=reader->EvaluateMVA("BDT");
-      }
 
       // Calculate a lot of physics quantities used for the rectangular selection
 
@@ -1165,7 +1124,6 @@ void zhAnalysis(
       
       // Helicity angle calculation
       double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
-      //double cos_theta_star_l2 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], dilepMET);
       
       bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets     = idJet.size() <= nJetsType;
@@ -1229,6 +1187,15 @@ void zhAnalysis(
 	   		   passZMass && passNjets &&           passMET &&!passPTFrac 		    		      && passPTLL &&  pass3rdLVeto                                                  && passMETTight, // DYSANESEL1
 	   		   passZMass && passNjets &&           passMET               &&!passDPhiZMET   		      && passPTLL &&  pass3rdLVeto                                                  && passMETTight  // DYSANESEL2
                                     };
+     // Evaluate nominal BDT value
+     double bdt_value=-1;
+     if(useBDT) {
+       TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
+                      lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
+                      MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
+                      jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
+        bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
+     }
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
        passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
@@ -1255,6 +1222,40 @@ void zhAnalysis(
           passZMass && passNjets && (double)(*eventMet.ptJESUP)[0]   > metMIN && (mtWSyst[0] > mtMIN || (double)(*eventMet.ptJESUP)[0]   < metTIGHT) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
           passZMass && passNjets && (double)(*eventMet.ptJESDOWN)[0] > metMIN && (mtWSyst[1] > mtMIN || (double)(*eventMet.ptJESDOWN)[0] < metTIGHT) && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto
      };
+      
+      // Do the BDT nuisance evaluations
+      double bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
+      double MVAVar_muonScaleDown=-9999, MVAVar_muonScaleUp=-9999, MVAVar_electronScaleDown=-9999, MVAVar_electronScaleUp=-9999, MVAVar_METScaleDown=-9999, MVAVar_METScaleUp=-9999, MVAVar_jetScaleDown=-9999, MVAVar_jetScaleUp=-9999;
+      if(useBDT) {
+        TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
+                       lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
+                       MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
+                       jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
+        double lepton1_scale_variation, lepton2_scale_variation;
+        // BDT variation with the muon scale variation (flat 1%)
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
+        bdt_muonScaleUp = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+	MVAVar_muonScaleUp = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_muonScaleUp, xbins[nBinMVA]);
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
+        bdt_muonScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+	MVAVar_muonScaleDown = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_muonScaleDown, xbins[nBinMVA]);
+        // BDT variation with the electron scale variation (flat 1%)
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
+        bdt_electronScaleUp = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+	MVAVar_electronScaleUp = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_electronScaleUp, xbins[nBinMVA]);
+        lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
+        bdt_electronScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+	MVAVar_electronScaleDown = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_electronScaleDown, xbins[nBinMVA]);
+        // BDT variation with the MET scale variation (from Nero)
+        bdt_METScaleUp = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESUP)[0] / MET.Pt() - 1., 0);
+	MVAVar_METScaleUp = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_METScaleUp, xbins[nBinMVA]);
+        bdt_METScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, (double)(*eventMet.ptJESDOWN)[0] / MET.Pt() - 1., 0);
+	MVAVar_METScaleDown = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_METScaleDown, xbins[nBinMVA]);
+      }
 
       // begin event weighting
       vector<int>zzBoson;
@@ -1524,39 +1525,7 @@ void zhAnalysis(
       }
 
       if(typeSel == typePair || typeSel == 3) {
-	double MVAVar = -1000;
-        if(passAllCuts[TIGHTSEL]) { // Set initial value used by Same-sign bin
-          if(MVAVarType==0 || MVAVarType==1 || MVAVarType==2 || MVAVarType==4) MVAVar = 0.1; //first bin is [0,50]
-          else if(MVAVarType==3) MVAVar=-1.99; //first bin here is [-2, -1]
-        }
-	if(typePair == 1 || typePair == 2){
-	  if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,xbins[nBinMVA]-0.001),50.001);
-	  else if(MVAVarType == 1) MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),xbins[nBinMVA]-0.001);
-	  else if(MVAVarType == 2) {
-	    if((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100) MVAVar = 80.;
-	    else {
-	      double auxMll = 0;
-	      if     (TMath::Abs(dilep.M()-91.1876) <  5) auxMll = 0;
-	      else if(TMath::Abs(dilep.M()-91.1876) < 10) auxMll = 1000;
-	      else                                        auxMll = 2000;
-	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999) + auxMll;
-	    }
-	  } else if(MVAVarType == 3) {
-            MVAVar = bdt_value;
-          } else if(MVAVarType == 4) {
-	    if((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100 || bdt_value < -0.4) MVAVar = 80.;
-	    else {
-	      double auxBDT = 0;
-	      if     ( bdt_value >= 0.2 ) auxBDT = 0;
-              else if( bdt_value >= 0.1 ) auxBDT = 1000;
-              else if( bdt_value >= 0   ) auxBDT = 2000;
-              else                        auxBDT = 3000;
-	      MVAVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),349.999) + auxBDT;
-	    }
-          }
-          else {assert(0); return;}
-        }
-
+	double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
         if     (theCategory == 0){
 	  if(passAllCuts[SIGSEL]) histo_Data->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[TIGHTSEL] && verbose) {
@@ -1627,14 +1596,12 @@ void zhAnalysis(
              histo_WZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_WZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
              if(useBDT) {
-               histo_WZ_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
-               histo_WZ_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
-               histo_WZ_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
-               histo_WZ_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
-               histo_WZ_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
-               histo_WZ_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
-               histo_WZ_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
-               histo_WZ_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+               histo_WZ_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
+               histo_WZ_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
+               histo_WZ_CMS_BDTElectronScaleBoundingUp  ->Fill(MVAVar_electronScaleUp  , totalWeight);
+               histo_WZ_CMS_BDTElectronScaleBoundingDown->Fill(MVAVar_electronScaleDown, totalWeight);
+               histo_WZ_CMS_BDTMETScaleBoundingUp       ->Fill(MVAVar_METScaleUp       , totalWeight);
+               histo_WZ_CMS_BDTMETScaleBoundingDown     ->Fill(MVAVar_METScaleDown     , totalWeight);
              }
 	  }
           if(passSystCuts[JESUP])  histo_WZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
@@ -1676,14 +1643,12 @@ void zhAnalysis(
              histo_ZZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
              if(useBDT) {
-               histo_ZZ_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
-               histo_ZZ_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
-               histo_ZZ_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
-               histo_ZZ_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
-               histo_ZZ_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
-               histo_ZZ_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
-               histo_ZZ_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
-               histo_ZZ_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+               histo_ZZ_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
+               histo_ZZ_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
+               histo_ZZ_CMS_BDTElectronScaleBoundingUp  ->Fill(MVAVar_electronScaleUp  , totalWeight);
+               histo_ZZ_CMS_BDTElectronScaleBoundingDown->Fill(MVAVar_electronScaleDown, totalWeight);
+               histo_ZZ_CMS_BDTMETScaleBoundingUp       ->Fill(MVAVar_METScaleUp       , totalWeight);
+               histo_ZZ_CMS_BDTMETScaleBoundingDown     ->Fill(MVAVar_METScaleDown     , totalWeight);
              }
           }
           if(passSystCuts[JESUP])  histo_ZZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
@@ -1716,14 +1681,12 @@ void zhAnalysis(
              histo_VVV_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_VVV_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
              if(useBDT) {
-               histo_VVV_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
-               histo_VVV_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
-               histo_VVV_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
-               histo_VVV_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
-               histo_VVV_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
-               histo_VVV_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
-               histo_VVV_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
-               histo_VVV_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+               histo_VVV_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
+               histo_VVV_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
+               histo_VVV_CMS_BDTElectronScaleBoundingUp  ->Fill(MVAVar_electronScaleUp  , totalWeight);
+               histo_VVV_CMS_BDTElectronScaleBoundingDown->Fill(MVAVar_electronScaleDown, totalWeight);
+               histo_VVV_CMS_BDTMETScaleBoundingUp       ->Fill(MVAVar_METScaleUp       , totalWeight);
+               histo_VVV_CMS_BDTMETScaleBoundingDown     ->Fill(MVAVar_METScaleDown     , totalWeight);
              }
           }
           if(passSystCuts[JESUP])  histo_VVV_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
@@ -1756,14 +1719,12 @@ void zhAnalysis(
              histo_ZH_hinv_CMS_PUBoundingUp  [nModel]->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
              if(useBDT) {
-               histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]      ->Fill(bdt_muonScaleUp      , totalWeight);
-               histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]    ->Fill(bdt_muonScaleDown    , totalWeight);
-               histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Fill(bdt_electronScaleUp  , totalWeight);
-               histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Fill(bdt_electronScaleDown, totalWeight);
-               histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]       ->Fill(bdt_METScaleUp       , totalWeight);
-               histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]     ->Fill(bdt_METScaleDown     , totalWeight);
-               histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]       ->Fill(bdt_jetScaleUp       , totalWeight);
-               histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]     ->Fill(bdt_jetScaleDown     , totalWeight);
+               histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]      ->Fill(MVAVar_muonScaleUp      , totalWeight);
+               histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]    ->Fill(MVAVar_muonScaleDown    , totalWeight);
+               histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Fill(MVAVar_electronScaleUp  , totalWeight);
+               histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Fill(MVAVar_electronScaleDown, totalWeight);
+               histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]       ->Fill(MVAVar_METScaleUp       , totalWeight);
+               histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]     ->Fill(MVAVar_METScaleDown     , totalWeight);
              }
 	  }
           if(passSystCuts[JESUP])  histo_ZH_hinv_CMS_MVAJESBoundingUp  [nModel]->Fill(MVAVar,totalWeight);
@@ -1796,14 +1757,12 @@ void zhAnalysis(
              histo_ggZH_hinv_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ggZH_hinv_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
              if(useBDT) {
-               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp      ->Fill(bdt_muonScaleUp      , totalWeight);
-               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown    ->Fill(bdt_muonScaleDown    , totalWeight);
-               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->Fill(bdt_electronScaleUp  , totalWeight);
-               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->Fill(bdt_electronScaleDown, totalWeight);
-               histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp       ->Fill(bdt_METScaleUp       , totalWeight);
-               histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown     ->Fill(bdt_METScaleDown     , totalWeight);
-               histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp       ->Fill(bdt_jetScaleUp       , totalWeight);
-               histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown     ->Fill(bdt_jetScaleDown     , totalWeight);
+               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
+               histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
+               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->Fill(MVAVar_electronScaleUp  , totalWeight);
+               histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->Fill(MVAVar_electronScaleDown, totalWeight);
+               histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp       ->Fill(MVAVar_METScaleUp       , totalWeight);
+               histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown     ->Fill(MVAVar_METScaleDown     , totalWeight);
              }
 	  }
           if(passSystCuts[JESUP])  histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
@@ -2438,19 +2397,6 @@ void zhAnalysis(
       if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp	->GetBinContent(nb) > 0) systBDTMETUp  [4] = histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
       if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown ->GetBinContent(nb) > 0) systBDTMETDown[4] = histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
    
-      double systBDTJetUp  [5] = {1.0,1.0,1.0,1.0,1.0};
-      double systBDTJetDown[5] = {1.0,1.0,1.0,1.0,1.0};
-      //if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTJetUp  [0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-      //if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTJetDown[0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-      //if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTJetUp  [1] = histo_VVV_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-      //if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[1] = histo_VVV_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-      //if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [2] = histo_WZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
-      //if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[2] = histo_WZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
-      //if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [3] = histo_ZZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-      //if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[3] = histo_ZZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-      //if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp	->GetBinContent(nb) > 0) systBDTJetUp  [4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
-      //if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown ->GetBinContent(nb) > 0) systBDTJetDown[4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
-   
       double systPUUp  [5] = {1.0,1.0,1.0,1.0,1.0};
       double systPUDown[5] = {1.0,1.0,1.0,1.0,1.0};
       if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_PUBoundingUp[nModel]     ->GetBinContent(nb) > 0) systPUUp  [0] = histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
@@ -2811,11 +2757,10 @@ void zhAnalysis(
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
       newcardShape << Form("CMS_zllhinv_WZ_lep2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[0]);	    
       newcardShape << Form("CMS_zllhinv_WZ_tau2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[1]);	    
-      if(MVAVarType == 3) {
+      if(MVAVarType == 3 || MVAVarType==4) {
       newcardShape << Form("CMS_BDT_scale_m                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMuonUp[0], systBDTMuonDown[0], systBDTMuonUp[1], systBDTMuonDown[1], systBDTMuonUp[2], systBDTMuonDown[2], systBDTMuonUp[3], systBDTMuonDown[3], systBDTMuonUp[4], systBDTMuonDown[4]);	    
       newcardShape << Form("CMS_BDT_scale_e                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTElectronUp[0], systBDTElectronDown[0], systBDTElectronUp[1], systBDTElectronDown[1], systBDTElectronUp[2], systBDTElectronDown[2], systBDTElectronUp[3], systBDTElectronDown[3], systBDTElectronUp[4], systBDTElectronDown[4]);	    
       newcardShape << Form("CMS_BDT_scale_MET                 lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2], systBDTMETUp[3], systBDTMETDown[3], systBDTMETUp[4], systBDTMETDown[4]);	    
-      //newcardShape << Form("CMS_BDT_scale_j                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTJetUp[0], systBDTJetDown[0], systBDTJetUp[1], systBDTJetDown[1], systBDTJetUp[2], systBDTJetDown[2], systBDTJetUp[3], systBDTJetDown[3], systBDTJetUp[4], systBDTJetDown[4]);	    
       }
       if(nb>=3){
       newcardShape << Form("CMS_zllhinv_ZLLNorm2016_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    

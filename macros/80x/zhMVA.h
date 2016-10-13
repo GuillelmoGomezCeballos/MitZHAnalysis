@@ -1,12 +1,13 @@
 #include <TROOT.h>
 #include <TLorentzVector.h>
 #include <TMath.h>
-//#include "TMVA/Reader.h"
+#include "TMVA/Reader.h"
 
 // mvaNuisances:
 //   Access the MVA variables
 //   (optionally) vary relevant nuisances
-void mvaNuisances(
+double mvaNuisances(
+  TMVA::Reader *reader,
   TLorentzVector lepton1,
   TLorentzVector lepton2,
   TLorentzVector MET,
@@ -112,4 +113,52 @@ void mvaNuisances(
     printf("(pt, eta, phi, E) lepton1 (%f, %f, %f, %f) lepton2 (%f, %f, %f, %f)\n", lepton1.Pt(), lepton1.Eta(), lepton1.Phi(), lepton1.E(), lepton2.Pt(), lepton2.Eta(), lepton2.Phi(), lepton2.E());
     printf("(pt, eta, phi, E) d_lepton1 (%f, %f, %f, %f) d_lepton2 (%f, %f, %f, %f)\n", d_lepton1.Pt(), d_lepton1.Eta(), d_lepton1.Phi(), d_lepton1.E(), d_lepton2.Pt(), d_lepton2.Eta(), d_lepton2.Phi(), d_lepton2.E());
   }
+  return reader->EvaluateMVA("BDT");
 }
+
+double getMVAVar(
+  unsigned int MVAVarType,
+  bool isSignal,
+  unsigned int typePair,
+  double MET,
+  double mtW,
+  double Mll,
+  double bdt_value,
+  double xmax
+) {
+  double MVAVar=-9999;
+  if(MVAVarType>4 || typePair>2) return -9999;
+  if(typePair==0 && isSignal) { // set value used for same-sign bin
+    if(MVAVarType==0 || MVAVarType==1 || MVAVarType==2 || MVAVarType==4) MVAVar = 0.1; //first bin is [0,50]
+    else if(MVAVarType==3) MVAVar=-1.99; //first bin here is [-2, -1]
+  } else if(typePair == 1 || typePair == 2) {
+    if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,xmax-0.001),50.001);
+    else if(MVAVarType == 1) MVAVar = TMath::Min(MET,xmax-0.001);
+    else if(MVAVarType == 2) {
+      if(MET<100.) MVAVar = 80.;
+      else {
+        double auxMll = 0;
+        if     (TMath::Abs(Mll-91.1876) <  5) auxMll = 0;
+        else if(TMath::Abs(Mll-91.1876) < 10) auxMll = 1000;
+        else                                  auxMll = 2000;
+        MVAVar = TMath::Min(MET, 349.999) + auxMll;
+      }
+    } else if(MVAVarType == 3) {
+      MVAVar = bdt_value;
+    } else if(MVAVarType == 4) {
+      if(MET < 100 || bdt_value < -0.4) MVAVar = 80.;
+      else {
+        double auxBDT = 0;
+        if     ( bdt_value >= 0.2 ) auxBDT = 0;
+        else if( bdt_value >= 0.1 ) auxBDT = 1000;
+        else if( bdt_value >= 0   ) auxBDT = 2000;
+        else                        auxBDT = 3000;
+        MVAVar = TMath::Min(MET,349.999) + auxBDT;
+      }
+    }
+  }
+  return MVAVar;
+}
+
+
+  

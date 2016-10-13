@@ -29,7 +29,7 @@ int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
-double mcPrescale = 100.;
+double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -151,16 +151,15 @@ void zhAnalysis(
     infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); infileCategory_.push_back(6); signalIndex_.push_back(0);
     infileName_.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));       infileCategory_.push_back(7); signalIndex_.push_back(0);
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
+  //{ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
+  //  signalName_.push_back(Form("mh%d", mH));
+  //  infileName_.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); 
+  //  infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH));
+  //  infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
+  //  infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
+  //  iH++;
+  //}}
 /*
-  { int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
-    signalName_.push_back(Form("mh%d", mH));
-    infileName_.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH)); 
-    infileName_.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data(),mH));
-    infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
-    infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
-    iH++;
-  }}
-
   { // dark matter models () ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep DarkMatter_MonoZToLL|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
     signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v2+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
@@ -366,7 +365,7 @@ void zhAnalysis(
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 10; Float_t xbins[nBinMVA+1] =  {-2, -1, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4}; TString addChan = "3";
+  const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -467,7 +466,7 @@ void zhAnalysis(
     else if(thePlot == 33) {nBinPlot =  60; xminPlot =40.0; xmaxPlot = 100.0;}
     else if(thePlot == 34) {nBinPlot =  60; xminPlot = 0.0; xmaxPlot =   3.0;}
     else if(thePlot == 35) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
-    else if(thePlot == 36) {nBinPlot =  80; xminPlot =-0.4; xmaxPlot =   0.4;}
+    else if(thePlot == 36) {nBinPlot = 100; xminPlot =-1.0; xmaxPlot =   1.0;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -1233,8 +1232,8 @@ void zhAnalysis(
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
        passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
-       passAllCuts[SIGSEL] = passAllCuts[PRESEL];
-       passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && bdt_value>-0.4;
+       passAllCuts[SIGSEL] = passAllCuts[PRESEL] && passMETTight;
+       passAllCuts[TIGHTSEL] = passAllCuts[TIGHTSEL] && bdt_value>0;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -1518,7 +1517,7 @@ void zhAnalysis(
 	    else if(thePlot == 33 && passNMinusOne[3])       {makePlot = true;theVar = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt();}
 	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
 	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
-            else if(thePlot == 36 && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(0.399, TMath::Max(-0.4,bdt_value));}
+        else if(thePlot == 36 && passAllCuts[TIGHTSEL] && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(1., TMath::Max(-1.,bdt_value));}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }
@@ -1977,19 +1976,19 @@ void zhAnalysis(
   }
 
   // computing DY scale factor using the first bin
-  if(MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2){
+  if(MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4){
     printf("-----------------------------------------------------------------------------------------------------------\n");
     printf("Computing the Drell-Yan data/MC scale factor using the first shape bin\n\n");
     int theBin = 2;
     double the_bck = histo_EM->GetBinContent(theBin) + histo_WZ->GetBinContent(theBin) + histo_ZZ->GetBinContent(theBin) + histo_VVV->GetBinContent(theBin);
     double the_data = histo_Data->GetBinContent(theBin);
     double the_sf;
-    if(MVAVarType!=3) { 
-      the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(theBin);
-      printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(theBin),the_sf);
-    } else {
-      the_sf=1.068889;
-    }
+    //if(MVAVarType!=3) { 
+    the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(theBin);
+    printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(theBin),the_sf);
+    //} else {
+    //  the_sf=1.068889;
+    //}
     histo_Zjets->Scale(the_sf);
     histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
   }
@@ -2441,16 +2440,16 @@ void zhAnalysis(
    
       double systBDTJetUp  [5] = {1.0,1.0,1.0,1.0,1.0};
       double systBDTJetDown[5] = {1.0,1.0,1.0,1.0,1.0};
-      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTJetUp  [0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-      if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTJetDown[0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTJetUp  [1] = histo_VVV_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[1] = histo_VVV_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [2] = histo_WZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
-      if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[2] = histo_WZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
-      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [3] = histo_ZZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[3] = histo_ZZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp	->GetBinContent(nb) > 0) systBDTJetUp  [4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
-      if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown ->GetBinContent(nb) > 0) systBDTJetDown[4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      //if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]	->GetBinContent(nb) > 0) systBDTJetUp  [0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      //if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]	->GetBinContent(nb) > 0) systBDTJetDown[0] = histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      //if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingUp 	->GetBinContent(nb) > 0) systBDTJetUp  [1] = histo_VVV_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      //if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[1] = histo_VVV_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      //if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [2] = histo_WZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      //if(histo_WZ->GetBinContent(nb)	  > 0 && histo_WZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[2] = histo_WZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+      //if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingUp  	->GetBinContent(nb) > 0) systBDTJetUp  [3] = histo_ZZ_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      //if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_BDTJetScaleBoundingDown	->GetBinContent(nb) > 0) systBDTJetDown[3] = histo_ZZ_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      //if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp	->GetBinContent(nb) > 0) systBDTJetUp  [4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
+      //if(histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown ->GetBinContent(nb) > 0) systBDTJetDown[4] = histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb);
    
       double systPUUp  [5] = {1.0,1.0,1.0,1.0,1.0};
       double systPUDown[5] = {1.0,1.0,1.0,1.0,1.0};
@@ -2816,7 +2815,7 @@ void zhAnalysis(
       newcardShape << Form("CMS_BDT_scale_m                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMuonUp[0], systBDTMuonDown[0], systBDTMuonUp[1], systBDTMuonDown[1], systBDTMuonUp[2], systBDTMuonDown[2], systBDTMuonUp[3], systBDTMuonDown[3], systBDTMuonUp[4], systBDTMuonDown[4]);	    
       newcardShape << Form("CMS_BDT_scale_e                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTElectronUp[0], systBDTElectronDown[0], systBDTElectronUp[1], systBDTElectronDown[1], systBDTElectronUp[2], systBDTElectronDown[2], systBDTElectronUp[3], systBDTElectronDown[3], systBDTElectronUp[4], systBDTElectronDown[4]);	    
       newcardShape << Form("CMS_BDT_scale_MET                 lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2], systBDTMETUp[3], systBDTMETDown[3], systBDTMETUp[4], systBDTMETDown[4]);	    
-      newcardShape << Form("CMS_BDT_scale_j                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTJetUp[0], systBDTJetDown[0], systBDTJetUp[1], systBDTJetDown[1], systBDTJetUp[2], systBDTJetDown[2], systBDTJetUp[3], systBDTJetDown[3], systBDTJetUp[4], systBDTJetDown[4]);	    
+      //newcardShape << Form("CMS_BDT_scale_j                   lnN	%7.5f/%7.5f -  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f -  %7.5f/%7.5f   \n", systBDTJetUp[0], systBDTJetDown[0], systBDTJetUp[1], systBDTJetDown[1], systBDTJetUp[2], systBDTJetDown[2], systBDTJetUp[3], systBDTJetDown[3], systBDTJetUp[4], systBDTJetDown[4]);	    
       }
       if(nb>=3){
       newcardShape << Form("CMS_zllhinv_ZLLNorm2016_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    

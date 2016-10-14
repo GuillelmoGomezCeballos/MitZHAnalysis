@@ -1,0 +1,1223 @@
+#include <TROOT.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <TSystem.h>
+#include <TString.h>
+#include <TH1D.h>
+#include <TH2D.h>
+#include <TMath.h>
+#include <iostream>
+#include <fstream>
+
+#include "NeroProducer/Core/interface/BareEvent.hpp"
+#include "NeroProducer/Core/interface/BareJets.hpp"
+#include "NeroProducer/Core/interface/BareLeptons.hpp"
+#include "NeroProducer/Core/interface/BareTaus.hpp"
+#include "NeroProducer/Core/interface/BareMet.hpp"
+#include "NeroProducer/Core/interface/BareTrigger.hpp"
+#include "NeroProducer/Core/interface/BareVertex.hpp"
+#include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
+
+#include "MitAnalysisRunII/macros/80x/factors.h"
+
+bool isMINIAOD[5] = {true, true, true, true, true};
+int whichSkim = 2;
+bool usePureMC = false; 
+double mcPrescale = 1.0;
+enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
+TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
+enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
+TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
+const TString typeLepSel = "medium";
+
+void zzAnalysis(
+ ){
+
+  system("mkdir -p MitZHAnalysis/datacards");
+
+  Int_t period = 1;
+  TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
+  TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
+  TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
+  TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
+  Double_t lumi = 20.0;
+  bool verbose = true;
+
+  //*******************************************************
+  //Input Files
+  //*******************************************************
+  vector<TString> infileName_;  
+  vector<Int_t> infileCategory_;  
+
+  TString puPath = "";
+  TString triggerSuffix[5] = {"*", "*", "*", "*", "*"};
+  if(isMINIAOD[0]) triggerSuffix[0] = "";
+  if(isMINIAOD[1]) triggerSuffix[1] = "";
+  if(isMINIAOD[2]) triggerSuffix[2] = "";
+  if(isMINIAOD[3]) triggerSuffix[3] = "";
+  if(isMINIAOD[4]) triggerSuffix[4] = "";
+
+  puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
+  // Data files
+  if(isMINIAOD[0]) {infileName_.push_back(Form("%sdata_Run2016B_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
+  else             {infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
+
+  if(isMINIAOD[1]) {infileName_.push_back(Form("%sdata_Run2016C_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
+  else             {infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
+
+  if(isMINIAOD[2]) {infileName_.push_back(Form("%sdata_Run2016D_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
+  else             {infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
+
+  if(isMINIAOD[3]) {infileName_.push_back(Form("%sdata_Run2016E_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
+  else             {infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
+
+  if(isMINIAOD[4]) {infileName_.push_back(Form("%sdata_Run2016F_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
+  else             {infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
+  
+
+  if(usePureMC == true){
+  infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1+AODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));						   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));    infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluHToTauTau_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sVBFHToTauTau_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));                infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZZTo2L2Nu_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));  				   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));           infileCategory_.push_back(1);
+  //infileName_.push_back(Form("%stZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		           infileCategory_.push_back(1);
+  }
+
+  infileName_.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	 	   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	 	   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4e_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
+
+  infileName_.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(5);
+
+  infileName_.push_back(Form("%sVHToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		   infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_mWCutfix+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3_ext1-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sGluGluHToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sVBF_HToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
+  
+  //infileName_.clear();infileCategory_.clear();
+  //infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));						  infileCategory_.push_back(1);
+  //infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));	 infileCategory_.push_back(2);
+  //infileName_.push_back(Form("%sTT_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2+AODSIM.root",filesPath.Data()));     infileCategory_.push_back(3);
+  //infileName_.push_back(Form("%sTTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));	 infileCategory_.push_back(4);
+
+  if(infileName_.size() != infileCategory_.size()) {assert(0); return;}
+
+  Float_t fMVACut[4][4];
+  InitializeJetIdCuts(fMVACut);
+ 
+  TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
+  TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeights"));     assert(fhDPU);    fhDPU    ->SetDirectory(0);
+  TH1D *fhDPUUp   = (TH1D*)(fPUFile->Get("puWeightsUp"));   assert(fhDPUUp);  fhDPUUp  ->SetDirectory(0);
+  TH1D *fhDPUDown = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPUDown);fhDPUDown->SetDirectory(0);
+  delete fPUFile;
+
+  TFile *fTrackElectronReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_13p0ifb.root"));
+  TH2D *fhDeltrksf= (TH2D*)(fTrackElectronReco_SF->Get("scalefactors_Reco_Electron")); assert(fhDeltrksf); fhDeltrksf->SetDirectory(0);
+  delete fTrackElectronReco_SF;
+
+  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_13p0ifb.root"));
+  TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("scalefactors_Medium_Electron"));
+  TH2D *fhDElTightSF = (TH2D*)(fElSF->Get("scalefactors_Tight_Electron"));
+  assert(fhDElMediumSF);
+  assert(fhDElTightSF);
+  fhDElMediumSF->SetDirectory(0);
+  fhDElTightSF->SetDirectory(0);
+  delete fElSF;
+
+  TFile *fTrackMuonReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/trackMuReco_SF.root"));
+  TH1D *fhDmutrksfptg10 = (TH1D*)(fTrackMuonReco_SF->Get("mutrksfptg10")); assert(fhDmutrksfptg10); fhDmutrksfptg10->SetDirectory(0);
+  //TH1D *fhDmutrksfptl10 = (TH1D*)(fTrackMuonReco_SF->Get("mutrksfptl10")); assert(fhDmutrksfptl10); fhDmutrksfptl10->SetDirectory(0);
+  delete fTrackMuonReco_SF;
+
+  //TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x.root"));
+  //TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_Tight_Muon")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
+  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonID_Z_RunBCD_prompt80X_7p65.root"));
+  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
+  delete fMuSF;
+
+  TFile *fMuIsoSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonIso_Z_RunBCD_prompt80X_7p65.root"));
+  TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
+  delete fMuIsoSF;
+
+  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+
+  TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
+  histoMVA->Sumw2();
+
+  double xmin = 0.0;
+  double xmax = 1.0;
+  int nBinPlot      = 200;
+  double xminPlot   = 0.0;
+  double xmaxPlot   = 200.0;
+  const int allPlots = 35;
+  const int histBins = 7;
+  TH1D* histo[allPlots][histBins];
+  TString processName[histBins] = {"..Data", "....EM", "Zgamma", "....WZ", "...ZZ", "...VVV", ".Higgs"};
+
+  for(int thePlot=0; thePlot<allPlots; thePlot++){
+    if     (thePlot >=  0 && thePlot <=  0) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
+    else if(thePlot >=  1 && thePlot <=  1) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
+    else if(thePlot >=  2 && thePlot <=  2) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 100.0;}
+    else if(thePlot >=  3 && thePlot <=  4) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >=  5 && thePlot <=  5) {nBinPlot =  80; xminPlot = 0.0; xmaxPlot =   4.0;}
+    else if(thePlot >=  6 && thePlot <=  6) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
+    else if(thePlot >=  7 && thePlot <=  7) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot >=  8 && thePlot <=  9) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >= 10 && thePlot <= 10) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
+    else if(thePlot >= 11 && thePlot <= 16) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
+    else if(thePlot >= 18 && thePlot <= 18) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
+    else if(thePlot >= 19 && thePlot <= 19) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot >= 20 && thePlot <= 21) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >= 22 && thePlot <= 24) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
+    else if(thePlot >= 25 && thePlot <= 25) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
+    else if(thePlot >= 26 && thePlot <= 26) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot =   2.0;}
+    else if(thePlot >= 27 && thePlot <= 28) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >= 29 && thePlot <= 29) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot >= 30 && thePlot <= 30) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
+    else if(thePlot >= 31 && thePlot <= 33) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    TH1D* histos;
+    if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
+    else                      histos = new TH1D("histos", "histos", nBinMVA, xbins);
+    histos->Sumw2();
+    for(int i=0; i<histBins; i++) histo[thePlot][i] = (TH1D*) histos->Clone(Form("histo%d",i));
+    histos->Clear();
+  }
+
+  TH1D *histo_Data     = (TH1D*) histoMVA->Clone("histo_Data");
+  TH1D *histo_Fake     = (TH1D*) histoMVA->Clone("histo_Fake");	 
+  TH1D *histo_ZZ       = (TH1D*) histoMVA->Clone("histo_ZZ");
+  TH1D *histo_VVV      = (TH1D*) histoMVA->Clone("histo_VVV");	 
+  TH1D *histo_Higgs    = (TH1D*) histoMVA->Clone("histo_Higgs");	 
+
+  char finalStateName[6],effMName[10],effEName[10],momMName[10],momEName[10];
+  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
+  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
+  sprintf(finalStateName,"llll1j");
+  TString ECMsb  = "13TeV2016";
+
+  TH1D* histo_Fake_CMS_MVAFakeStatBoundingUp           = new TH1D( Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Fake_CMS_MVAFakeStatBoundingUp  ->Sumw2();
+  TH1D* histo_Fake_CMS_MVAFakeStatBoundingDown         = new TH1D( Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Fake_CMS_MVAFakeStatBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_MVAZZStatBoundingUp           = new TH1D( Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVAZZStatBoundingDown         = new TH1D( Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVAVVVStatBoundingUp         = new TH1D( Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVAVVVStatBoundingDown       = new TH1D( Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAHiggsStatBoundingUp           = new TH1D( Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Higgs_CMS_MVAHiggsStatBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAHiggsStatBoundingDown         = new TH1D( Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Higgs_CMS_MVAHiggsStatBoundingDown->Sumw2();
+
+  TH1D* histo_Diff = new TH1D("dummy", "dummy",1000,-1,1); histo_Diff->Sumw2();
+
+  TH1D* histo_ZZ_CMS_QCDScaleBounding[6];
+  TH1D* histo_VVV_CMS_QCDScaleBounding[6];
+  TH1D* histo_Higgs_CMS_QCDScaleBounding[6];
+  for(int nb=0; nb<6; nb++){
+    histo_ZZ_CMS_QCDScaleBounding[nb]	     = new TH1D(Form("histo_ZZ_QCDScale_f%d",nb),      Form("histo_ZZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_ZZ_CMS_QCDScaleBounding[nb]->Sumw2();
+    histo_VVV_CMS_QCDScaleBounding[nb]       = new TH1D(Form("histo_VVV_QCDScale_f%d",nb),     Form("histo_VVV_QCDScale_f%d",nb),nBinMVA, xbins);     histo_VVV_CMS_QCDScaleBounding[nb]->Sumw2();
+    histo_Higgs_CMS_QCDScaleBounding[nb]     = new TH1D(Form("histo_Higgs_QCDScale_f%d",nb),      Form("histo_Higgs_QCDScale_f%d",nb),nBinMVA, xbins);      histo_Higgs_CMS_QCDScaleBounding[nb]->Sumw2();
+  }
+  TH1D* histo_ZZ_CMS_PDFBounding[102];
+  TH1D* histo_VVV_CMS_PDFBounding[102];
+  TH1D* histo_Higgs_CMS_PDFBounding[102];
+  for(int nb=0; nb<102; nb++) {
+    histo_ZZ_CMS_PDFBounding[nb]        = new TH1D(Form("histo_ZZ_PDF_f%d",nb),      Form("histo_ZZ_PDF_f%d",nb),     nBinMVA, xbins); histo_ZZ_CMS_PDFBounding[nb]->Sumw2();
+    histo_VVV_CMS_PDFBounding[nb]       = new TH1D(Form("histo_VVV_PDF_f%d",nb),     Form("histo_VVV_PDF_f%d",nb),    nBinMVA, xbins); histo_VVV_CMS_PDFBounding[nb]->Sumw2();
+    histo_Higgs_CMS_PDFBounding[nb]     = new TH1D(Form("histo_Higgs_PDF_f%d",nb),      Form("histo_Higgs_PDF_f%d",nb),     nBinMVA, xbins); histo_Higgs_CMS_PDFBounding[nb]->Sumw2();
+  }
+
+  TH1D* histo_Fake_CMS_MVAFakeStatBoundingBinUp[nBinMVA];
+  TH1D* histo_Fake_CMS_MVAFakeStatBoundingBinDown[nBinMVA];
+  TH1D* histo_ZZ_CMS_MVAZZStatBoundingBinUp[nBinMVA];
+  TH1D* histo_ZZ_CMS_MVAZZStatBoundingBinDown[nBinMVA];
+  TH1D* histo_VVV_CMS_MVAVVVStatBoundingBinUp[nBinMVA];
+  TH1D* histo_VVV_CMS_MVAVVVStatBoundingBinDown[nBinMVA];
+  TH1D* histo_Higgs_CMS_MVAHiggsStatBoundingBinUp[nBinMVA];
+  TH1D* histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[nBinMVA];
+  for(int nb=0; nb<nBinMVA; nb++) {
+    histo_Fake_CMS_MVAFakeStatBoundingBinUp[nb]    = new TH1D(Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%s_Bin%dUp" 	   ,finalStateName,  ECMsb.Data(),nb), Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%s_Bin%dUp"	      ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_Fake_CMS_MVAFakeStatBoundingBinDown[nb]  = new TH1D(Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%s_Bin%dDown" 	 ,finalStateName,  ECMsb.Data(),nb), Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%s_Bin%dDown"	    ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]        = new TH1D(Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%s_Bin%dUp" 	   ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%s_Bin%dUp"  	  ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]      = new TH1D(Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%s_Bin%dDown" 	 ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zz4l%s_MVAZZStatBounding_%s_Bin%dDown"  	,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]      = new TH1D(Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%s_Bin%dUp" 	 ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%s_Bin%dUp"  	,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]    = new TH1D(Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%s_Bin%dDown"	   ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zz4l%s_MVAVVVStatBounding_%s_Bin%dDown"	  ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinUp[nb]  = new TH1D(Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%s_Bin%dUp"	       ,finalStateName,  ECMsb.Data(),nb), Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%s_Bin%dUp"	    ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[nb]= new TH1D(Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%s_Bin%dDown"	     ,finalStateName,  ECMsb.Data(),nb), Form("histo_Higgs_CMS_zz4l%s_MVAHiggsStatBounding_%s_Bin%dDown"	  ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_Fake_CMS_MVAFakeStatBoundingBinUp[nb]    ->Sumw2();
+    histo_Fake_CMS_MVAFakeStatBoundingBinDown[nb]  ->Sumw2();
+    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]	   ->Sumw2();
+    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]	   ->Sumw2();
+    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]	   ->Sumw2();
+    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]    ->Sumw2();
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinUp[nb]  ->Sumw2();
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[nb]->Sumw2();
+  }
+
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingUp    	   = new TH1D( Form("histo_ZZ_%sUp",effMName)  , Form("histo_ZZ_%sUp",effMName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingDown  	   = new TH1D( Form("histo_ZZ_%sDown",effMName), Form("histo_ZZ_%sDown",effMName), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingUp   	   = new TH1D( Form("histo_VVV_%sUp",effMName)  , Form("histo_VVV_%sUp",effMName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingDown 	   = new TH1D( Form("histo_VVV_%sDown",effMName), Form("histo_VVV_%sDown",effMName), nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffMBoundingUp       = new TH1D( Form("histo_Higgs_%sUp",effMName)  , Form("histo_Higgs_%sUp",effMName)  , nBinMVA, xbins); histo_Higgs_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffMBoundingDown     = new TH1D( Form("histo_Higgs_%sDown",effMName), Form("histo_Higgs_%sDown",effMName), nBinMVA, xbins); histo_Higgs_CMS_MVALepEffMBoundingDown->Sumw2();
+
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingAvg    	   = new TH1D( Form("histo_ZZ_%sAvg",effMName)  , Form("histo_ZZ_%sAvg",effMName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingAvg   	   = new TH1D( Form("histo_VVV_%sAvg",effMName)  , Form("histo_VVV_%sAvg",effMName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffMBoundingAvg      = new TH1D( Form("histo_Higgs_%sAvg",effMName)  , Form("histo_Higgs_%sAvg",effMName)  , nBinMVA, xbins); histo_Higgs_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingUp    	   = new TH1D( Form("histo_ZZ_%sUp",effEName)  , Form("histo_ZZ_%sUp",effEName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingDown  	   = new TH1D( Form("histo_ZZ_%sDown",effEName), Form("histo_ZZ_%sDown",effEName), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingUp   	   = new TH1D( Form("histo_VVV_%sUp",effEName)  , Form("histo_VVV_%sUp",effEName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingDown 	   = new TH1D( Form("histo_VVV_%sDown",effEName), Form("histo_VVV_%sDown",effEName), nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffEBoundingUp       = new TH1D( Form("histo_Higgs_%sUp",effEName)  , Form("histo_Higgs_%sUp",effEName)  , nBinMVA, xbins); histo_Higgs_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffEBoundingDown     = new TH1D( Form("histo_Higgs_%sDown",effEName), Form("histo_Higgs_%sDown",effEName), nBinMVA, xbins); histo_Higgs_CMS_MVALepEffEBoundingDown->Sumw2();
+
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingAvg    	   = new TH1D( Form("histo_ZZ_%sAvg",effEName)  , Form("histo_ZZ_%sAvg",effEName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingAvg   	   = new TH1D( Form("histo_VVV_%sAvg",effEName)  , Form("histo_VVV_%sAvg",effEName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVALepEffEBoundingAvg      = new TH1D( Form("histo_Higgs_%sAvg",effEName)  , Form("histo_Higgs_%sAvg",effEName)  , nBinMVA, xbins); histo_Higgs_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+
+  TH1D* histo_ZZ_CMS_MVAMETBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_scale_metUp")  , Form("histo_ZZ_CMS_scale_metUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVAMETBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_scale_metDown"), Form("histo_ZZ_CMS_scale_metDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVAMETBoundingUp   	= new TH1D( Form("histo_VVV_CMS_scale_metUp")  , Form("histo_VVV_CMS_scale_metUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVAMETBoundingDown 	= new TH1D( Form("histo_VVV_CMS_scale_metDown"), Form("histo_VVV_CMS_scale_metDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAMETBoundingUp    	= new TH1D( Form("histo_Higgs_CMS_scale_metUp")  , Form("histo_Higgs_CMS_scale_metUp")  , nBinMVA, xbins); histo_Higgs_CMS_MVAMETBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAMETBoundingDown  	= new TH1D( Form("histo_Higgs_CMS_scale_metDown"), Form("histo_Higgs_CMS_scale_metDown"), nBinMVA, xbins); histo_Higgs_CMS_MVAMETBoundingDown->Sumw2();
+
+  TH1D* histo_ZZ_CMS_MVAJESBoundingUp       	= new TH1D( Form("histo_ZZ_CMS_scale_jUp")  , Form("histo_ZZ_CMS_scale_jUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVAJESBoundingDown     	= new TH1D( Form("histo_ZZ_CMS_scale_jDown"), Form("histo_ZZ_CMS_scale_jDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVAJESBoundingUp      	= new TH1D( Form("histo_VVV_CMS_scale_jUp")  , Form("histo_VVV_CMS_scale_jUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVAJESBoundingDown    	= new TH1D( Form("histo_VVV_CMS_scale_jDown"), Form("histo_VVV_CMS_scale_jDown"), nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAJESBoundingUp       	= new TH1D( Form("histo_Higgs_CMS_scale_jUp")  , Form("histo_Higgs_CMS_scale_jUp")  , nBinMVA, xbins); histo_Higgs_CMS_MVAJESBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVAJESBoundingDown     	= new TH1D( Form("histo_Higgs_CMS_scale_jDown"), Form("histo_Higgs_CMS_scale_jDown"), nBinMVA, xbins); histo_Higgs_CMS_MVAJESBoundingDown->Sumw2();
+
+  TH1D* histo_ZZ_CMS_PUBoundingUp            	= new TH1D( Form("histo_ZZ_CMS_puUp")  , Form("histo_ZZ_CMS_puUp")  , nBinMVA, xbins); histo_ZZ_CMS_PUBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_PUBoundingDown  	        = new TH1D( Form("histo_ZZ_CMS_puDown"), Form("histo_ZZ_CMS_puDown"), nBinMVA, xbins); histo_ZZ_CMS_PUBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_PUBoundingUp           	= new TH1D( Form("histo_VVV_CMS_puUp")  , Form("histo_VVV_CMS_puUp")  , nBinMVA, xbins); histo_VVV_CMS_PUBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_PUBoundingDown         	= new TH1D( Form("histo_VVV_CMS_puDown"), Form("histo_VVV_CMS_puDown"), nBinMVA, xbins); histo_VVV_CMS_PUBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_PUBoundingUp            = new TH1D( Form("histo_Higgs_CMS_puUp")  , Form("histo_Higgs_CMS_puUp")  , nBinMVA, xbins); histo_Higgs_CMS_PUBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_PUBoundingDown          = new TH1D( Form("histo_Higgs_CMS_puDown"), Form("histo_Higgs_CMS_puDown"), nBinMVA, xbins); histo_Higgs_CMS_PUBoundingDown->Sumw2();
+
+  unsigned int numberOfLeptons = 4;
+
+  double totalEventsProcess[50];
+  std::vector<double> sumEventsProcess(infileName_.size(), 0.0);
+
+  //*******************************************************
+  // Chain Loop
+  //*******************************************************
+  for(UInt_t ifile=0; ifile<infileName_.size(); ifile++) {
+
+    TFile the_input_file(infileName_[ifile]);
+    TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
+    //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
+    TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
+    TTree *the_SelBit_tree= (TTree*)the_input_file.FindObjectAny("SelBit_tree");
+
+    BareEvent eventEvent;
+    eventEvent.setBranchAddresses(the_input_tree);
+
+    BareJets eventJets;
+    eventJets.setBranchAddresses(the_input_tree);
+
+    BareLeptons eventLeptons;
+    eventLeptons.setBranchAddresses(the_input_tree);
+
+    //BareTaus eventTaus;
+    //eventTaus.setBranchAddresses(the_input_tree);
+
+    BareMet eventMet;
+    eventMet.SetExtend();
+    eventMet.setBranchAddresses(the_input_tree);
+
+    BareTrigger eventTrigger;
+    eventTrigger.setBranchAddresses(the_input_tree);
+
+    BareVertex eventVertex;
+    eventVertex.setBranchAddresses(the_input_tree);
+
+    BareMonteCarlo eventMonteCarlo;
+    eventMonteCarlo.setBranchAddresses(the_input_tree);
+
+    TNamed *triggerNames = (TNamed*)the_input_file.FindObjectAny("triggerNames");
+    char **tokens;
+    size_t numtokens;
+    tokens = strsplit(triggerNames->GetTitle(), ",", &numtokens);
+    if(infileCategory_[ifile] == 0){
+      for (int i = 0; i < (int)numtokens; i++) {
+        printf("triggerNames(%2d): \"%s\"\n",(int)i,tokens[i]);
+      }
+    }
+    else {
+      printf("sampleNames(%d): %s\n",ifile,infileName_[ifile].Data());
+    }
+
+    char weightDef[256];
+    int initPDFTag = -1;
+    if(the_PDF_tree) {
+      the_PDF_tree->SetBranchAddress("weightDef", &weightDef);
+      for (int i=0; i<the_PDF_tree->GetEntries(); ++i) {
+        the_PDF_tree->GetEntry(i);
+        char **tokensPDF;
+        size_t numtokensPDF;
+        tokensPDF = strsplit(weightDef, " = ", &numtokensPDF);
+        for (int k = 0; k < (int)numtokensPDF; k++) if(strcmp(tokensPDF[k],"292201") == 0||
+	                                               strcmp(tokensPDF[k],"292001") == 0||
+						       strcmp(tokensPDF[k],"260001") == 0) {initPDFTag = i; break;}
+	if(initPDFTag != -1) break;
+      }
+    }
+    if(infileCategory_[ifile] != 0 && initPDFTag == -1 && infileName_[ifile].Contains("powheg") == false) {
+      printf("PDFTAG PROBLEM\n");
+      if(the_PDF_tree) {
+        printf("PDFTree Entries: %d\n",(int)the_PDF_tree->GetEntries());
+        for (int i=0; i<the_PDF_tree->GetEntries(); ++i) {
+          the_PDF_tree->GetEntry(i);
+	  //printf("PDF(%d): %s\n",i,weightDef);
+        }
+      }
+      else {
+        printf("PDFTree not available\n");
+      }
+      //return;
+    }
+
+    unsigned int selBit_= 0;
+    the_SelBit_tree->SetBranchAddress("selBit", &selBit_);
+    double theMCPrescale = mcPrescale;
+    if(infileCategory_[ifile] == 0) theMCPrescale = 1.0;
+    for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
+      the_SelBit_tree->GetEntry(i);
+      if(i%100000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
+      if((selBit_ & 0x1<<whichSkim) == 0) continue;
+
+      the_input_tree->GetEntry(i);
+
+      Bool_t passFilter[14] = {kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,
+                               kFALSE,kFALSE,kFALSE,kFALSE};
+      if(eventLeptons.p4->GetEntriesFast() >= 2 &&
+     	 ((TLorentzVector*)(*eventLeptons.p4)[0])->Pt() > 20 && 
+     	 ((TLorentzVector*)(*eventLeptons.p4)[1])->Pt() > 10) passFilter[0] = kTRUE;
+      if(infileCategory_[ifile] == 0) {
+	for (int nt = 0; nt <(int)numtokens; nt++) {
+          if((*eventTrigger.triggerFired)[nt] == 0) continue;
+          if((strcmp(tokens[nt],"HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*") == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*") == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v*") 	              == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v*")	      == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*") 	      == 0) ||
+             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*")	      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoMu24_v*")				      == 0) ||
+             (strcmp(tokens[nt],"HLT_IsoTkMu24_v*")				      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) ||
+             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
+             ) passFilter[1] = kTRUE;
+	}
+      } else { passFilter[1] = kTRUE;}
+
+      if(passFilter[0] == kFALSE) continue;
+      if(passFilter[1] == kFALSE) continue;
+      vector<int> idLep; vector<int> idTight; vector<int> idSoft; unsigned int goodIsTight = 0;
+      for(int nlep=0; nlep<eventLeptons.p4->GetEntriesFast(); nlep++) {
+        if(selectIdIsoCut(typeLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
+	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
+	                                                                                               {idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
+        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep); }
+        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
+      }
+      if(idLep.size()!=idTight.size()) {assert(1); return;}
+      if(idLep.size()==numberOfLeptons) passFilter[2] = kTRUE;
+      if(passFilter[2] == kFALSE) continue;
+
+      if(goodIsTight == idTight.size()) passFilter[3] = kTRUE;
+      if(usePureMC ==  true && passFilter[3] == kFALSE) continue;
+      if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <= 25 ||
+         ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <= 25 ||
+         ((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Pt() <= 10 ||
+         ((TLorentzVector*)(*eventLeptons.p4)[idLep[3]])->Pt() <= 10) continue;
+
+      double dPhiLepMETMin = 999.;
+      int signQ = 0;
+      for(unsigned nl=0; nl<idLep.size(); nl++){
+        signQ = signQ + (int)(*eventLeptons.pdgId)[idLep[nl]]/TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]);
+        if(dPhiLepMETMin > TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))))
+           dPhiLepMETMin = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));      
+      }
+      double minMET  = TMath::Min(((TLorentzVector*)(*eventMet.p4)[0])->Pt(),(double)eventMet.trackMet->Pt());
+      double minPMET = TMath::Min(((TLorentzVector*)(*eventMet.p4)[0])->Pt(),(double)eventMet.trackMet->Pt());
+      if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
+
+      passFilter[4] = TMath::Abs(signQ) == 0;
+      if(passFilter[4] == kFALSE) continue;
+
+      double minMassll = 999.0;
+      double minMassZ[2] = {99999.0, 99999.0};
+      double deltaRllMin = 999.0;
+      int tagZ[4] = {-1,-1,-1,-1};
+      for(unsigned nl0=0; nl0<idLep.size()-1; nl0++){
+        for(unsigned nl1=nl0+1; nl1<idLep.size(); nl1++){
+          double deltaRllAux = ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl0]])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl1]]));
+          if(deltaRllAux < deltaRllMin) deltaRllMin = deltaRllAux;
+
+	  if((int)(*eventLeptons.pdgId)[idLep[nl0]] * (int)(*eventLeptons.pdgId)[idLep[nl1]] > 0) continue;
+          TLorentzVector dilepAux(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl1])) ) ));
+
+	  if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]])==TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl1]])){
+	    if(TMath::Abs(dilepAux.M()-91.1876) < TMath::Abs(minMassZ[0]-91.1876)) {
+	      minMassZ[0] = dilepAux.M();tagZ[0]=nl0;tagZ[1]=nl1;
+	    }
+	  }
+
+	  if(minMassll > dilepAux.M()) minMassll = dilepAux.M();
+        }
+      }
+      
+      // Removing events with no Z candidate at all
+      if(tagZ[0] == -1) continue;
+      
+      for(unsigned nl=0; nl<idLep.size(); nl++){
+        if(tagZ[0] == (int)nl || tagZ[1] == (int)nl) continue;
+	if(tagZ[2] == -1) tagZ[2] = nl;
+	else              tagZ[3] = nl;
+      }
+
+      if(tagZ[0] == -1 || tagZ[1] == -1 || tagZ[2] == -1 || tagZ[3] == -1) printf("TAGZ PROBLEM!: %d %d %d %d\n",tagZ[0],tagZ[1],tagZ[2],tagZ[3]);
+
+      TLorentzVector dilepZ (( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) ) ));
+      TLorentzVector dilepLL(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) ) ));
+      minMassZ[1] = dilepLL.M();
+      double deltaPhiDileptonMet = TMath::Abs(dilepLL.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+      double mtHWW = TMath::Sqrt(2.0*dilepLL.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiDileptonMet)));
+
+      TLorentzVector dilepWW;
+      dilepWW.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+dilepLL.Px());
+      dilepWW.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+dilepLL.Py());
+      dilepWW.SetPz(0.0);
+
+      vector<int> idJet,idJetUp,idJetDown;
+      bool isBtag = kFALSE;
+      double bDiscrMax = 0.0;
+      double dPhiJetMET = -1.0;
+      double dPhiJetDiLep = -1.0;
+      for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
+        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
+        //if(passId == false) continue;        
+
+        Bool_t isLepton = kFALSE;
+        for(unsigned int nl=0; nl<idLep.size(); nl++){
+          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3) isLepton = kTRUE;
+	}
+	if(isLepton == kTRUE) continue;
+
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+        }
+
+	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
+	   (float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
+
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) idJet.push_back(nj);
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.03 > 30) idJetUp.push_back(nj);
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
+      }
+
+      TLorentzVector fourLep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[2])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[3])) ) ));
+      double mass4l = fourLep.M();
+      int typeL[2] = {0,0};
+      for(unsigned nl0=0; nl0<idLep.size(); nl0++){
+        if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 11) typeL[0]++;
+        else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 13) typeL[1]++;
+        else {printf("ZZ4lPROBLEM!\n");assert(0);return;}
+      }
+
+      int type4l = 0;
+      if     (typeL[0] == 4) type4l = 0;
+      else if(typeL[1] == 4) type4l = 1;
+      else if(typeL[0] == 2) type4l = 2;
+      else		     type4l = 3;
+
+      passFilter[5]  = typeL[0] == 4 || typeL[1] == 4 || (typeL[0] == 2 && typeL[1] == 2);
+      passFilter[6]  = minMassll > 4.0;
+      passFilter[7]  = minMassZ[0] > 76.1876 && minMassZ[0] < 106.1876 && minMassZ[1] > 76.1876 && minMassZ[1] < 106.1876;
+      passFilter[8]  = minMassZ[0] > 76.1876 && minMassZ[0] < 106.1876;
+      passFilter[9]  = minMassZ[1] > 10 && minMassZ[1] < 65;
+      passFilter[10] = mass4l > 140.0 || type4l == 3;
+      passFilter[11] = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 20.;
+      passFilter[12] = bDiscrMax < 0.560 && idJet.size() <= 1;
+      passFilter[13] = fourLep.Pt() > 30 || type4l == 3;
+
+      bool passNMinusOne[2] = {                 passFilter[6],
+                               passFilter[5]                 };
+      bool passAllCuts = passFilter[5] && passFilter[6];
+      bool passZZSel = passFilter[5] && passFilter[6] && passFilter[7];
+      bool passZHWWSelNMinusOne[6] = {passFilter[6] &&                  passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13],
+                                      passFilter[6] && passFilter[8] &&                  passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13],
+				      passFilter[6] && passFilter[8] && passFilter[9]                   && passFilter[11] && passFilter[12] && passFilter[13],
+				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10]                   && passFilter[12] && passFilter[13],
+				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11]                   && passFilter[13],
+				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12]};
+      bool passZHWWSel = passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13];
+
+      TLorentzVector theFakeMET[2], theFakeMETUp, theFakeMETDown, theZZllnnMET, dilepZll, dilepZnn; double dPhiDiLepMET = 0, ptFrac = 0;
+      if(passZZSel){
+        theFakeMET[0].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
+        theFakeMET[0].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
+        theFakeMET[1].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+        theFakeMET[1].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+        if(TMath::Abs(minMassZ[0]-91.1876) < TMath::Abs(minMassZ[1]-91.1876)) { // (1) => ll, (2) => nn
+	  theZZllnnMET = theFakeMET[1];
+          dilepZll = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) );
+          dilepZnn = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) );
+          theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
+          theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
+          theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
+          theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
+	} else { // (1) => nn, (2) ==> ll
+	  printf("IMPOSSIBLE!!!\n");
+	}
+        dPhiDiLepMET = TMath::Abs(dilepZll.DeltaPhi(theZZllnnMET));
+        ptFrac = TMath::Abs(dilepZll.Pt()-theZZllnnMET.Pt())/dilepZll.Pt();
+      }
+      bool passNjets      = idJet.size() <= 1;
+      bool passMET        = theZZllnnMET.Pt() > 50;
+      bool passPTFrac     = ptFrac < 0.4;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.8;
+      bool passPTLL       = dilepZll.Pt() > 60;
+      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET};
+      bool passSystCuts[nSystTypes] = {
+          passZZSel && idJetUp.size() <= 1   && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
+	  passZZSel && idJetDown.size() <= 1 && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
+          passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
+	  passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET
+      };
+
+      // begin event weighting
+      vector<int>zzBoson;
+      vector<bool> isGenDupl; double bosonPtMin = 1000000000; bool isBosonFound = false;
+      int numberQuarks[2] = {0,0};
+      for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zzBoson.push_back(ngen0);
+        if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
+	   ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[0]++;
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[1]++;
+        isGenDupl.push_back(0);
+	if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 11 &&
+	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 13) isGenDupl[ngen0] = 1;
+	if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 11 &&
+	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 13) continue;
+        for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
+	  if((int)(*eventMonteCarlo.pdgId)[ngen0] != (int)(*eventMonteCarlo.pdgId)[ngen1]) continue;
+          if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
+	    isGenDupl[ngen0] = 1;
+	    break;
+	  }
+        }
+      }
+      vector<int> isGenLep; unsigned int goodIsGenLep = 0;
+      for(unsigned nl=0; nl<idLep.size(); nl++){
+        bool isGenLepton = false;
+        for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
+	  if(isGenDupl[ngen] == 1) continue;
+          if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]) == TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen]) &&
+	    ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])) < 0.3) {
+	    isGenLepton = true;
+	    break;
+	  }
+	}
+	if(isGenLepton == true) {isGenLep.push_back(1); goodIsGenLep++;}
+	else                    {isGenLep.push_back(0);}
+      }
+
+      // luminosity
+      double theLumi  = 1.0; if(infileCategory_[ifile] != 0) theLumi  = lumi;
+      // pile-up
+      double puWeight     = 1.0; if(infileCategory_[ifile] != 0) puWeight     = nPUScaleFactor(fhDPU    , (double)eventMonteCarlo.puTrueInt);
+      double puWeightUp   = 1.0; if(infileCategory_[ifile] != 0) puWeightUp   = nPUScaleFactor(fhDPUUp  , (double)eventMonteCarlo.puTrueInt);
+      double puWeightDown = 1.0; if(infileCategory_[ifile] != 0) puWeightDown = nPUScaleFactor(fhDPUDown, (double)eventMonteCarlo.puTrueInt);
+      // lepton efficiency
+      double effSF = 1.0;
+      if(infileCategory_[ifile] != 0){
+        for(unsigned int nl=0; nl<idLep.size(); nl++){
+          effSF = effSF * effhDScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),
+	        ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),
+		typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF);
+        }
+      }
+
+      // fake rate
+      int theCategory = infileCategory_[ifile];
+      double fakeSF = 1.0;
+      if(usePureMC == false){
+        if     ((infileCategory_[ifile] == 0 || goodIsGenLep == isGenLep.size()) && goodIsTight != idTight.size()){ // add Z+jets from data
+	  for(unsigned int nl=0; nl<idLep.size(); nl++){
+	    if(idTight[nl] == 1) continue;
+	    fakeSF = fakeSF * fakeRateFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
+	    theCategory = 1;
+          }
+          if     (infileCategory_[ifile] != 0 && goodIsTight == idTight.size()-3) fakeSF = -1.0 * fakeSF; // triple fake, MC
+          else if(infileCategory_[ifile] != 0 && goodIsTight == idTight.size()-2) fakeSF = +1.0 * fakeSF; // double fake, MC
+          else if(infileCategory_[ifile] != 0 && goodIsTight == idTight.size()-1) fakeSF = -1.0 * fakeSF; // single fake, MC
+          else if(infileCategory_[ifile] == 0 && goodIsTight == idTight.size()-3) fakeSF = +1.0 * fakeSF; // triple fake, data
+          else if(infileCategory_[ifile] == 0 && goodIsTight == idTight.size()-2) fakeSF = -1.0 * fakeSF; // double fake, data
+          else if(infileCategory_[ifile] == 0 && goodIsTight == idTight.size()-1) fakeSF = +1.0 * fakeSF; // single fake, data
+        }
+        else if(infileCategory_[ifile] != 0 && goodIsGenLep != isGenLep.size()){ // remove MC dilepton fakes from ll events
+          fakeSF = 0.0;
+        }
+        else if(infileCategory_[ifile] != 0 && goodIsGenLep == isGenLep.size()){ // MC with all good leptons
+	  fakeSF = 1.0;
+        }
+        else if(infileCategory_[ifile] == 0){ // data or Z+gamma with all good leptons
+	  fakeSF = 1.0;
+        }
+	else {
+	  printf("PROBLEM: %d %d %d %d %d\n",infileCategory_[ifile],goodIsGenLep,(int)isGenLep.size(),goodIsTight,(int)idTight.size());
+	  assert(0);
+	}
+      }
+      double mcWeight = eventMonteCarlo.mcWeight;
+      if(infileCategory_[ifile] == 0) mcWeight = 1.0;
+      //double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale;
+      double totalWeight = mcWeight*theLumi*puWeight*fakeSF*theMCPrescale;
+      if(totalWeight == 0) continue;
+
+      double theZZCorr[2] {1,1};
+      if(theCategory == 4 && infileName_[ifile].Contains("GluGlu") == kFALSE) {
+        float GENmZZ = 0.0;
+	if(zzBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).M();
+	theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
+	theZZCorr[1] = kfactor_qqZZ_qcd_M(GENmZZ);
+        totalWeight = totalWeight * (theZZCorr[0]*theZZCorr[1]);
+      }
+
+      // end event weighting
+      if((infileCategory_[ifile] != 0 || theCategory == 0) && passZZSel) sumEventsProcess[ifile] += totalWeight;
+
+      for(int thePlot=0; thePlot<allPlots; thePlot++){
+	double theVar = 0.0;
+	bool makePlot = false;
+	if     (thePlot ==  0 && passAllCuts)             {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
+	else if(thePlot ==  1 && passNMinusOne[0])        {makePlot = true;theVar = type4l;}
+	else if(thePlot ==  2 && passNMinusOne[1])        {makePlot = true;theVar = TMath::Min(minMassll,99.999);}
+	else if(thePlot ==  3 && passAllCuts)             {makePlot = true;theVar = TMath::Min(minMassZ[0],199.999);}
+	else if(thePlot ==  4 && passAllCuts)             {makePlot = true;theVar = TMath::Min(minMassZ[1],199.999);}
+	else if(thePlot ==  5 && passAllCuts)             {makePlot = true;theVar = TMath::Min(deltaRllMin,3.999);}
+	else if(thePlot ==  6 && passAllCuts)             {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	else if(thePlot ==  7 && passAllCuts)             {makePlot = true;theVar = TMath::Min(bDiscrMax,0.999);}
+	else if(thePlot ==  8 && passAllCuts)             {makePlot = true;theVar = dPhiJetMET*180/TMath::Pi();}
+	else if(thePlot ==  9 && passAllCuts)             {makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
+	else if(thePlot == 10 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
+	else if(thePlot == 11 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
+	else if(thePlot == 12 && passZZSel)	          {makePlot = true;theVar = TMath::Min(TMath::Max(theFakeMET[0].Pt(),theFakeMET[1].Pt()),199.999);}
+	else if(thePlot == 13 && passZZSel)	          {makePlot = true;theVar = TMath::Min(TMath::Min(theFakeMET[0].Pt(),theFakeMET[1].Pt()),199.999);}
+	else if(thePlot == 14 && passZHWWSelNMinusOne[3]) {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
+	else if(thePlot == 15 && passZHWWSelNMinusOne[0]) {makePlot = true;theVar = TMath::Min(minMassZ[0],199.999);}
+	else if(thePlot == 16 && passZHWWSelNMinusOne[1]) {makePlot = true;theVar = TMath::Min(minMassZ[1],199.999);}
+	else if(thePlot == 17 && passZHWWSelNMinusOne[2]) {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
+	else if(thePlot == 18 && passZHWWSel)             {makePlot = true;theVar = type4l;}
+	else if(thePlot == 19 && passZHWWSelNMinusOne[4]) {makePlot = true;theVar = TMath::Min(bDiscrMax,0.999);}
+	else if(thePlot == 20 && passZHWWSelNMinusOne[5]) {makePlot = true;theVar = TMath::Min(fourLep.Pt(),199.999);}
+	else if(thePlot == 21 && passZHWWSel)             {makePlot = true;theVar = TMath::Min(mtHWW,199.999);}
+	else if(thePlot == 22 && passZHWWSel)             {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]))*180/TMath::Pi();}
+	else if(thePlot == 23 && passZHWWSel)             {makePlot = true;theVar = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]]))*180/TMath::Pi();}
+	else if(thePlot == 24 && passZHWWSel)             {makePlot = true;theVar = TMath::Abs(dilepZ.DeltaPhi(dilepWW))*180/TMath::Pi();}
+	else if(thePlot == 25 && passZHWWSelNMinusOne[4]) {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	else if(thePlot == 26 && passZHWWSel)             {makePlot = true;theVar = TMath::Min(dilepWW.Pt()/dilepZ.Pt(),1.999);}
+	else if(thePlot == 27 && passZZSel)               {makePlot = true;theVar = TMath::Min(theZZllnnMET.Pt(),199.999);}
+	else if(thePlot == 28 && passZZSel)               {makePlot = true;theVar = TMath::Min(dilepZll.Pt(),199.999);}
+	else if(thePlot == 29 && passZZSel)               {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
+	else if(thePlot == 30 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	else if(thePlot == 31 && passZZSel)               {makePlot = true;theVar = dPhiDiLepMET;}
+	else if(thePlot == 32 && passZZSel)               {makePlot = true;theVar = dPhiJetMET;}
+	else if(thePlot == 33 && passZZSel)               {makePlot = true;theVar = TMath::Abs(dilepZll.DeltaPhi(dilepZnn));}
+
+	if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
+      }
+      
+      if(1) {
+	double MVAVar = TMath::Min(theZZllnnMET.Pt(),xbins[nBinMVA]-0.001);
+	double MVAVarMETSyst[2] = {TMath::Min(theFakeMETUp.Pt(),xbins[nBinMVA]-0.001),TMath::Min(theFakeMETDown.Pt(),xbins[nBinMVA]-0.001)};
+
+        if     (theCategory == 0){
+	  if(passZZhinvSel) histo_Data->Fill(MVAVar,totalWeight);
+        }
+        else if(theCategory == 1){
+	  if(passZZhinvSel) histo_Fake->Fill(MVAVar,totalWeight);
+        }
+        else if(theCategory == 4){
+	  if(passZZhinvSel) {
+	     histo_ZZ->Fill(MVAVar,totalWeight);
+	     histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
+	     histo_ZZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
+	     histo_ZZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
+	     histo_ZZ_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
+	     histo_ZZ_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
+	     histo_ZZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     if(initPDFTag != -1)
+	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
+             else if(infileName_[ifile].Contains("powheg") == true)
+	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
+	     else
+	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
+             if     (type4l == 0) histo_ZZ_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else if(type4l == 1) histo_ZZ_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else                {histo_ZZ_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*0.50);
+	                          histo_ZZ_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*0.50);}
+
+             if     (type4l == 0) histo_ZZ_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else if(type4l == 1) histo_ZZ_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else                {histo_ZZ_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);
+	                          histo_ZZ_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);}
+
+             if     (type4l == 0) histo_ZZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else if(type4l == 1) histo_ZZ_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else                {histo_ZZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);
+	                          histo_ZZ_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);}
+
+             histo_ZZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
+             histo_ZZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+	  }
+          if(passSystCuts[JESUP])  histo_ZZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
+          if(passSystCuts[JESDOWN])histo_ZZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
+          if(passSystCuts[METUP])  histo_ZZ_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
+          if(passSystCuts[METDOWN])histo_ZZ_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);	       
+        }
+        else if(theCategory == 5){
+	  if(passZZhinvSel) {
+	     histo_VVV->Fill(MVAVar,totalWeight);
+	     histo_VVV_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
+	     histo_VVV_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
+	     histo_VVV_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
+	     histo_VVV_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
+	     histo_VVV_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
+	     histo_VVV_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     if(initPDFTag != -1)
+	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
+             else if(infileName_[ifile].Contains("powheg") == true)
+	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
+	     else
+	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
+             if     (type4l == 0) histo_VVV_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else if(type4l == 1) histo_VVV_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else                {histo_VVV_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*0.50);
+	                          histo_VVV_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*0.50);}
+
+             if     (type4l == 0) histo_VVV_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else if(type4l == 1) histo_VVV_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else                {histo_VVV_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);
+	                          histo_VVV_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);}
+
+             if     (type4l == 0) histo_VVV_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else if(type4l == 1) histo_VVV_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else                {histo_VVV_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);
+	                          histo_VVV_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);}
+
+             histo_VVV_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
+             histo_VVV_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+	  }
+          if(passSystCuts[JESUP])  histo_VVV_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
+          if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
+          if(passSystCuts[METUP])  histo_VVV_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
+          if(passSystCuts[METDOWN])histo_VVV_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);	  
+        }
+        else if(theCategory == 6){
+	  if(passZZhinvSel) {
+	     histo_Higgs->Fill(MVAVar,totalWeight);
+	     histo_Higgs_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
+	     histo_Higgs_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
+	     histo_Higgs_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
+	     histo_Higgs_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
+	     histo_Higgs_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
+	     histo_Higgs_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     if(initPDFTag != -1)
+	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
+             else if(infileName_[ifile].Contains("powheg") == true)
+	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
+	     else
+	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
+             if     (type4l == 0) histo_Higgs_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else if(type4l == 1) histo_Higgs_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
+             else                {histo_Higgs_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*0.50);
+	                          histo_Higgs_CMS_MVALepEffMBoundingAvg ->Fill(MVAVar,totalWeight*0.50);}
+
+             if     (type4l == 0) histo_Higgs_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else if(type4l == 1) histo_Higgs_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*1.02*1.02);
+             else                {histo_Higgs_CMS_MVALepEffEBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);
+	                          histo_Higgs_CMS_MVALepEffMBoundingUp  ->Fill(MVAVar,totalWeight*0.50*1.02*1.02);}
+
+             if     (type4l == 0) histo_Higgs_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else if(type4l == 1) histo_Higgs_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.98*0.98);
+             else                {histo_Higgs_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);
+	                          histo_Higgs_CMS_MVALepEffMBoundingDown->Fill(MVAVar,totalWeight*0.50*0.98*0.98);}
+
+             histo_Higgs_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
+             histo_Higgs_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+	  }
+          if(passSystCuts[JESUP])  histo_Higgs_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
+          if(passSystCuts[JESDOWN])histo_Higgs_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
+          if(passSystCuts[METUP])  histo_Higgs_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
+          if(passSystCuts[METDOWN])histo_Higgs_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);	   
+	}
+	else {
+	  printf("CATEGORY PROBLEM!\n"); return;
+	}
+      }
+      
+    }
+    printf("eff_cuts: %f\n",sumEventsProcess[ifile]);
+
+  } // end of chain
+
+  printf("QCD Corr: ZZ(%f:%f/%f/%f/%f/%f/%f) VVV(%f:%f/%f/%f/%f/%f/%f) Higgs(%f:%f/%f/%f/%f/%f/%f)\n",
+    histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[5]->GetSumOfWeights(),
+    histo_VVV->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[5]->GetSumOfWeights(),
+    histo_Higgs->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_Higgs_CMS_QCDScaleBounding[5]->GetSumOfWeights());
+
+  for(int i=1; i<=histo_Fake->GetNbinsX(); i++) {
+    histo_Fake->SetBinContent(i,TMath::Max(histo_Fake->GetBinContent(i),0.0));
+  }
+
+  histo[allPlots-1][0]->Add(histo_Data);
+  histo[allPlots-1][1]->Add(histo_Fake);
+  histo[allPlots-1][4]->Add(histo_ZZ);
+  histo[allPlots-1][5]->Add(histo_VVV);
+  histo[allPlots-1][6]->Add(histo_Higgs);  
+
+  for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {
+    double factorUp = +1.0; double factorDown = -1.0;
+    histo_Fake_CMS_MVAFakeStatBoundingUp       ->SetBinContent(i,TMath::Max(histo_Fake	 ->GetBinContent(i)+factorUp  *histo_Fake   ->GetBinError(i),0.000001));
+    histo_Fake_CMS_MVAFakeStatBoundingDown     ->SetBinContent(i,TMath::Max(histo_Fake       ->GetBinContent(i)+factorDown*histo_Fake	    ->GetBinError(i),0.000001));
+    histo_ZZ_CMS_MVAZZStatBoundingUp	       ->SetBinContent(i,TMath::Max(histo_ZZ       ->GetBinContent(i)+factorUp  *histo_ZZ	->GetBinError(i),0.000001));
+    histo_ZZ_CMS_MVAZZStatBoundingDown         ->SetBinContent(i,TMath::Max(histo_ZZ       ->GetBinContent(i)+factorDown*histo_ZZ	->GetBinError(i),0.000001));
+    histo_VVV_CMS_MVAVVVStatBoundingUp         ->SetBinContent(i,TMath::Max(histo_VVV      ->GetBinContent(i)+factorUp  *histo_VVV	->GetBinError(i),0.000001));
+    histo_VVV_CMS_MVAVVVStatBoundingDown       ->SetBinContent(i,TMath::Max(histo_VVV      ->GetBinContent(i)+factorDown*histo_VVV	->GetBinError(i),0.000001));
+    histo_Higgs_CMS_MVAHiggsStatBoundingUp     ->SetBinContent(i,TMath::Max(histo_Higgs	->GetBinContent(i)+factorUp  *histo_Higgs ->GetBinError(i),0.000001));
+    histo_Higgs_CMS_MVAHiggsStatBoundingDown   ->SetBinContent(i,TMath::Max(histo_Higgs       ->GetBinContent(i)+factorDown*histo_Higgs   ->GetBinError(i),0.000001));
+
+    histo_Fake_CMS_MVAFakeStatBoundingBinUp[i-1]	 ->Add(histo_Fake     ); histo_Fake_CMS_MVAFakeStatBoundingBinUp[i-1]	      ->SetBinContent(i,TMath::Max(histo_Fake	    ->GetBinContent(i)+factorUp  *histo_Fake	   ->GetBinError(i),0.000001));
+    histo_Fake_CMS_MVAFakeStatBoundingBinDown[i-1]       ->Add(histo_Fake     ); histo_Fake_CMS_MVAFakeStatBoundingBinDown[i-1]	  ->SetBinContent(i,TMath::Max(histo_Fake	->GetBinContent(i)+factorDown*histo_Fake       ->GetBinError(i),0.000001));
+    histo_ZZ_CMS_MVAZZStatBoundingBinUp[i-1]	         ->Add(histo_ZZ       ); histo_ZZ_CMS_MVAZZStatBoundingBinUp[i-1]           ->SetBinContent(i,TMath::Max(histo_ZZ       ->GetBinContent(i)+factorUp  *histo_ZZ       ->GetBinError(i),0.000001));
+    histo_ZZ_CMS_MVAZZStatBoundingBinDown[i-1]	         ->Add(histo_ZZ       ); histo_ZZ_CMS_MVAZZStatBoundingBinDown[i-1]         ->SetBinContent(i,TMath::Max(histo_ZZ       ->GetBinContent(i)+factorDown*histo_ZZ       ->GetBinError(i),0.000001));
+    histo_VVV_CMS_MVAVVVStatBoundingBinUp[i-1]	         ->Add(histo_VVV      ); histo_VVV_CMS_MVAVVVStatBoundingBinUp[i-1]         ->SetBinContent(i,TMath::Max(histo_VVV      ->GetBinContent(i)+factorUp  *histo_VVV      ->GetBinError(i),0.000001));
+    histo_VVV_CMS_MVAVVVStatBoundingBinDown[i-1]         ->Add(histo_VVV      ); histo_VVV_CMS_MVAVVVStatBoundingBinDown[i-1]       ->SetBinContent(i,TMath::Max(histo_VVV      ->GetBinContent(i)+factorDown*histo_VVV      ->GetBinError(i),0.000001));
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinUp[i-1]	 ->Add(histo_Higgs    ); histo_Higgs_CMS_MVAHiggsStatBoundingBinUp[i-1] 	  ->SetBinContent(i,TMath::Max(histo_Higgs	 ->GetBinContent(i)+factorUp  *histo_Higgs	 ->GetBinError(i),0.000001));
+    histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]	 ->Add(histo_Higgs    ); histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]	  ->SetBinContent(i,TMath::Max(histo_Higgs	 ->GetBinContent(i)+factorDown*histo_Higgs	 ->GetBinError(i),0.000001));
+  }
+
+  if(1){
+    char outputLimits[200];
+    sprintf(outputLimits,"MitZHAnalysis/plots/zz4l%shinv%s_input_%s.root", addChan.Data(), finalStateName, ECMsb.Data());
+    TFile* outFileLimits = new TFile(outputLimits,"recreate");
+    outFileLimits->cd();
+    
+    if(verbose) {
+      cout << histo_Data             ->GetSumOfWeights() << " ";
+      cout << histo_Fake             ->GetSumOfWeights() << " ";
+      cout << histo_ZZ               ->GetSumOfWeights() << " ";
+      cout << histo_VVV              ->GetSumOfWeights() << " ";
+      cout << histo_Higgs            ->GetSumOfWeights() << " ";
+      cout << endl;
+      printf("uncertainties Stat\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_Fake	->GetBinContent(i)>0)printf("%5.1f ",histo_Fake_CMS_MVAFakeStatBoundingUp		 ->GetBinContent(i)/histo_Fake       ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_Fake	->GetBinContent(i)>0)printf("%5.1f ",histo_Fake_CMS_MVAFakeStatBoundingDown 	 ->GetBinContent(i)/histo_Fake	   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_ZZ	->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAZZStatBoundingUp		 ->GetBinContent(i)/histo_ZZ       ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_ZZ	->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAZZStatBoundingDown 	 ->GetBinContent(i)/histo_ZZ	   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_VVV	->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAVVVStatBoundingUp 	 ->GetBinContent(i)/histo_VVV	   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_VVV	->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAVVVStatBoundingDown	 ->GetBinContent(i)/histo_VVV	   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_Higgs	->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAHiggsStatBoundingUp		 ->GetBinContent(i)/histo_Higgs       ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ  ->GetNbinsX(); i++) {if(histo_Higgs	->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAHiggsStatBoundingDown 	 ->GetBinContent(i)/histo_Higgs	   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      printf("uncertainties LepEffM\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVALepEffMBoundingUp       ->GetBinContent(i)/histo_ZZ_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVALepEffMBoundingDown     ->GetBinContent(i)/histo_ZZ_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV_CMS_MVALepEffMBoundingAvg    ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVALepEffMBoundingUp      ->GetBinContent(i)/histo_VVV_CMS_MVALepEffMBoundingAvg    ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV_CMS_MVALepEffMBoundingAvg    ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVALepEffMBoundingDown    ->GetBinContent(i)/histo_VVV_CMS_MVALepEffMBoundingAvg    ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVALepEffMBoundingUp       ->GetBinContent(i)/histo_Higgs_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVALepEffMBoundingDown     ->GetBinContent(i)/histo_Higgs_CMS_MVALepEffMBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      printf("uncertainties LepEffE\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVALepEffEBoundingUp       ->GetBinContent(i)/histo_ZZ_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVALepEffEBoundingDown     ->GetBinContent(i)/histo_ZZ_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV_CMS_MVALepEffEBoundingAvg    ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVALepEffEBoundingUp      ->GetBinContent(i)/histo_VVV_CMS_MVALepEffEBoundingAvg    ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV_CMS_MVALepEffEBoundingAvg    ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVALepEffEBoundingDown    ->GetBinContent(i)/histo_VVV_CMS_MVALepEffEBoundingAvg    ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVALepEffEBoundingUp       ->GetBinContent(i)/histo_Higgs_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVALepEffEBoundingDown     ->GetBinContent(i)/histo_Higgs_CMS_MVALepEffEBoundingAvg     ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      printf("uncertainties MET\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAMETBoundingUp   ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAMETBoundingDown ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAMETBoundingUp    ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAMETBoundingDown  ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAMETBoundingUp   ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAMETBoundingDown ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      printf("uncertainties JES\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAJESBoundingUp      ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAJESBoundingDown    ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAJESBoundingUp      ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVAJESBoundingDown    ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAJESBoundingUp      ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAJESBoundingDown    ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      printf("uncertainties PU\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_PUBoundingUp   ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_PUBoundingDown ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_PUBoundingUp    ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_PUBoundingDown  ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_PUBoundingUp   ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {if(histo_Higgs    ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_PUBoundingDown ->GetBinContent(i)/histo_Higgs   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+    } 
+    histo_Fake ->Write();
+    histo_Data ->Write();
+    histo_ZZ   ->Write();
+    histo_VVV  ->Write();
+    histo_Higgs->Write();
+
+    histo_Fake_CMS_MVAFakeStatBoundingUp       ->Write();
+    histo_Fake_CMS_MVAFakeStatBoundingDown     ->Write();
+    histo_ZZ_CMS_MVAZZStatBoundingUp	       ->Write();
+    histo_ZZ_CMS_MVAZZStatBoundingDown	       ->Write();
+    histo_VVV_CMS_MVAVVVStatBoundingUp	       ->Write();
+    histo_VVV_CMS_MVAVVVStatBoundingDown       ->Write();
+    histo_Higgs_CMS_MVAHiggsStatBoundingUp     ->Write();
+    histo_Higgs_CMS_MVAHiggsStatBoundingDown   ->Write();
+    
+    histo_ZZ_CMS_MVALepEffMBoundingUp	       ->Write();
+    histo_ZZ_CMS_MVALepEffMBoundingDown	       ->Write();
+    histo_VVV_CMS_MVALepEffMBoundingUp	       ->Write();
+    histo_VVV_CMS_MVALepEffMBoundingDown       ->Write();
+    histo_Higgs_CMS_MVALepEffMBoundingUp       ->Write();
+    histo_Higgs_CMS_MVALepEffMBoundingDown     ->Write();
+    
+    histo_ZZ_CMS_MVALepEffEBoundingUp	       ->Write();
+    histo_ZZ_CMS_MVALepEffEBoundingDown	       ->Write();
+    histo_VVV_CMS_MVALepEffEBoundingUp	       ->Write();
+    histo_VVV_CMS_MVALepEffEBoundingDown       ->Write();
+    histo_Higgs_CMS_MVALepEffEBoundingUp       ->Write();
+    histo_Higgs_CMS_MVALepEffEBoundingDown     ->Write();
+    
+    histo_ZZ_CMS_MVAMETBoundingUp	       ->Write();
+    histo_ZZ_CMS_MVAMETBoundingDown	       ->Write();
+    histo_VVV_CMS_MVAMETBoundingUp	       ->Write();
+    histo_VVV_CMS_MVAMETBoundingDown	       ->Write();
+    histo_Higgs_CMS_MVAMETBoundingUp	       ->Write();
+    histo_Higgs_CMS_MVAMETBoundingDown	       ->Write();
+    
+    histo_ZZ_CMS_MVAJESBoundingUp 	       ->Write();
+    histo_ZZ_CMS_MVAJESBoundingDown	       ->Write();
+    histo_VVV_CMS_MVAJESBoundingUp	       ->Write();
+    histo_VVV_CMS_MVAJESBoundingDown	       ->Write();
+    histo_Higgs_CMS_MVAJESBoundingUp 	       ->Write();
+    histo_Higgs_CMS_MVAJESBoundingDown	       ->Write();
+    
+    histo_ZZ_CMS_PUBoundingUp	               ->Write();
+    histo_ZZ_CMS_PUBoundingDown	               ->Write();
+    histo_VVV_CMS_PUBoundingUp	               ->Write();
+    histo_VVV_CMS_PUBoundingDown	       ->Write();
+    histo_Higgs_CMS_PUBoundingUp	       ->Write();
+    histo_Higgs_CMS_PUBoundingDown	       ->Write();
+
+    outFileLimits->Close();
+
+    double lumiE = 1.030;
+    double systLepResE[3] = {1.01,1.01,1.01};
+    double systLepResM[3] = {1.01,1.01,1.01};
+
+    for(int nb=1; nb<=nBinMVA; nb++){
+      // QCD study
+      double systQCDScale[3] = {TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[0]   ->GetBinContent(nb)-histo_ZZ   ->GetBinContent(nb)),
+                                TMath::Abs(histo_VVV_CMS_QCDScaleBounding[0]  ->GetBinContent(nb)-histo_VVV  ->GetBinContent(nb)),
+                                TMath::Abs(histo_Higgs_CMS_QCDScaleBounding[0]->GetBinContent(nb)-histo_Higgs->GetBinContent(nb))};
+      for(int nqcd=1; nqcd<6; nqcd++) {
+        if(TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)   -histo_ZZ     ->GetBinContent(nb)) > systQCDScale[0]) systQCDScale[0] = TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)   -histo_ZZ	->GetBinContent(nb));
+        if(TMath::Abs(histo_VVV_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)  -histo_VVV    ->GetBinContent(nb)) > systQCDScale[1]) systQCDScale[1] = TMath::Abs(histo_VVV_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)  -histo_VVV	->GetBinContent(nb));
+        if(TMath::Abs(histo_Higgs_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_Higgs  ->GetBinContent(nb)) > systQCDScale[2]) systQCDScale[2] = TMath::Abs(histo_Higgs_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_Higgs	->GetBinContent(nb));
+      }                 
+      if(histo_ZZ->GetBinContent(nb) > 0)    systQCDScale[0] = 1 + systQCDScale[0]/histo_ZZ    ->GetBinContent(nb); else systQCDScale[0] = 1;
+      if(histo_VVV->GetBinContent(nb) > 0)   systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV   ->GetBinContent(nb); else systQCDScale[1] = 1;
+      if(histo_Higgs->GetBinContent(nb) > 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_Higgs ->GetBinContent(nb); else systQCDScale[2] = 1;
+
+      for(int ntype=0; ntype<3; ntype++) if(systQCDScale[ntype] < 0) systQCDScale[ntype] = 1.0;
+      if(verbose) printf("QCDScale(%d): %f %f %f\n",nb,systQCDScale[0],systQCDScale[1],systQCDScale[2]);
+  
+      // PDF study
+      double systPDF[3];
+      histo_Diff->Reset();
+      for(int npdf=1; npdf<102; npdf++) histo_Diff->Fill((histo_ZZ_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_ZZ->GetBinContent(nb))/histo_ZZ->GetBinContent(nb));
+      systPDF[0] = 1.0+histo_Diff->GetRMS();
+      histo_Diff->Reset();
+      for(int npdf=1; npdf<102; npdf++) histo_Diff->Fill((histo_VVV_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_VVV->GetBinContent(nb))/histo_VVV->GetBinContent(nb));
+      systPDF[1] = 1.0+histo_Diff->GetRMS();
+      histo_Diff->Reset();
+      for(int npdf=1; npdf<102; npdf++) histo_Diff->Fill((histo_Higgs_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_Higgs->GetBinContent(nb))/histo_Higgs->GetBinContent(nb));
+      systPDF[2] = 1.0+histo_Diff->GetRMS();
+      histo_Diff->Reset();
+      if(verbose) printf("PDF(%d): %f %f %f\n",nb,systPDF[0],systPDF[1],systPDF[2]);
+  
+      double systLepEffM[3] = {1.0,1.0,1.0};
+      if     (histo_ZZ_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)         > 0 && histo_ZZ_CMS_MVALepEffMBoundingUp          ->GetBinContent(nb) > 0) systLepEffM[0] = histo_ZZ_CMS_MVALepEffMBoundingUp->GetBinContent(nb)/histo_ZZ_CMS_MVALepEffMBoundingAvg->GetBinContent(nb);
+      else if(histo_ZZ_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)         > 0 && histo_ZZ_CMS_MVALepEffMBoundingDown        ->GetBinContent(nb) > 0) systLepEffM[0] = histo_ZZ_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)/histo_ZZ_CMS_MVALepEffMBoundingDown->GetBinContent(nb);
+      if     (histo_VVV_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)        > 0 && histo_VVV_CMS_MVALepEffMBoundingUp         ->GetBinContent(nb) > 0) systLepEffM[1] = histo_VVV_CMS_MVALepEffMBoundingUp->GetBinContent(nb)/histo_VVV_CMS_MVALepEffMBoundingAvg->GetBinContent(nb);
+      else if(histo_VVV_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)        > 0 && histo_VVV_CMS_MVALepEffMBoundingDown       ->GetBinContent(nb) > 0) systLepEffM[1] = histo_VVV_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)/histo_VVV_CMS_MVALepEffMBoundingDown->GetBinContent(nb);
+      if     (histo_Higgs_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)      > 0 && histo_Higgs_CMS_MVALepEffMBoundingUp       ->GetBinContent(nb) > 0) systLepEffM[2] = histo_Higgs_CMS_MVALepEffMBoundingUp->GetBinContent(nb)/histo_Higgs_CMS_MVALepEffMBoundingAvg->GetBinContent(nb);
+      else if(histo_Higgs_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)      > 0 && histo_Higgs_CMS_MVALepEffMBoundingDown     ->GetBinContent(nb) > 0) systLepEffM[2] = histo_Higgs_CMS_MVALepEffMBoundingAvg->GetBinContent(nb)/histo_Higgs_CMS_MVALepEffMBoundingDown->GetBinContent(nb);
+  
+      double systLepEffE[3] = {1.0,1.0,1.0};
+      if     (histo_ZZ_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)         > 0 && histo_ZZ_CMS_MVALepEffEBoundingUp          ->GetBinContent(nb) > 0) systLepEffE[0] = histo_ZZ_CMS_MVALepEffEBoundingUp->GetBinContent(nb)/histo_ZZ_CMS_MVALepEffEBoundingAvg->GetBinContent(nb);
+      else if(histo_ZZ_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)         > 0 && histo_ZZ_CMS_MVALepEffEBoundingDown        ->GetBinContent(nb) > 0) systLepEffE[0] = histo_ZZ_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)/histo_ZZ_CMS_MVALepEffEBoundingDown->GetBinContent(nb);
+      if     (histo_VVV_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)        > 0 && histo_VVV_CMS_MVALepEffEBoundingUp         ->GetBinContent(nb) > 0) systLepEffE[1] = histo_VVV_CMS_MVALepEffEBoundingUp->GetBinContent(nb)/histo_VVV_CMS_MVALepEffEBoundingAvg->GetBinContent(nb);
+      else if(histo_VVV_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)        > 0 && histo_VVV_CMS_MVALepEffEBoundingDown       ->GetBinContent(nb) > 0) systLepEffE[1] = histo_VVV_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)/histo_VVV_CMS_MVALepEffEBoundingDown->GetBinContent(nb);
+      if     (histo_Higgs_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)      > 0 && histo_Higgs_CMS_MVALepEffEBoundingUp       ->GetBinContent(nb) > 0) systLepEffE[2] = histo_Higgs_CMS_MVALepEffEBoundingUp->GetBinContent(nb)/histo_Higgs_CMS_MVALepEffEBoundingAvg->GetBinContent(nb);
+      else if(histo_Higgs_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)      > 0 && histo_Higgs_CMS_MVALepEffEBoundingDown     ->GetBinContent(nb) > 0) systLepEffE[2] = histo_Higgs_CMS_MVALepEffEBoundingAvg->GetBinContent(nb)/histo_Higgs_CMS_MVALepEffEBoundingDown->GetBinContent(nb);
+  
+      double systMetUp  [3] = {1.0,1.0,1.0};
+      double systMetDown[3] = {1.0,1.0,1.0};
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_MVAMETBoundingUp          ->GetBinContent(nb) > 0) systMetUp  [0] = histo_ZZ_CMS_MVAMETBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_MVAMETBoundingDown        ->GetBinContent(nb) > 0) systMetDown[0] = histo_ZZ_CMS_MVAMETBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_MVAMETBoundingUp         ->GetBinContent(nb) > 0) systMetUp  [1] = histo_VVV_CMS_MVAMETBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_MVAMETBoundingDown       ->GetBinContent(nb) > 0) systMetDown[1] = histo_VVV_CMS_MVAMETBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)     > 0 && histo_Higgs_CMS_MVAMETBoundingUp       ->GetBinContent(nb) > 0) systMetUp  [2] = histo_Higgs_CMS_MVAMETBoundingUp  ->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)     > 0 && histo_Higgs_CMS_MVAMETBoundingDown     ->GetBinContent(nb) > 0) systMetDown[2] = histo_Higgs_CMS_MVAMETBoundingDown->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+      for(int i=0; i<3; i++) if(systMetUp  [i] == 1) systMetUp  [i] = 0.998;
+      for(int i=0; i<3; i++) if(systMetDown[i] == 1) systMetDown[i] = 1.002;
+  
+      double systJesUp  [3] = {1.0,1.0,1.0};
+      double systJesDown[3] = {1.0,1.0,1.0};
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_MVAJESBoundingUp  	->GetBinContent(nb) > 0) systJesUp  [0] = histo_ZZ_CMS_MVAJESBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)	  > 0 && histo_ZZ_CMS_MVAJESBoundingDown	->GetBinContent(nb) > 0) systJesDown[0] = histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_MVAJESBoundingUp 	->GetBinContent(nb) > 0) systJesUp  [1] = histo_VVV_CMS_MVAJESBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)	  > 0 && histo_VVV_CMS_MVAJESBoundingDown	->GetBinContent(nb) > 0) systJesDown[1] = histo_VVV_CMS_MVAJESBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)	  > 0 && histo_Higgs_CMS_MVAJESBoundingUp  	->GetBinContent(nb) > 0) systJesUp  [2] = histo_Higgs_CMS_MVAJESBoundingUp  ->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)	  > 0 && histo_Higgs_CMS_MVAJESBoundingDown	->GetBinContent(nb) > 0) systJesDown[2] = histo_Higgs_CMS_MVAJESBoundingDown->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+ 
+      double systPUUp  [3] = {1.0,1.0,1.0};
+      double systPUDown[3] = {1.0,1.0,1.0};
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_PUBoundingUp          ->GetBinContent(nb) > 0) systPUUp  [0] = histo_ZZ_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_PUBoundingDown        ->GetBinContent(nb) > 0) systPUDown[0] = histo_ZZ_CMS_PUBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_PUBoundingUp         ->GetBinContent(nb) > 0) systPUUp  [1] = histo_VVV_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_PUBoundingDown       ->GetBinContent(nb) > 0) systPUDown[1] = histo_VVV_CMS_PUBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)     > 0 && histo_Higgs_CMS_PUBoundingUp       ->GetBinContent(nb) > 0) systPUUp  [2] = histo_Higgs_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+      if(histo_Higgs->GetBinContent(nb)     > 0 && histo_Higgs_CMS_PUBoundingDown     ->GetBinContent(nb) > 0) systPUDown[2] = histo_Higgs_CMS_PUBoundingDown->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+      for(int npu=0; npu<3; npu++) if(systPUUp[npu]   > 1.02) systPUUp[npu]   = 1.02;
+      for(int npu=0; npu<3; npu++) if(systPUUp[npu]   < 0.98) systPUUp[npu]   = 0.98;
+      for(int npu=0; npu<3; npu++) if(systPUDown[npu] > 1.02) systPUDown[npu] = 1.02;
+      for(int npu=0; npu<3; npu++) if(systPUDown[npu] < 0.98) systPUDown[npu] = 0.98;
+   
+      char outputLimitsShape[200];                                            
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zz4l%shinv%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, ECMsb.Data(),nb-1);
+      ofstream newcardShape;
+      newcardShape.open(outputLimitsShape);
+      newcardShape << Form("imax 1 number of channels\n");
+      newcardShape << Form("jmax * number of background\n");
+      newcardShape << Form("kmax * number of nuisance parameters\n");
+      newcardShape << Form("Observation %d\n",(int)histo_Data->GetBinContent(nb));
+      newcardShape << Form("bin hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d\n",finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1);
+      newcardShape << Form("process ZH_hinv ZZ VVV Higgs Fake\n");
+      newcardShape << Form("process 0 1 2 3 4\n");
+      newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f\n",0.0,histo_ZZ->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb),histo_Fake->GetBinContent(nb));
+      newcardShape << Form("lumi2106_%4s                           lnN  1.000 %7.5f %7.5f %7.5f   -\n",ECMsb.Data(),lumiE,lumiE,lumiE);		       
+      newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2]);
+      newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2]);
+      newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2]);
+      newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2]);
+      newcardShape << Form("CMS_trigger                            lnN  1.000 %7.5f %7.5f %7.5f   -\n",1.01,1.01,1.01);
+      newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  1.000 %7.5f %7.5f %7.5f   -\n",systPDF[0],systPDF[1],systPDF[2]);
+      newcardShape << Form("QCDscale_VVV                           lnN    -     -   %7.5f   -     -\n",systQCDScale[1]);		
+      newcardShape << Form("QCDscale_VV		                   lnN    -   %7.5f   -   %7.5f   -\n",systQCDScale[0],systQCDScale[2]);		
+
+      newcardShape << Form("CMS_pu2016                             lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systPUUp[0] ,systPUDown[0] ,systPUUp[1] ,systPUDown[1] ,systPUUp[2] ,systPUDown[2] );
+      newcardShape << Form("CMS_scale_met                          lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2]);
+      newcardShape << Form("CMS_scale_j                            lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2]);   	     
+
+      if(nb != 1)
+      newcardShape << Form("CMS_hinv_zznorm_bin%d		   lnU    -    2.0    -     -     -\n",nb-1);		
+
+      if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb));
+      if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb));  
+      if(histo_Higgs->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAHiggsSatBounding2016_%s_Bin%d   lnN     1.000   -	  -   %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs->GetBinError(nb)/histo_Higgs->GetBinContent(nb));
+      if(histo_Fake ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMSatBounding2016_%s_Bin%d      lnN     1.000   -	  -	-  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Fake ->GetBinError(nb)/histo_Fake ->GetBinContent(nb));
+    }
+  }
+
+  double sumEvents = 0;
+  for(int np=1; np<histBins; np++) sumEvents += histo[0][np]->GetSumOfWeights();
+  printf("yields: %f |",histo[0][0]->GetSumOfWeights());
+  for(int np=1; np<histBins; np++) printf(" %.3f",histo[0][np]->GetSumOfWeights());
+  printf(" = %.3f\n",sumEvents);
+  double sumEventsType[5] = {0,0,0,0,0};
+  double sumEventsTypeE[5] = {0,0,0,0,0};
+  printf("                  all                 4e                  4m                  2e2m\n");
+  printf("---------------------------------------------------------------------------------------\n");
+  for(int np=0; np<histBins; np++) {
+    double sumEvents = 0.; double sumEventsE = 0.;
+    for(int i=1; i<=3; i++) {sumEvents = sumEvents + histo[1][np]->GetBinContent(i); sumEventsE = sumEventsE + histo[1][np]->GetBinError(i)*histo[1][np]->GetBinError(i);}
+    if(np!=0){
+    sumEventsType[0] = sumEventsType[0] + sumEvents;                      sumEventsTypeE[0] = sumEventsTypeE[0] + sumEventsE * sumEventsE;
+    sumEventsType[1] = sumEventsType[1] + histo[1][np]->GetBinContent(1); sumEventsTypeE[1] = sumEventsTypeE[1] + histo[1][np]->GetBinError(1) * histo[1][np]->GetBinError(1);
+    sumEventsType[2] = sumEventsType[2] + histo[1][np]->GetBinContent(2); sumEventsTypeE[2] = sumEventsTypeE[2] + histo[1][np]->GetBinError(2) * histo[1][np]->GetBinError(2);
+    sumEventsType[3] = sumEventsType[3] + histo[1][np]->GetBinContent(3); sumEventsTypeE[3] = sumEventsTypeE[3] + histo[1][np]->GetBinError(3) * histo[1][np]->GetBinError(3);
+    sumEventsType[4] = sumEventsType[4] + histo[1][np]->GetBinContent(4); sumEventsTypeE[4] = sumEventsTypeE[4] + histo[1][np]->GetBinError(4) * histo[1][np]->GetBinError(4);
+    }
+    sumEventsE = sqrt(sumEventsE);
+    if(sumEvents>0)
+    printf("(%6s): %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f\n",
+    processName[np].Data(),sumEvents,sumEventsE,
+    histo[1][np]->GetBinContent(1),histo[1][np]->GetBinError(1),
+    histo[1][np]->GetBinContent(2),histo[1][np]->GetBinError(2),
+    histo[1][np]->GetBinContent(3),histo[1][np]->GetBinError(3));
+    if(np==0)
+    printf("---------------------------------------------------------------------------------------\n");
+  }
+    printf("---------------------------------------------------------------------------------------\n");
+    printf("(%6s): %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f\n",
+    "   all",
+    sumEventsType[0],sqrt(sumEventsTypeE[0]),
+    sumEventsType[1],sqrt(sumEventsTypeE[1]),
+    sumEventsType[2],sqrt(sumEventsTypeE[2]),
+    sumEventsType[3],sqrt(sumEventsTypeE[3]));
+  for(int thePlot=0; thePlot<allPlots; thePlot++){
+    char output[200];
+    sprintf(output,"histozz_nice_%d.root",thePlot);	  
+    TFile* outFilePlotsNote = new TFile(output,"recreate");
+    outFilePlotsNote->cd();
+    for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
+    outFilePlotsNote->Close();
+  }
+}

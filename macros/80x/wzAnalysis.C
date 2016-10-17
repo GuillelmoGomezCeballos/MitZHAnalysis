@@ -187,7 +187,7 @@ void wzAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 44;
+  const int allPlots = 45;
   const int histBins = 7;
   TH1D* histo[allStates][allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "Zgamma", "....WZ", "...ZZ", "...VVV", ".Higgs"};
@@ -208,6 +208,13 @@ void wzAnalysis(
       bgdDecay[i][j] = 0.0; weiDecay[i][j] = 0.0; 
     }
   }
+
+  TString ECMsb  = "13TeV2015";
+  //const int nBinMVA = 5; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5};
+  const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350};
+
+  TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
+  histoMVA->Sumw2();
 
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     if     (thePlot >=  0 && thePlot <=  2) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
@@ -238,20 +245,15 @@ void wzAnalysis(
     else if(thePlot >= 40 && thePlot <= 41) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 42 && thePlot <= 42) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 43 && thePlot <= 43) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   TMath::Pi();}
-    TH1D* histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
+    TH1D* histos;
+    if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
+    else                      histos = new TH1D("histos", "histos", nBinMVA, xbins);
     histos->Sumw2();
     for(int i=0; i<histBins; i++) {
       for(int j=0; j<allStates; j++) histo[j][thePlot][i] = (TH1D*) histos->Clone(Form("histo%d",i));
     }
     histos->Reset();histos->Clear();
   }
-
-  TString ECMsb  = "13TeV2015";
-  //const int nBinMVA = 5; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5};
-  const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350};
-
-  TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
-  histoMVA->Sumw2();
 
   TH1D *histo_Data   = (TH1D*) histoMVA->Clone("histo_Data");
   TH1D *histo_Zg     = (TH1D*) histoMVA->Clone("histo_Zg"); 
@@ -1157,6 +1159,15 @@ void wzAnalysis(
     }
 
   } // end of chain
+
+  histo[5][allPlots-1][0]->Add(histo_Data);
+  histo[5][allPlots-1][1]->Add(histo_FakeM);
+  histo[5][allPlots-1][1]->Add(histo_FakeE);
+  histo[5][allPlots-1][2]->Add(histo_Zg);
+  histo[5][allPlots-1][3]->Add(histo_WZ);
+  histo[5][allPlots-1][4]->Add(histo_ZZ);
+  histo[5][allPlots-1][5]->Add(histo_VVV);
+  histo[5][allPlots-1][6]->Add(histo_Higgs);  
 
   printf("----------------------totalFakeDataCount--------------------------------\n");
   printf("      TTT    FTT    TFT    FFT    TTF    FTF    TFF    FFF\n");

@@ -323,6 +323,11 @@ void zzAnalysis(
   TH1D* histo_Higgs_CMS_PUBoundingUp            = new TH1D( Form("histo_Higgs_CMS_puUp")  , Form("histo_Higgs_CMS_puUp")  , nBinMVA, xbins); histo_Higgs_CMS_PUBoundingUp  ->Sumw2();
   TH1D* histo_Higgs_CMS_PUBoundingDown          = new TH1D( Form("histo_Higgs_CMS_puDown"), Form("histo_Higgs_CMS_puDown"), nBinMVA, xbins); histo_Higgs_CMS_PUBoundingDown->Sumw2();
 
+  TH1D* histo_ZZ_CMS_EWKCorrUp                  = new TH1D( Form("histo_ZZ_EWKCorrUp")  , Form("histo_ZZ_EWKCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_EWKCorrUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_EWKCorrDown                = new TH1D( Form("histo_ZZ_EWKCorrDown"), Form("histo_ZZ_EWKCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_EWKCorrDown->Sumw2();
+  TH1D* histo_ZZ_CMS_ggCorrUp                   = new TH1D( Form("histo_ZZ_ggCorrUp")  , Form("histo_ZZ_ggCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_ggCorrUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_ggCorrDown                 = new TH1D( Form("histo_ZZ_ggCorrDown"), Form("histo_ZZ_ggCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_ggCorrDown->Sumw2();
+
   unsigned int numberOfLeptons = 4;
 
   double totalEventsProcess[50];
@@ -634,26 +639,52 @@ void zzAnalysis(
 
       // begin event weighting
       vector<int>zzBoson;
-      vector<bool> isGenDupl; double bosonPtMin = 1000000000; bool isBosonFound = false;
-      int numberQuarks[2] = {0,0};
+      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
         if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zzBoson.push_back(ngen0);
         if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
 	   ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[0]++;
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[1]++;
+        // begin neutrinos
+        isNeuDupl.push_back(0);
+	if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 12 &&
+	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 14 &&
+	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 16) isNeuDupl[ngen0] = 1;
+	else {
+          for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
+	    if((int)(*eventMonteCarlo.pdgId)[ngen0] != (int)(*eventMonteCarlo.pdgId)[ngen1]) continue;
+            if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
+	      isNeuDupl[ngen0] = 1;
+	      break;
+	    }
+          }
+        }
+	// begin leptons	
         isGenDupl.push_back(0);
 	if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 11 &&
 	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 13) isGenDupl[ngen0] = 1;
-	if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 11 &&
-	   TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) != 13) continue;
-        for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
-	  if((int)(*eventMonteCarlo.pdgId)[ngen0] != (int)(*eventMonteCarlo.pdgId)[ngen1]) continue;
-          if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
-	    isGenDupl[ngen0] = 1;
-	    break;
-	  }
-        }
+	else {
+          for(int ngen1=ngen0+1; ngen1<eventMonteCarlo.p4->GetEntriesFast(); ngen1++) {
+	    if((int)(*eventMonteCarlo.pdgId)[ngen0] != (int)(*eventMonteCarlo.pdgId)[ngen1]) continue;
+            if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen1])) < 0.02) {
+	      isGenDupl[ngen0] = 1;
+	      break;
+	    }
+          }
+	}
+      }
+      if(isBosonFound==false) bosonPtMin = 0;
+      int numberGoodGenLep[3] = {0,0,0};
+      TLorentzVector the_rhoP4(0,0,0,0);
+      for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
+        if(isNeuDupl[ngen] == 0 || isGenDupl[ngen] == 0) {
+	  the_rhoP4 = the_rhoP4 + *(TLorentzVector*)(*eventMonteCarlo.p4)[ngen];
+	}
+        if(isNeuDupl[ngen] == 0) numberGoodGenLep[2]++;
+	if(isGenDupl[ngen] == 1) continue;
+	numberGoodGenLep[0]++;
+	if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Pt() <= 10 ||
+	   TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Eta()) >= 2.5) continue;
+	numberGoodGenLep[1]++;
       }
       vector<int> isGenLep; unsigned int goodIsGenLep = 0;
       for(unsigned nl=0; nl<idLep.size(); nl++){
@@ -661,7 +692,7 @@ void zzAnalysis(
         for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
 	  if(isGenDupl[ngen] == 1) continue;
           if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]) == TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen]) &&
-	    ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])) < 0.3) {
+	    ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])) < 0.1) {
 	    isGenLepton = true;
 	    break;
 	  }
@@ -723,12 +754,21 @@ void zzAnalysis(
       double totalWeight = mcWeight*theLumi*puWeight*fakeSF*theMCPrescale;
       if(totalWeight == 0) continue;
 
+      double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
       double theZZCorr[2] {1,1};
       if(theCategory == 4 && infileName_[ifile].Contains("GluGlu") == kFALSE) {
+	theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
+
+        //float GENdPhiZZ = 5;
+	//if(zzBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[1]])));
+	//theZZCorr[1] = kfactor_qqZZ_qcd_dPhi(GENdPhiZZ);
         float GENmZZ = 0.0;
 	if(zzBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).M();
-	theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
 	theZZCorr[1] = kfactor_qqZZ_qcd_M(GENmZZ);
+        //float GENptZZ = 0.0;
+	//if(zzBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).Pt();
+	//theZZCorr[1] = kfactor_qqZZ_qcd_M(GENptZZ);
+
         totalWeight = totalWeight * (theZZCorr[0]*theZZCorr[1]);
       }
 
@@ -789,6 +829,14 @@ void zzAnalysis(
         else if(theCategory == 4){
 	  if(passZZhinvSel) {
 	     histo_ZZ->Fill(MVAVar,totalWeight);
+	     if(infileName_[ifile].Contains("GluGlu") == kFALSE) {
+	       if(the_rho <= 0.3) histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*(1.0+TMath::Abs((theZZCorr[0]-1)*(15.99/9.89-1))));
+	       else               histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*(1.0+TMath::Abs((theZZCorr[0]-1)               )));
+	     } else {
+               histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight);
+	     }
+	     if(infileName_[ifile].Contains("GluGlu") == kFALSE) histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight);
+	     else                                                histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight*1.30);
 	     histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
 	     histo_ZZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
 	     histo_ZZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
@@ -946,6 +994,23 @@ void zzAnalysis(
     histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]	 ->Add(histo_Higgs    ); histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]	  ->SetBinContent(i,TMath::Max(histo_Higgs	 ->GetBinContent(i)+factorDown*histo_Higgs	 ->GetBinError(i),0.000001));
   }
 
+  double mean,up,diff;
+  for(int i=1; i<=histo_ZZ->GetNbinsX(); i++){
+    mean = histo_ZZ              ->GetBinContent(i);
+    up   = histo_ZZ_CMS_EWKCorrUp->GetBinContent(i);
+    diff = mean-up;
+    histo_ZZ_CMS_EWKCorrDown->SetBinContent(i,TMath::Max(mean+diff,0.000001));
+
+    mean = histo_ZZ             ->GetBinContent(i);
+    up   = histo_ZZ_CMS_ggCorrUp->GetBinContent(i);
+    diff = mean-up;
+    histo_ZZ_CMS_ggCorrDown->SetBinContent(i,TMath::Max(mean+diff,0.000001));
+  }
+
+  printf("EWK Corr: ZZ(%f/%f/%f) ggZZ(%f/%f/%f)\n",
+                     histo_ZZ_CMS_EWKCorrUp->GetSumOfWeights(),histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_EWKCorrDown->GetSumOfWeights(),
+		     histo_ZZ_CMS_ggCorrUp ->GetSumOfWeights(),histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_ggCorrDown ->GetSumOfWeights());
+
   if(1){
     char outputLimits[200];
     sprintf(outputLimits,"MitZHAnalysis/plots/zz4l%shinv%s_input_%s.root", addChan.Data(), finalStateName, ECMsb.Data());
@@ -1054,6 +1119,11 @@ void zzAnalysis(
     histo_Higgs_CMS_PUBoundingUp	       ->Write();
     histo_Higgs_CMS_PUBoundingDown	       ->Write();
 
+    histo_ZZ_CMS_EWKCorrUp	               ->Write();
+    histo_ZZ_CMS_EWKCorrDown	               ->Write();
+    histo_ZZ_CMS_ggCorrUp	               ->Write();
+    histo_ZZ_CMS_ggCorrDown	               ->Write();
+
     outFileLimits->Close();
 
     double lumiE = 1.030;
@@ -1140,6 +1210,13 @@ void zzAnalysis(
       for(int npu=0; npu<3; npu++) if(systPUDown[npu] > 1.02) systPUDown[npu] = 1.02;
       for(int npu=0; npu<3; npu++) if(systPUDown[npu] < 0.98) systPUDown[npu] = 0.98;
    
+      double syst_EWKCorrUp[2]   = {1.0,1.0};
+      double syst_EWKCorrDown[2] = {1.0,1.0};
+      if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_EWKCorrUp  ->GetBinContent(nb) > 0) syst_EWKCorrUp  [0] = histo_ZZ_CMS_EWKCorrUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb) > 0) syst_EWKCorrDown[0] = histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb) > 0) syst_EWKCorrUp  [1] = histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb) > 0) syst_EWKCorrDown[1] = histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+
       char outputLimitsShape[200];                                            
       sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zz4l%shinv%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, ECMsb.Data(),nb-1);
       ofstream newcardShape;
@@ -1166,8 +1243,12 @@ void zzAnalysis(
       newcardShape << Form("CMS_scale_met                          lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2]);
       newcardShape << Form("CMS_scale_j                            lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2]);   	     
 
-      if(nb != 1)
-      newcardShape << Form("CMS_hinv_zznorm_bin%d		   lnU    -    2.0    -     -     -\n",nb-1);		
+      if(nb != 1){
+      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
+      //newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[0]-1.0);	
+      }
+
+      newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
 
       if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb));
       if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb));  

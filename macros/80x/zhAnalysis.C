@@ -2755,13 +2755,19 @@ void zhAnalysis(
       newcardShape << Form("QCDscale_VV		                 lnN    -     -     -   %7.5f %7.5f   -     -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
-      newcardShape << Form("CMS_hinv_wznorm_bin%d		   lnU    -     -     -    2.0       -        -     -  \n",nb-1);		
-      newcardShape << Form("CMS_hinv_zznorm_bin%d		   lnU    -     -     -     -       2.0       -     -  \n",nb-1);		
-      }
+      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
+      newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[0]-1.0);		
 
+      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
+      newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[1]-1.0);	
+      }
+      else if(!useVVFromData){
       newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -    -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
       newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
+      }
+
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
+
       newcardShape << Form("CMS_zllhinv_WZ_lep2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[0]);	    
       newcardShape << Form("CMS_zllhinv_WZ_tau2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[1]);	    
       if(MVAVarType == 3 || MVAVarType==4) {

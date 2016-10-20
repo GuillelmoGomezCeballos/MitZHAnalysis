@@ -161,7 +161,7 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>120 && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT_massIndependent_"+mediator, "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massIndependent_"+mediator, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   } else if(mode==3) {
     factory->AddVariable( "mva_balance"                       , "Balance"                           , ""    , 'F');
     factory->AddVariable( "mva_cos_theta_star_l1"             , "cos #theta^{*}_{l1}"               , ""    , 'F');
@@ -185,7 +185,7 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>80  && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT_massDependent_"+signal_model, "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massDependent_"+signal_model, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   }
 
   factory->TrainAllMethods();

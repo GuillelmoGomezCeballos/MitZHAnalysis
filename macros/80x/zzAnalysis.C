@@ -1228,13 +1228,13 @@ void zzAnalysis(
       newcardShape << Form("bin hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d\n",finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1);
       newcardShape << Form("process ZH_hinv ZZ VVV Higgs Fake\n");
       newcardShape << Form("process 0 1 2 3 4\n");
-      newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f\n",0.0,histo_ZZ->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb),histo_Fake->GetBinContent(nb));
-      newcardShape << Form("lumi2106_%4s                           lnN  1.000 %7.5f %7.5f %7.5f   -\n",ECMsb.Data(),lumiE,lumiE,lumiE);		       
+      newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f\n",0.0,histo_ZZ->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb),TMath::Max(histo_Fake->GetBinContent(nb),0.0));
+      newcardShape << Form("lumi_%4s                               lnN  1.000 %7.5f %7.5f %7.5f   -\n",ECMsb.Data(),lumiE,lumiE,lumiE);		       
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2]);
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2]);
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2]);
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2]);
-      newcardShape << Form("CMS_trigger                            lnN  1.000 %7.5f %7.5f %7.5f   -\n",1.01,1.01,1.01);
+      newcardShape << Form("CMS_trigger2016                        lnN  1.000 %7.5f %7.5f %7.5f   -\n",1.01,1.01,1.01);
       newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  1.000 %7.5f %7.5f %7.5f   -\n",systPDF[0],systPDF[1],systPDF[2]);
       newcardShape << Form("QCDscale_VVV                           lnN    -     -   %7.5f   -     -\n",systQCDScale[1]);		
       newcardShape << Form("QCDscale_VV		                   lnN    -   %7.5f   -   %7.5f   -\n",systQCDScale[0],systQCDScale[2]);		

@@ -29,7 +29,7 @@ int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
-bool useVVFromData = true;
+bool useVVFromData = false;
 double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
@@ -2243,7 +2243,7 @@ void zhAnalysis(
     histo_Zjets_CMS_ZjetsSystDown	                        ->Write();
     outFileLimits->Close();
   
-    double lumiE = 1.062;
+    double lumiE = 1.030;
     double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
     double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
     double syst_btag = 1.02;
@@ -2278,9 +2278,9 @@ void zhAnalysis(
         if(TMath::Abs(histo_ggZH_hinv_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb)) > systQCDScale[0]) systQCDScale[0] = TMath::Abs(histo_ggZH_hinv_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb));
       }                 
       if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0)   systQCDScale[0] = 1 + sqrt(TMath::Max(systQCDScale[0]*systQCDScale[0]/histo_ZH_hinv[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb) - qcdScaleTotal[0]*qcdScaleTotal[0],0.0)); else systQCDScale[0] = 1;
-      if(histo_VVV->GetBinContent(nb) > 0)       systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV      ->GetBinContent(nb); else systQCDScale[1] = 1;
-      if(histo_WZ->GetBinContent(nb) > 0)        systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ       ->GetBinContent(nb); else systQCDScale[2] = 1;
-      if(histo_ZZ->GetBinContent(nb) > 0)        systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ       ->GetBinContent(nb); else systQCDScale[3] = 1;
+      if(histo_VVV->GetBinContent(nb) > 0) systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV      ->GetBinContent(nb); else systQCDScale[1] = 1;
+      if(histo_WZ->GetBinContent(nb) > 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ       ->GetBinContent(nb); else systQCDScale[2] = 1;
+      if(histo_ZZ->GetBinContent(nb) > 0) systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ       ->GetBinContent(nb); else systQCDScale[3] = 1;
       if(histo_ggZH_hinv->GetBinContent(nb) > 0) systQCDScale[4] = 1 + sqrt(TMath::Max(systQCDScale[4]*systQCDScale[4]/histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb) - qcdScaleTotal[1]*qcdScaleTotal[1],0.0)); else systQCDScale[4] = 1;
       for(int ntype=0; ntype<5; ntype++) if(systQCDScale[ntype] < 0) systQCDScale[ntype] = 1.0;
       if(verbose) printf("QCDScale(%d): %f %f %f %f %f\n",nb,systQCDScale[0],systQCDScale[1],systQCDScale[2],systQCDScale[3],systQCDScale[4]);
@@ -2305,7 +2305,7 @@ void zhAnalysis(
         if(histo_ggZH_hinv->GetBinContent(nb) > 0) histo_Diff->Fill((histo_ggZH_hinv_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb))/histo_ggZH_hinv->GetBinContent(nb));
       }
       systPDF[4] = 1.0+sqrt(TMath::Max(histo_Diff->GetRMS()*histo_Diff->GetRMS()-pdfTotal[1]*pdfTotal[1],0.0));
-      if(verbose) printf("PDF(%d): %f %f %f %f %f\n",nb,systPDF[0],systPDF[1],systPDF[2],systPDF[3],systPDF[4]);
+      if(verbose) printf("PDF(%d): %f %f %f %f %f\n",nb,systPDF[0],systPDF[1],systPDF[2],systPDF[3],systPDF[4]); // ZH, VVV, WZ, ZZ, ggZH
   
       double systLepEffM[5] = {1.0,1.0,1.0,1.0,1.0};
       if     (histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]->GetBinContent(nb)    > 0 && histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]     ->GetBinContent(nb) > 0) systLepEffM[0] = histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]->GetBinContent(nb)/histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]->GetBinContent(nb);
@@ -2420,7 +2420,7 @@ void zhAnalysis(
       if(histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystUp   ->GetBinContent(nb) > 0) systZjetsUp  [0] = histo_Zjets_CMS_ZjetsSystUp  ->GetBinContent(nb)/histo_Zjets->GetBinContent(nb);
       if(histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystDown ->GetBinContent(nb) > 0) systZjetsDown[0] = histo_Zjets_CMS_ZjetsSystDown->GetBinContent(nb)/histo_Zjets->GetBinContent(nb);
   
-      double syst_EWKCorrUp[3]   = {1.0,1.0,1.0};
+      double syst_EWKCorrUp[3]   = {1.0,1.0,1.0}; // WZ, ZZ, ggZZ
       double syst_EWKCorrDown[3] = {1.0,1.0,1.0};
       if(histo_WZ->GetBinContent(nb) > 0 &&  histo_WZ_CMS_EWKCorrUp  ->GetBinContent(nb) > 0) syst_EWKCorrUp  [0] = histo_WZ_CMS_EWKCorrUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
       if(histo_WZ->GetBinContent(nb) > 0 &&  histo_WZ_CMS_EWKCorrDown->GetBinContent(nb) > 0) syst_EWKCorrDown[0] = histo_WZ_CMS_EWKCorrDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
@@ -2428,6 +2428,15 @@ void zhAnalysis(
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb) > 0) syst_EWKCorrDown[1] = histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb) > 0) syst_EWKCorrUp  [2] = histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb) > 0) syst_EWKCorrDown[2] = histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+
+      // If VV normalization is from data
+      double systVV[2] = {0,0};
+      if(useVVFromData){
+        systVV[0] = sqrt(TMath::Power(syst_EWKCorrUp[0]-1,2)+TMath::Power(systQCDScale[2]-1,2)+TMath::Power(systPDF[2]-1,2));
+	systVV[1] = sqrt(TMath::Power(syst_EWKCorrUp[1]-1,2)+TMath::Power(systQCDScale[3]-1,2)+TMath::Power(systPDF[3]-1,2));
+	//printf("systVV_theo = %f(%f/%f/%f) %f(%f/%f/%f)\n",systVV[0],syst_EWKCorrUp[0]-1,systQCDScale[2]-1,systPDF[2]-1,
+	//                                                   systVV[1],syst_EWKCorrUp[1]-1,systQCDScale[3]-1,systPDF[3]-1);
+      }
 
       process_syst_bins[nb-1][0] = sqrt( // qq Signal
         pow(1.-lumiE,2) +
@@ -2725,7 +2734,7 @@ void zhAnalysis(
       newcardShape << Form("process ZH_hinv Zjets VVV WZ ZZ EM ggZH_hinv\n");
       newcardShape << Form("process 0 1 2 3 4 5 -1\n");
       newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n",histo_ZH_hinv[nModel]->GetBinContent(nb),histo_Zjets->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_EM->GetBinContent(nb),nggZHEvt);
-      newcardShape << Form("lumi2106_%4s                           lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
+      newcardShape << Form("lumi_%4s                               lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
       if(MVAVarType != 3) {
@@ -2735,9 +2744,9 @@ void zhAnalysis(
       newcardShape << Form("CMS_pu2016                             lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_met                          lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2],systMetUp[3],systMetDown[3],systMetUp[0],systMetDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_j                            lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2],systJesUp[3],systJesDown[3],systJesUp[0],systJesDown[0]); // 0 --> 4		 
-      newcardShape << Form("CMS_trigger                            lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",1.03,1.03,1.03,1.03,1.03);
+      newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",1.02,1.02,1.02,1.02,1.02);
       newcardShape << Form("UEPS			           lnN  1.030   -     -     -     -     -   1.030\n");
-      newcardShape << Form("CMS_eff_b2016                          lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",syst_btag,syst_btag,syst_btag,syst_btag,syst_btag);
+      newcardShape << Form("CMS_eff_b_mistag2016                   lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",syst_btag,syst_btag,syst_btag,syst_btag,syst_btag);
       newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  %7.5f   -   %7.5f %7.5f %7.5f   -     -  \n",systPDF[0],systPDF[1],systPDF[2],systPDF[3]);
       if(systPDF[4] != 1.0)
       newcardShape << Form("pdf_gg_ACCEPT                          lnN    -     -     -     -     -     -   %7.5f\n",systPDF[4]);
@@ -2752,18 +2761,18 @@ void zhAnalysis(
       if(histo_ggZH_hinv->GetBinContent(nb) > 0)
       newcardShape << Form("QCDscale_ggVH		                 lnN    -     -     -     -     -     -   %7.5f\n",1.0+qcdScaleTotal[1]);  
       newcardShape << Form("QCDscale_VVV		                 lnN    -     -   %7.5f   -     -     -     -  \n",systQCDScale[1]);		
-      newcardShape << Form("QCDscale_VV		                 lnN    -     -     -   %7.5f %7.5f   -     -  \n",systQCDScale[2],systQCDScale[3]);		
+      newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
       newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
-      newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[0]-1.0);		
+      newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		
 
       newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[1]-1.0);	
+      newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1, systVV[1]);	
       }
       else if(!useVVFromData){
-      newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -    -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
-      newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
+      newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -      -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
+      newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -    %7.5f/%7.5f   -      -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
       }
 
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		

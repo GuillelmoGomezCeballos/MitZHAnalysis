@@ -209,7 +209,7 @@ void wzAnalysis(
     }
   }
 
-  TString ECMsb  = "13TeV2015";
+  TString ECMsb  = "13TeV2016";
   //const int nBinMVA = 5; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5};
   const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350};
 
@@ -265,8 +265,8 @@ void wzAnalysis(
   TH1D *histo_Higgs  = (TH1D*) histoMVA->Clone("histo_Higgs");	 
 
   char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
-  sprintf(effMName,"CMS_eff_m");sprintf(momMName,"CMS_scale_m");
-  sprintf(effEName,"CMS_eff_e");sprintf(momEName,"CMS_scale_e");
+  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
+  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
   sprintf(finalStateName,"3l");
 
   TH1D* histo_Zg_CMS_MVAZHStatBoundingUp           = new TH1D( Form("histo_Zg_CMS_wz3l%s_MVAZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Zg_CMS_wz3l%s_MVAZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Zg_CMS_MVAZHStatBoundingUp  ->Sumw2();
@@ -1383,7 +1383,7 @@ void wzAnalysis(
   histo_Higgs_CMS_PUBoundingDown          ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_PUBoundingDown ->GetBinContent(i)/histo_Higgs->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   outFileLimits->Close();
 
-  double lumiE = 1.027;
+  double lumiE = 1.030;
   double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
   double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
 
@@ -1506,17 +1506,18 @@ void wzAnalysis(
     newcardShape << Form("process 1 2 6 3 4 5 7\n");
     else
     newcardShape << Form("process 1 2 0 3 4 5 6\n");
-    newcardShape << Form("rate %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",histo_Zg->GetBinContent(nb),histo_VVV->GetBinContent(nb),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_FakeM->GetBinContent(nb),histo_FakeE->GetBinContent(nb),histo_Higgs->GetBinContent(nb));
+    newcardShape << Form("rate %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",histo_Zg->GetBinContent(nb),histo_VVV->GetBinContent(nb),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),TMath::Max(histo_FakeM->GetBinContent(nb),0.0),TMath::Max(histo_FakeE->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb));
     newcardShape << Form("lumi_%4s                               lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE); 		
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
-    newcardShape << Form("CMS_pu                                 lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systPU[0],systPU[1],systPU[2],systPU[3],systPU[4]);
+    newcardShape << Form("CMS_pu2016                             lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systPU[0],systPU[1],systPU[2],systPU[3],systPU[4]);
     newcardShape << Form("CMS_scale_met                          lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systMet[0],systMet[1],systMet[2],systMet[3],systMet[4]);
     newcardShape << Form("CMS_scale_jes                          lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systJes[0],systJes[1],systJes[2],systJes[3],systJes[4]);
-    newcardShape << Form("CMS_eff_b_mistag                       lnN  %7.5f     -   %7.5f %7.5f   -    -  %7.5f\n",1.02,1.02,1.02,1.02);
-    newcardShape << Form("CMS_eff_b_bjet                         lnN	-     %7.5f   -     -	  -    -    -  \n",1.07);
+    newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",1.01,1.01,1.01,1.01,1.01);
+    newcardShape << Form("CMS_eff_b_mistag2016                   lnN  %7.5f	-   %7.5f %7.5f   -    -  %7.5f\n",1.02,1.02,1.02,1.02);
+    newcardShape << Form("CMS_eff_b_bjet2016                     lnN	    -	  %7.5f   -	-     -    -	-  \n",1.07);
     newcardShape << Form("pdf_qqbar                              lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systPDF[0],systPDF[1],systPDF[2],systPDF[3],systPDF[4]);
     newcardShape << Form("QCDscale_VVV		                 lnN    -     %7.5f   -     -	  -    -    -  \n",systQCDScale[1]); 	   
     newcardShape << Form("QCDscale_VV		                 lnN  %7.5f     -   %7.5f %7.5f   -    -    -  \n",systQCDScale[0],systQCDScale[2],systQCDScale[3]); 	   

@@ -1531,8 +1531,10 @@ void wzAnalysis(
     if(histo_FakeE->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_wz3l%s_MVAFameEStatBounding_%s_Bin%d	  lnN      -     -    -    -	-  %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_FakeE ->GetBinError(nb)/histo_FakeE ->GetBinContent(nb));
     if(histo_Higgs->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_wz3l%s_MVAHiggsStatBounding_%s_Bin%d     lnN      -     -    -    -	-    -  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs ->GetBinError(nb)/histo_Higgs ->GetBinContent(nb));
 
-    if(nb != 1 && isWZhinv)
-    newcardShape << Form("CMS_hinv_wznorm_bin%d 		 lnU	-       -    2.0    -     -    -    -  \n",nb-1);	      
+    if(nb != 1 && isWZhinv){
+    newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);	      
+    //newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1,0.1);	      
+    }
 
     newcardShape.close();
   }

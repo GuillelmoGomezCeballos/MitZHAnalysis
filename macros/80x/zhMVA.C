@@ -17,6 +17,7 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
   //   mediator not used, specify signal_model
   
   vector<TString> signalName_;
+  vector<double> signalWeight_;
   // Push back all the full sim points we have for the signal models, if we do mass-independent merging
   if(mode==1 || mode==2) {
     if(mediator=="higgs") { 
@@ -103,10 +104,10 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory = new TMVA::Factory("rco", output_file, "AnalysisType=Classification");
   } else if(mode==2) {
     output_file=TFile::Open(("MitZHAnalysis/mva/training_result_BDT_massIndependent_"+mediator+".root").c_str(), "RECREATE");
-    factory = new TMVA::Factory("bdt", output_file, "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+    factory = new TMVA::Factory("bdt", output_file, "!V:!Silent:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
   } else if(mode==3) {
     output_file=TFile::Open(("MitZHAnalysis/mva/training_result_BDT_massDependent_"+signal_model+".root").c_str(), "RECREATE");
-    factory = new TMVA::Factory("bdt", output_file, "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+    factory = new TMVA::Factory("bdt", output_file, "!V:!Silent:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
   } else { assert(0); return; }
 
   // Determine the input trees
@@ -130,62 +131,61 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
   TTree *VVV_mva_tree      = (TTree*) mva_input_trees->Get("bkg_mva_tree_VVV");   factory->AddBackgroundTree(VVV_mva_tree   , 1);
   factory->SetWeightExpression( "mva_weight");
   if(mode==1) {
-    TString optionString="!H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=400:SC_steps=10:SC_rate=5:SC_factor=0.95";
-    factory->AddVariable( "mva_balance"           , "Balance"                           , ""    , 'F'); optionString+=":CutRangeMin[0]=0.1:CutRangeMax[0]=0.5:VarProp[0]=FMin";
+    TString optionString="!H:!V:FitMethod=GA:EffSel:Steps=50:Cycles=5:PopSize=400:SC_steps=10:SC_rate=5:SC_factor=0.95";
+    factory->AddVariable( "mva_balance"           , "Balance"                           , ""    , 'F'); optionString+=":CutRangeMin[0]=0.1:CutRangeMax[0]=0.9:VarProp[0]=FMin";
     factory->AddVariable( "mva_delphi_ptll_MET"   , "#Delta#Phi(p^{ll}, p^{miss})"      , "rad" , 'F'); optionString+=":CutRangeMin[1]=2.0:CutRangeMax[1]=3.1:VarProp[1]=FMax";
-    factory->AddVariable( "mva_deltaR_ll"         , "#DeltaR(l1, l2)"                   , ""    , 'F'); optionString+=":CutRangeMin[2]=0.1:CutRangeMax[2]=3.0:VarProp[2]=FMin";
-    factory->AddVariable( "mva_mll_minus_mZ"      , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F'); optionString+=":CutRangeMin[3]=5.0:CutRangeMax[3]=30.0:VarProp[3]=FMin";
-    TCut preselectionCut = "mva_MET>80  && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1 && (mva_delphi_jet_MET > 0.5 || mva_delphi_jet_MET < 0)";
-    preselectionCut = preselectionCut && "mva_balance>=0.1 && mva_balance<0.5";
+    factory->AddVariable( "mva_deltaR_ll"         , "#DeltaR(l1, l2)"                   , ""    , 'F'); optionString+=":CutRangeMin[2]=0.1:CutRangeMax[2]=5.0:VarProp[2]=FMin";
+    factory->AddVariable( "mva_mll_minus_mZ"      , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F'); optionString+=":CutRangeMin[3]=5.0:CutRangeMax[3]=15.0:VarProp[3]=FMin";
+    TCut preselectionCut = "mva_MET>100  && mva_3lveto==1 && mva_ntaus==0 && mva_btag_veto==1 && (mva_delphi_jet_MET > 0.5 || mva_delphi_jet_MET < 0)";
+    preselectionCut = preselectionCut && "mva_balance>=0.1 && mva_balance<0.9";
     preselectionCut = preselectionCut && "mva_delphi_ptll_MET>=2.0 && mva_delphi_ptll_MET<3.1";
-    preselectionCut = preselectionCut && "mva_deltaR_ll>=0.0 && mva_deltaR_ll<3.0";
-    preselectionCut = preselectionCut && "mva_mll_minus_mZ>=5.0 && mva_mll_minus_mZ<30.0";
+    preselectionCut = preselectionCut && "mva_deltaR_ll>=0.0 && mva_deltaR_ll<5.0";
+    preselectionCut = preselectionCut && "mva_mll_minus_mZ>=5.0 && mva_mll_minus_mZ<15.0";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
     cout << optionString << std::endl;
-    factory->BookMethod( TMVA::Types::kCuts, "RCO", optionString);
+    factory->BookMethod( TMVA::Types::kCuts, "RCO_massIndependent_"+mediator, optionString);
   } else if(mode==2) {
-    factory->AddVariable( "mva_balance"           , "Balance"                           , ""    , 'F');
-    factory->AddVariable( "mva_cos_theta_star_l1" , "cos #theta^{*}_{l1}"               , ""    , 'F');
-    factory->AddVariable( "mva_cos_theta_CS_l1"   , "cos #theta^{CS}_{l1}"              , ""    , 'F');
-    factory->AddVariable( "mva_delphi_ptll_MET"   , "#Delta#Phi(p^{ll}, p^{miss})"      , "rad" , 'F');
-    factory->AddVariable( "mva_delphi_ll"         , "#Delta#Phi^{ll}"                   , "rad" , 'F');
-    factory->AddVariable( "mva_delphi_jet_MET"    , "#Delta#Phi(jet, p^{miss})"         , "rad" , 'F');
-    factory->AddVariable( "mva_deltaR_ll"         , "#DeltaR(l1, l2)"                   , ""    , 'F');
-    factory->AddVariable( "mva_etall"             , "#eta_{ll}"                         , ""    , 'F');
-    factory->AddVariable( "mva_etal1"             , "#eta_{l1}"                         , ""    , 'F');
-    factory->AddVariable( "mva_etal2"             , "#eta_{l2}"                         , ""    , 'F');
-    factory->AddVariable( "mva_mll_minus_mZ"      , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F');
-    factory->AddVariable( "mva_mTjetMET"          , "m_{T}(jet, p_{T}^{miss})"          , "GeV" , 'F');
-    factory->AddVariable( "mva_mTl1MET"           , "m_{T}(p_{T}^{l1}, p_{T}^{miss})"   , "GeV" , 'F');
-    factory->AddVariable( "mva_mTl2MET"           , "m_{T}(p_{T}^{l2}, p_{T}^{miss})"   , "GeV" , 'F');
-    factory->AddVariable( "ptl1mptl2_over_ptll"   , "Lepton Balance"                    , ""    , 'F');
+    factory->AddVariable( "mva_cos_theta_star_l1"             , "cos #theta^{*}_{l1}"               , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , "| cos #theta^{CS}_{l1} |"          , ""    , 'F');
+    factory->AddVariable( "mva_delphi_ptll_MET"               , "#Delta#Phi(p^{ll}, p^{miss})"      , "rad" , 'F');
+    factory->AddVariable( "mva_delphi_ll"                     , "#Delta#Phi^{ll}"                   , "rad" , 'F');
+    factory->AddVariable( "mva_delphi_jet_MET"                , "#Delta#Phi(jet, p^{miss})"         , "rad" , 'F');
+    factory->AddVariable( "mva_deltaR_ll"                     , "#DeltaR(l1, l2)"                   , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etall)"             , "|#eta_{ll}|"                       , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etal1)"             , "|#eta_{l1}|"                       , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etal2)"             , "|#eta_{l2}|"                       , ""    , 'F');
+    factory->AddVariable( "mva_mll_minus_mZ"                  , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F');
+    factory->AddVariable( "mva_mTjetMET"                      , "m_{T}(jet, p_{T}^{miss})"          , "GeV" , 'F');
+    factory->AddVariable( "mva_mTl1MET"                       , "m_{T}(p_{T}^{l1}, p_{T}^{miss})"   , "GeV" , 'F');
+    factory->AddVariable( "mva_mTl2MET"                       , "m_{T}(p_{T}^{l2}, p_{T}^{miss})"   , "GeV" , 'F');
+    factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>120 && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massIndependent_"+mediator, "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   } else if(mode==3) {
-    factory->AddVariable( "mva_balance"           , "Balance"                           , ""    , 'F');
-    factory->AddVariable( "mva_cos_theta_star_l1" , "cos #theta^{*}_{l1}"               , ""    , 'F');
-    factory->AddVariable( "mva_cos_theta_CS_l1"   , "cos #theta^{CS}_{l1}"              , ""    , 'F');
-    factory->AddVariable( "mva_delphi_ptll_MET"   , "#Delta#Phi(p^{ll}, p^{miss})"      , "rad" , 'F');
-    factory->AddVariable( "mva_delphi_ll"         , "#Delta#Phi^{ll}"                   , "rad" , 'F');
-    factory->AddVariable( "mva_delphi_jet_MET"    , "#Delta#Phi(jet, p^{miss})"         , "rad" , 'F');
-    factory->AddVariable( "mva_deltaR_ll"         , "#DeltaR(l1, l2)"                   , ""    , 'F');
-    factory->AddVariable( "mva_etall"             , "#eta_{ll}"                         , ""    , 'F');
-    factory->AddVariable( "mva_etal1"             , "#eta_{l1}"                         , ""    , 'F');
-    factory->AddVariable( "mva_etal2"             , "#eta_{l2}"                         , ""    , 'F');
-    factory->AddVariable( "mva_MET"               , "E_{T}^{miss}"                      , "GeV" , 'F');
-    factory->AddVariable( "mva_mll_minus_mZ"      , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F');
-    factory->AddVariable( "mva_mTjetMET"          , "m_{T}(jet, p_{T}^{miss})"          , "GeV" , 'F');
-    factory->AddVariable( "mva_mTll"              , "m_{T}(p_{T}^{ll}, p^{miss})"       , "GeV" , 'F');
-    factory->AddVariable( "mva_mTl1MET"           , "m_{T}(p_{T}^{l1}, p_{T}^{miss})"   , "GeV" , 'F');
-    factory->AddVariable( "mva_mTl2MET"           , "m_{T}(p_{T}^{l2}, p_{T}^{miss})"   , "GeV" , 'F');
-    factory->AddVariable( "mva_ptll"              , "p_{T}^{ll}"                        , "GeV" , 'F');
-    factory->AddVariable( "mva_ptl1"              , "p_{T}^{l1}"                        , "GeV" , 'F');
-    factory->AddVariable( "mva_ptl2"              , "p_{T}^{l2}"                        , "GeV" , 'F');
-    factory->AddVariable( "ptl1mptl2_over_ptll"   , "Lepton Balance"                    , ""    , 'F');
+    factory->AddVariable( "mva_balance"                       , "Balance"                           , ""    , 'F');
+    factory->AddVariable( "mva_cos_theta_star_l1"             , "cos #theta^{*}_{l1}"               , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , "| cos #theta^{CS}_{l1} |"          , ""    , 'F');
+    factory->AddVariable( "mva_delphi_ptll_MET"               , "#Delta#Phi(p^{ll}, p^{miss})"      , "rad" , 'F');
+    factory->AddVariable( "mva_delphi_ll"                     , "#Delta#Phi^{ll}"                   , "rad" , 'F');
+    factory->AddVariable( "mva_delphi_jet_MET"                , "#Delta#Phi(jet, p^{miss})"         , "rad" , 'F');
+    factory->AddVariable( "mva_deltaR_ll"                     , "#DeltaR(l1, l2)"                   , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etall)"             , "|#eta_{ll}|"                       , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etal1)"             , "|#eta_{l1}|"                       , ""    , 'F');
+    factory->AddVariable( "TMath::Abs(mva_etal2)"             , "|#eta_{l2}|"                       , ""    , 'F');
+    factory->AddVariable( "mva_MET"                           , "E_{T}^{miss}"                      , "GeV" , 'F');
+    factory->AddVariable( "mva_mll_minus_mZ"                  , "|m_{ll} - m_{Z}|"                  , "GeV" , 'F');
+    factory->AddVariable( "mva_mTjetMET"                      , "m_{T}(jet, p_{T}^{miss})"          , "GeV" , 'F');
+    factory->AddVariable( "mva_mTll"                          , "m_{T}(p_{T}^{ll}, p^{miss})"       , "GeV" , 'F');
+    factory->AddVariable( "mva_mTl1MET"                       , "m_{T}(p_{T}^{l1}, p_{T}^{miss})"   , "GeV" , 'F');
+    factory->AddVariable( "mva_mTl2MET"                       , "m_{T}(p_{T}^{l2}, p_{T}^{miss})"   , "GeV" , 'F');
+    factory->AddVariable( "mva_ptll"                          , "p_{T}^{ll}"                        , "GeV" , 'F');
+    factory->AddVariable( "mva_ptl1"                          , "p_{T}^{l1}"                        , "GeV" , 'F');
+    factory->AddVariable( "mva_ptl2"                          , "p_{T}^{l2}"                        , "GeV" , 'F');
+    factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>80  && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massDependent_"+signal_model, "!H:!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   }
 
   factory->TrainAllMethods();

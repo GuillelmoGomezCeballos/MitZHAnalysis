@@ -42,14 +42,14 @@ void zhAnalysis(
  bool isBlinded = false,
  Int_t typeSel = 3,
  Int_t plotModel = 0,
- bool verbose = false
+ bool verbose = false,
+ string the_BDT_weights=""
  ){
 
   system("mkdir -p MitZHAnalysis/datacards");
   system("mkdir -p MitZHAnalysis/plots");
   bool makeMVAtrees=false;
   bool useBDT=false;
-  string the_BDT_weights="";
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
@@ -373,8 +373,6 @@ void zhAnalysis(
   //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
-  if (MVAVarType==3) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_mh125_full.weights.xml";
-  if (MVAVarType==4) the_BDT_weights = "/home/dhsu/cms/cmssw/045/CMSSW_8_0_12/src/weights/bdt_BDT_sm_noMET.weights.xml";
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
@@ -802,7 +800,6 @@ void zhAnalysis(
     Zjets_mva_tree->Branch( "mva_delphi_ll"        , &mva_delphi_ll        , "mva_delphi_ll/F"         ); 
     Zjets_mva_tree->Branch( "mva_delphi_jet_MET"   , &mva_delphi_jet_MET   , "mva_delphi_jet_MET/F"    ); 
     Zjets_mva_tree->Branch( "mva_deltaR_ll"        , &mva_deltaR_ll        , "mva_deltaR_ll/F"         ); 
-    //Zjets_mva_tree->Branch( "mva_deltaR_jet_MET"   , &mva_deltaR_jet_MET   , "mva_deltaR_jet_MET/F"    ); 
     Zjets_mva_tree->Branch( "mva_etall"            , &mva_etall            , "mva_etall/F"             ); 
     Zjets_mva_tree->Branch( "mva_etal1"            , &mva_etal1            , "mva_etal1/F"             ); 
     Zjets_mva_tree->Branch( "mva_etal2"            , &mva_etal2            , "mva_etal2/F"             ); 
@@ -834,37 +831,37 @@ void zhAnalysis(
   if(useBDT) {
     reader=new TMVA::Reader();
     if(MVAVarType==3) {
-      reader->AddVariable( "mva_balance"           , &mva_balance            );
-      reader->AddVariable( "mva_cos_theta_star_l1" , &mva_cos_theta_star_l1  );
-      reader->AddVariable( "mva_cos_theta_CS_l1"   , &mva_cos_theta_CS_l1    );
-      reader->AddVariable( "mva_delphi_ptll_MET"   , &mva_delphi_ptll_MET    );
-      reader->AddVariable( "mva_delphi_ll"         , &mva_delphi_ll          );
-      reader->AddVariable( "mva_delphi_jet_MET"    , &mva_delphi_jet_MET     );
-      reader->AddVariable( "mva_deltaR_ll"         , &mva_deltaR_ll          );
-      reader->AddVariable( "mva_etall"             , &mva_etall              );
-      reader->AddVariable( "mva_etal1"             , &mva_etal1              );
-      reader->AddVariable( "mva_etal2"             , &mva_etal2              );
-      reader->AddVariable( "mva_MET"               , &mva_MET                );
-      reader->AddVariable( "mva_mll_minus_mZ"      , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_mTjetMET"          , &mva_mTjetMET           );
-      reader->AddVariable( "mva_mTll"              , &mva_mTll               );
-      reader->AddVariable( "mva_mTl1MET"           , &mva_mTl1MET            );
-      reader->AddVariable( "mva_mTl2MET"           , &mva_mTl2MET            );
-      reader->AddVariable( "mva_ptll"              , &mva_ptll               );
-      reader->AddVariable( "mva_ptl1"              , &mva_ptl1               );
-      reader->AddVariable( "mva_ptl2"              , &mva_ptl2               );
-      reader->AddVariable( "ptl1mptl2_over_ptll"   , &mva_ptl1mptl2_over_ptll);
+      reader->AddVariable( "mva_balance"                       , &mva_balance            );
+      reader->AddVariable( "mva_cos_theta_star_l1"             , &mva_cos_theta_star_l1  );
+      reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
+      reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
+      reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
+      reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
+      reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
+      reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
+      reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
+      reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
+      reader->AddVariable( "mva_MET"                           , &mva_MET                );
+      reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
+      reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
+      reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
+      reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
+      reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
+      reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
+      reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
+      reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
+      reader->AddVariable( "ptl1mptl2_over_ptll"               , &mva_ptl1mptl2_over_ptll);
     } else if(MVAVarType==4) {
-      reader->AddVariable( "mva_cos_theta_CS_l1"   , &mva_cos_theta_CS_l1    );
-      reader->AddVariable( "mva_deltaR_ll"         , &mva_deltaR_ll          );
-      reader->AddVariable( "mva_etall"             , &mva_etall              );
-      reader->AddVariable( "mva_etal1"             , &mva_etal1              );
-      reader->AddVariable( "mva_etal2"             , &mva_etal2              );
-      reader->AddVariable( "mva_mll_minus_mZ"      , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_ptll"              , &mva_ptll               );
-      reader->AddVariable( "mva_ptl1"              , &mva_ptl1               );
-      reader->AddVariable( "mva_ptl2"              , &mva_ptl2               );
-      reader->AddVariable( "ptl1mptl2_over_ptll"   , &mva_ptl1mptl2_over_ptll);
+      reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
+      reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
+      reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
+      reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
+      reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
+      reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
+      reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
+      reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
+      reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
+      reader->AddVariable( "ptl1mptl2_over_ptll"               , &mva_ptl1mptl2_over_ptll);
     }
     reader->BookMVA("BDT", the_BDT_weights);
   }

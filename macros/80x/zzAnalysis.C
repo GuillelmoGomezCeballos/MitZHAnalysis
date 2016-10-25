@@ -24,6 +24,7 @@ bool isMINIAOD[5] = {true, true, true, true, true};
 int whichSkim = 2;
 bool usePureMC = false; 
 double mcPrescale = 1.0;
+bool useZZWZEWKUnc = false;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -193,7 +194,8 @@ void zzAnalysis(
     else if(thePlot >=  7 && thePlot <=  7) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >=  8 && thePlot <=  9) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
     else if(thePlot >= 10 && thePlot <= 10) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
-    else if(thePlot >= 11 && thePlot <= 16) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot >= 11 && thePlot <= 12) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
+    else if(thePlot >= 13 && thePlot <= 16) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 17 && thePlot <= 17) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 400.0;}
     else if(thePlot >= 18 && thePlot <= 18) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot =   3.5;}
     else if(thePlot >= 19 && thePlot <= 19) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
@@ -603,8 +605,9 @@ void zzAnalysis(
 				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12]};
       bool passZHWWSel = passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13];
 
-      TLorentzVector theFakeMET[2], theFakeMETUp, theFakeMETDown, theZZllnnMET, dilepZll, dilepZnn; double dPhiDiLepMET = 0, ptFrac = 0;
+      TLorentzVector theFakeMETUp, theFakeMETDown, theZZllnnMET, theOtherZZllnnMET, dilepZll, dilepZnn; double dPhiDiLepMET = 0, ptFrac = 0;
       if(passZZSel){
+        TLorentzVector theFakeMET[2];
         theFakeMET[0].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
         theFakeMET[0].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
         theFakeMET[1].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
@@ -617,6 +620,7 @@ void zzAnalysis(
           theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
           theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
           theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
+	  theOtherZZllnnMET = theFakeMET[0];
 	} else { // (1) => nn, (2) ==> ll
 	  printf("IMPOSSIBLE!!!\n");
 	}
@@ -789,9 +793,9 @@ void zzAnalysis(
 	else if(thePlot ==  8 && passAllCuts)             {makePlot = true;theVar = dPhiJetMET*180/TMath::Pi();}
 	else if(thePlot ==  9 && passAllCuts)             {makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
 	else if(thePlot == 10 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
-	else if(thePlot == 11 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
-	else if(thePlot == 12 && passZZSel)	          {makePlot = true;theVar = TMath::Min(TMath::Max(theFakeMET[0].Pt(),theFakeMET[1].Pt()),199.999);}
-	else if(thePlot == 13 && passZZSel)	          {makePlot = true;theVar = TMath::Min(TMath::Min(theFakeMET[0].Pt(),theFakeMET[1].Pt()),199.999);}
+	else if(thePlot == 11 && passZZhinvSel) 	  {makePlot = true;theVar = TMath::Min(TMath::Max(theZZllnnMET.Pt()     ,0.001),399.999);}
+	else if(thePlot == 12 && passZZhinvSel) 	  {makePlot = true;theVar = TMath::Min(TMath::Max(theOtherZZllnnMET.Pt(),0.001),399.999);}
+	else if(thePlot == 13 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
 	else if(thePlot == 14 && passZHWWSelNMinusOne[3]) {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
 	else if(thePlot == 15 && passZHWWSelNMinusOne[0]) {makePlot = true;theVar = TMath::Min(minMassZ[0],199.999);}
 	else if(thePlot == 16 && passZHWWSelNMinusOne[1]) {makePlot = true;theVar = TMath::Min(minMassZ[1],199.999);}
@@ -1244,8 +1248,12 @@ void zzAnalysis(
       newcardShape << Form("CMS_scale_j                            lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2]);   	     
 
       if(nb != 1){
+      if(useZZWZEWKUnc){
+      newcardShape << Form("CMS_zllhinv_ZZWW_EWKCorr               lnN    -   %7.5f   -     -     -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
+      } else {
       newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      //newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1,syst_EWKCorrUp[0]-1.0);	
+      }
       }
 
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		

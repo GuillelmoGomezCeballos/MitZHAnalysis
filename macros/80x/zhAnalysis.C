@@ -30,6 +30,7 @@ bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
 bool useVVFromData = false;
+bool useZZWZEWKUnc = false;
 double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
@@ -2764,11 +2765,16 @@ void zhAnalysis(
       newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
+      if(useZZWZEWKUnc){
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
+      newcardShape << Form("CMS_zllhinv_ZZWW_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
+      } else {
       newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
       newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		
-
       newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
       newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1, systVV[1]);	
+      }
       }
       else if(!useVVFromData){
       newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -      -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		

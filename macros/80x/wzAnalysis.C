@@ -33,6 +33,7 @@ int whichSkim = 2;
 double mcPrescale = 1.0;
 bool usePureMC = false;
 bool isWZhinv = true;
+bool useZZWZEWKUnc = false;
 
 double overallZgSF[1] = {0.8};
 
@@ -1533,8 +1534,11 @@ void wzAnalysis(
     if(histo_Higgs->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_wz3l%s_MVAHiggsStatBounding_%s_Bin%d     lnN      -     -    -    -	-    -  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs ->GetBinError(nb)/histo_Higgs ->GetBinContent(nb));
 
     if(nb != 1 && isWZhinv){
-    newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);	      
-    //newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1,0.1);	      
+      if(useZZWZEWKUnc){
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);
+      } else {
+      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);
+      }
     }
 
     newcardShape.close();

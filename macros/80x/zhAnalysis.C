@@ -43,11 +43,12 @@ void zhAnalysis(
  Int_t typeSel = 3,
  Int_t plotModel = 0,
  bool verbose = false,
- string the_BDT_weights=""
+ string the_BDT_weights="",
+ string subdirectory=""
  ){
-
-  system("mkdir -p MitZHAnalysis/datacards");
-  system("mkdir -p MitZHAnalysis/plots");
+  if(subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
+  system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
+  system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
   bool makeMVAtrees=false;
   bool useBDT=false;
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
@@ -160,7 +161,7 @@ void zhAnalysis(
     infileCategory_.push_back(6); signalIndex_.push_back(iH+1);
     iH++;
   }}
-/*
+
   { // dark matter models () ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep DarkMatter_MonoZToLL|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
     signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v2+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
@@ -228,7 +229,7 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
   }
-*/
+
 /*
   { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep monoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
@@ -362,7 +363,7 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  ////const int MVAVarType = 1; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
@@ -836,14 +837,14 @@ void zhAnalysis(
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
       reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
-      reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
+      //reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
       reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
       reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
       reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
       reader->AddVariable( "mva_MET"                           , &mva_MET                );
       reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
+      //reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
       reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
       reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
       reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
@@ -1198,7 +1199,7 @@ void zhAnalysis(
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
        passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
        passAllCuts[SIGSEL] = passAllCuts[PRESEL] && passMETTight;
-       passAllCuts[TIGHTSEL] = passAllCuts[TIGHTSEL] && bdt_value>0;
+       passAllCuts[TIGHTSEL] = passAllCuts[SIGSEL] && bdt_value>0;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -1939,13 +1940,9 @@ void zhAnalysis(
     int theBin = 2;
     double the_bck = histo_EM->GetBinContent(theBin) + histo_WZ->GetBinContent(theBin) + histo_ZZ->GetBinContent(theBin) + histo_VVV->GetBinContent(theBin);
     double the_data = histo_Data->GetBinContent(theBin);
-    double the_sf;
-    //if(MVAVarType!=3) { 
-    the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(theBin);
+    double the_DY = histo_Zjets->GetBinContent(theBin);
+    double the_sf = the_DY > 0 ? (the_data-the_bck)/the_DY : 1.;
     printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(theBin),the_sf);
-    //} else {
-    //  the_sf=1.068889;
-    //}
     histo_Zjets->Scale(the_sf);
     histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
   }
@@ -2008,7 +2005,7 @@ void zhAnalysis(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"MitZHAnalysis/plots/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots%s/histo%szh%s_nice_%s_%d.root",subdirectory,addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -2720,7 +2717,7 @@ void zhAnalysis(
         process_syst_type[6][27] +=  0;                                                                                 //EMNorm
       }
       char outputLimitsShape[200];                                            
-      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards%s/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
       ofstream newcardShape;
       newcardShape.open(outputLimitsShape);
       newcardShape << Form("imax 1 number of channels\n");

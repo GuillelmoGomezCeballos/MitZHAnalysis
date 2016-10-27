@@ -144,7 +144,8 @@ double getMVAVar(
         MVAVar = TMath::Min(MET, 349.999) + auxMll;
       }
     } else if(MVAVarType == 3) {
-      MVAVar = bdt_value;
+      if(MET<100.) MVAVar = -0.5;
+      else         MVAVar = bdt_value;
     } else if(MVAVarType == 4) {
       if(MET < 100 || bdt_value < -0.4) MVAVar = 80.;
       else {

@@ -363,12 +363,12 @@ void zhAnalysis(
 
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   //const int MVAVarType = 1; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -764,7 +764,7 @@ void zhAnalysis(
     bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
   }}}
   TFile *mva_trees;
-  TTree *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
+  TTree *data_mva_tree, *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
@@ -787,43 +787,69 @@ void zhAnalysis(
            mva_ptl2,
            mva_ptl1mptl2_over_ptll,
            mva_response,
-           mva_weight;
+           mva_weight,
+           aux_MET_JESup,
+           aux_MET_JESdown,
+           aux_PUscale,
+           aux_QCDscale_r1f2,
+           aux_QCDscale_r1f5,
+           aux_QCDscale_r2f1,
+           aux_QCDscale_r2f2,
+           aux_QCDscale_r5f1,
+           aux_QCDscale_r5f5,
+           aux_EWKscale;
+  Float_t  aux_PDFscale[102];
   UChar_t  mva_njets,
-           mva_ntaus;
+           mva_ntaus,
+           aux_njets_JESup,
+           aux_njets_JESdown;
   Bool_t   mva_btag_veto,
            mva_3lveto;
   if(makeMVAtrees) {
     mva_trees=new TFile("MitZHAnalysis/mva/mva_input_trees.root", "RECREATE");
-    Zjets_mva_tree = new TTree("bkg_mva_tree_Zjets", "MVA input tree with Drell-Yan background events");
-    Zjets_mva_tree->Branch( "mva_balance"          , &mva_balance          , "mva_balance/F"           ); 
-    Zjets_mva_tree->Branch( "mva_cos_theta_star_l1", &mva_cos_theta_star_l1, "mva_cos_theta_star_l1/F" ); 
-    Zjets_mva_tree->Branch( "mva_cos_theta_CS_l1"  , &mva_cos_theta_CS_l1  , "mva_cos_theta_CS_l1/F"   ); 
-    Zjets_mva_tree->Branch( "mva_delphi_ptll_MET"  , &mva_delphi_ptll_MET  , "mva_delphi_ptll_MET/F"   ); 
-    Zjets_mva_tree->Branch( "mva_delphi_ll"        , &mva_delphi_ll        , "mva_delphi_ll/F"         ); 
-    Zjets_mva_tree->Branch( "mva_delphi_jet_MET"   , &mva_delphi_jet_MET   , "mva_delphi_jet_MET/F"    ); 
-    Zjets_mva_tree->Branch( "mva_deltaR_ll"        , &mva_deltaR_ll        , "mva_deltaR_ll/F"         ); 
-    Zjets_mva_tree->Branch( "mva_etall"            , &mva_etall            , "mva_etall/F"             ); 
-    Zjets_mva_tree->Branch( "mva_etal1"            , &mva_etal1            , "mva_etal1/F"             ); 
-    Zjets_mva_tree->Branch( "mva_etal2"            , &mva_etal2            , "mva_etal2/F"             ); 
-    Zjets_mva_tree->Branch( "mva_MET"              , &mva_MET              , "mva_MET/F"               ); 
-    Zjets_mva_tree->Branch( "mva_mll_minus_mZ"     , &mva_mll_minus_mZ     , "mva_mll_minus_mZ/F"      ); 
-    Zjets_mva_tree->Branch( "mva_mTjetMET"         , &mva_mTjetMET         , "mva_mTjetMET/F"          ); 
-    Zjets_mva_tree->Branch( "mva_mTll"             , &mva_mTll             , "mva_mTll/F"              ); 
-    Zjets_mva_tree->Branch( "mva_mTl1MET"          , &mva_mTl1MET          , "mva_mTl1MET/F"           ); 
-    Zjets_mva_tree->Branch( "mva_mTl2MET"          , &mva_mTl2MET          , "mva_mTl2MET/F"           ); 
-    Zjets_mva_tree->Branch( "mva_njets"            , &mva_njets            , "mva_njets/O"             ); 
-    Zjets_mva_tree->Branch( "mva_3lveto"           , &mva_3lveto           , "mva_3lveto/b"            ); 
-    Zjets_mva_tree->Branch( "mva_btag_veto"        , &mva_btag_veto        , "mva_btag_veto/b"         ); 
-    Zjets_mva_tree->Branch( "mva_ntaus"            , &mva_ntaus            , "mva_ntaus/O"             ); 
-    Zjets_mva_tree->Branch( "mva_ptll"             , &mva_ptll             , "mva_ptll/F"              ); 
-    Zjets_mva_tree->Branch( "mva_ptl1"             , &mva_ptl1             , "mva_ptl1/F"              ); 
-    Zjets_mva_tree->Branch( "mva_ptl2"             , &mva_ptl2             , "mva_ptl2/F"              ); 
-    Zjets_mva_tree->Branch( "ptl1mptl2_over_ptll"  , &mva_ptl1mptl2_over_ptll  , "mva_ptl1mptl2_over_ptll/F"); 
-    Zjets_mva_tree->Branch( "mva_weight"           , &mva_weight           , "mva_weight/F"            ); 
-    EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree  ->SetName("bkg_mva_tree_EM" ); EM_mva_tree  ->SetTitle( "MVA input tree with WW/top background events" );
-    WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree  ->SetName("bkg_mva_tree_WZ" ); WZ_mva_tree  ->SetTitle( "MVA input tree with WZ background events"     );
-    ZZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); ZZ_mva_tree  ->SetName("bkg_mva_tree_ZZ" ); ZZ_mva_tree  ->SetTitle( "MVA input tree with ZZ background events"     );
-    VVV_mva_tree   = (TTree*)Zjets_mva_tree->CloneTree(); VVV_mva_tree ->SetName("bkg_mva_tree_VVV"); VVV_mva_tree ->SetTitle( "MVA input tree with VVV background events"    );
+    data_mva_tree = new TTree("bkg_mva_tree_Zjets", "MVA input tree with data events");
+    data_mva_tree->Branch( "mva_balance"             , &mva_balance              , "mva_balance/F"           ); 
+    data_mva_tree->Branch( "mva_cos_theta_star_l1"   , &mva_cos_theta_star_l1    , "mva_cos_theta_star_l1/F" ); 
+    data_mva_tree->Branch( "mva_cos_theta_CS_l1"     , &mva_cos_theta_CS_l1      , "mva_cos_theta_CS_l1/F"   ); 
+    data_mva_tree->Branch( "mva_delphi_ptll_MET"     , &mva_delphi_ptll_MET      , "mva_delphi_ptll_MET/F"   ); 
+    data_mva_tree->Branch( "mva_delphi_ll"           , &mva_delphi_ll            , "mva_delphi_ll/F"         ); 
+    data_mva_tree->Branch( "mva_delphi_jet_MET"      , &mva_delphi_jet_MET       , "mva_delphi_jet_MET/F"    ); 
+    data_mva_tree->Branch( "mva_deltaR_ll"           , &mva_deltaR_ll            , "mva_deltaR_ll/F"         ); 
+    data_mva_tree->Branch( "mva_etall"               , &mva_etall                , "mva_etall/F"             ); 
+    data_mva_tree->Branch( "mva_etal1"               , &mva_etal1                , "mva_etal1/F"             ); 
+    data_mva_tree->Branch( "mva_etal2"               , &mva_etal2                , "mva_etal2/F"             ); 
+    data_mva_tree->Branch( "mva_MET"                 , &mva_MET                  , "mva_MET/F"               ); 
+    data_mva_tree->Branch( "mva_mll_minus_mZ"        , &mva_mll_minus_mZ         , "mva_mll_minus_mZ/F"      ); 
+    data_mva_tree->Branch( "mva_mTjetMET"            , &mva_mTjetMET             , "mva_mTjetMET/F"          ); 
+    data_mva_tree->Branch( "mva_mTll"                , &mva_mTll                 , "mva_mTll/F"              ); 
+    data_mva_tree->Branch( "mva_mTl1MET"             , &mva_mTl1MET              , "mva_mTl1MET/F"           ); 
+    data_mva_tree->Branch( "mva_mTl2MET"             , &mva_mTl2MET              , "mva_mTl2MET/F"           ); 
+    data_mva_tree->Branch( "mva_ptll"                , &mva_ptll                 , "mva_ptll/F"              ); 
+    data_mva_tree->Branch( "mva_ptl1"                , &mva_ptl1                 , "mva_ptl1/F"              ); 
+    data_mva_tree->Branch( "mva_ptl2"                , &mva_ptl2                 , "mva_ptl2/F"              ); 
+    data_mva_tree->Branch( "mva_ptl1mptl2_over_ptll" , &mva_ptl1mptl2_over_ptll  , "mva_ptl1mptl2_over_ptll/F"); 
+    data_mva_tree->Branch( "mva_weight"              , &mva_weight               , "mva_weight/F"            ); 
+    data_mva_tree->Branch( "mva_njets"               , &mva_njets                , "mva_njets/b"             ); 
+    data_mva_tree->Branch( "mva_ntaus"               , &mva_ntaus                , "mva_ntaus/b"             ); 
+    data_mva_tree->Branch( "mva_3lveto"              , &mva_3lveto               , "mva_3lveto/O"            ); 
+    data_mva_tree->Branch( "mva_btag_veto"           , &mva_btag_veto            , "mva_btag_veto/O"         ); 
+    Zjets_mva_tree = (TTree*) data_mva_tree->CloneTree(); Zjets_mva_tree  ->SetName("bkg_mva_tree_Zjets" ); Zjets_mva_tree  ->SetTitle( "MVA input tree with Drell-Yan background events" );
+    data_mva_tree->Branch( "aux_PDFscale"            , &aux_PDFscale);
+    data_mva_tree->Branch( "aux_PUscale"             , &aux_PUscale              , "aux_PUscale/F"           );
+    data_mva_tree->Branch( "aux_QCDscale_r1f2"       , &aux_QCDscale_r1f2        , "aux_QCDscale_r1f2/F"     );
+    data_mva_tree->Branch( "aux_QCDscale_r1f5"       , &aux_QCDscale_r1f5        , "aux_QCDscale_r1f5/F"     );
+    data_mva_tree->Branch( "aux_QCDscale_r2f1"       , &aux_QCDscale_r2f1        , "aux_QCDscale_r2f1/F"     );
+    data_mva_tree->Branch( "aux_QCDscale_r2f2"       , &aux_QCDscale_r2f2        , "aux_QCDscale_r2f2/F"     );
+    data_mva_tree->Branch( "aux_QCDscale_r5f1"       , &aux_QCDscale_r5f1        , "aux_QCDscale_r5f1/F"     );
+    data_mva_tree->Branch( "aux_QCDscale_r5f5"       , &aux_QCDscale_r5f5        , "aux_QCDscale_r5f5/F"     );
+    data_mva_tree->Branch( "aux_njets_JESup"         , &aux_njets_JESup          , "aux_njets_JESup/b"       ); 
+    data_mva_tree->Branch( "aux_njets_JESdown"       , &aux_njets_JESdown        , "aux_njets_JESdown/b"     ); 
+    data_mva_tree->Branch( "aux_MET_JESup"           , &aux_MET_JESup            , "aux_MET_JESup/F"         );
+    data_mva_tree->Branch( "aux_MET_JESdown"         , &aux_MET_JESdown          , "aux_MET_JESdown/F"       );
+    EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree     ->SetName("bkg_mva_tree_EM" );    EM_mva_tree     ->SetTitle( "MVA input tree with WW/top background events" );
+    WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree     ->SetName("bkg_mva_tree_WZ" );    WZ_mva_tree     ->SetTitle( "MVA input tree with WZ background events"     );
+    ZZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); ZZ_mva_tree     ->SetName("bkg_mva_tree_ZZ" );    ZZ_mva_tree     ->SetTitle( "MVA input tree with ZZ background events"     );
+    VVV_mva_tree   = (TTree*)Zjets_mva_tree->CloneTree(); VVV_mva_tree    ->SetName("bkg_mva_tree_VVV");    VVV_mva_tree    ->SetTitle( "MVA input tree with VVV background events"    );
     for(int nModel=0; nModel<nSigModels; nModel++) {
       signal_mva_trees[nModel] = (TTree*)Zjets_mva_tree->CloneTree(); 
       signal_mva_trees[nModel]->SetName( Form("signal_mva_tree_%s", signalName_[nModel].Data()));
@@ -881,6 +907,7 @@ void zhAnalysis(
     TFile the_input_file(infileName_[ifile]);
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
+    if(MVAVarType==3 && nModel>0 && nModel!=plotModel) continue;
     TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
     TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
@@ -1198,9 +1225,9 @@ void zhAnalysis(
      }
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
-       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
-       passAllCuts[SIGSEL] = passAllCuts[PRESEL] && passMETTight;
-       passAllCuts[TIGHTSEL] = passAllCuts[SIGSEL] && bdt_value>0;
+       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET;
+       passAllCuts[TIGHTSEL] = (passAllCuts[PRESEL] && passMETTight && bdt_value>=0);
+       passAllCuts[SIGSEL] = passAllCuts[SIGSEL] || passAllCuts[TIGHTSEL]; 
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -1459,6 +1486,40 @@ void zhAnalysis(
         mva_ntaus               = (unsigned char) numberGoodTaus; 
         mva_btag_veto           = passBtagVeto; 
         mva_3lveto              = pass3rdLVeto;
+        // Auxiliary variables
+        if(theCategory==3) {
+          aux_EWKscale = 0.1; // WZ EWK uncertainty
+        } else if(theCategory==4) {
+          if(infileName_[ifile].Contains("GluGlu") == kFALSE) { // qq ZZ EWK uncertainty
+	        if(the_rho <= 0.3) aux_EWKscale=(TMath::Abs((theZZCorr[0]-1)*(15.99/9.89-1)));
+	        else               aux_EWKscale=(TMath::Abs((theZZCorr[0]-1)               ));
+          } else {
+            aux_EWKscale = 0.3; // gg ZZ EWK uncertainty
+          }
+        } else aux_EWKscale = 0;
+        aux_MET_JESup           = (double)(*eventMet.ptJESUP)[0];
+        aux_MET_JESdown         = (double)(*eventMet.ptJESDOWN)[0];
+        if(theCategory == 3 || theCategory == 4 || theCategory == 5 || theCategory == 6 || theCategory == 7) { // PDF and QCD scale
+          if(initPDFTag != -1)                                   for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]) - 1.;
+          else if(infileName_[ifile].Contains("powheg") == true) for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]) - 1.;
+          else                                                   for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = 0;
+          aux_QCDscale_r1f2       = TMath::Abs((double)eventMonteCarlo.r1f2) - 1.;
+          aux_QCDscale_r1f5       = TMath::Abs((double)eventMonteCarlo.r1f5) - 1.;
+          aux_QCDscale_r2f1       = TMath::Abs((double)eventMonteCarlo.r2f1) - 1.;
+          aux_QCDscale_r2f2       = TMath::Abs((double)eventMonteCarlo.r2f2) - 1.;
+          aux_QCDscale_r5f1       = TMath::Abs((double)eventMonteCarlo.r5f1) - 1.;
+          aux_QCDscale_r5f5       = TMath::Abs((double)eventMonteCarlo.r5f5) - 1.;
+        } else {
+          for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = 0;
+          aux_QCDscale_r1f2       = 0;
+          aux_QCDscale_r1f5       = 0;
+          aux_QCDscale_r2f1       = 0;
+          aux_QCDscale_r2f2       = 0;
+          aux_QCDscale_r5f1       = 0;
+          aux_QCDscale_r5f5       = 0;
+        }
+        aux_njets_JESup         = idJetUp.size();
+        aux_njets_JESdown       = idJetDown.size();
       }
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
 
@@ -1544,10 +1605,12 @@ void zhAnalysis(
               ptFrac
             );
           }
+          data_mva_tree->Write();
         }
         else if(theCategory == 1){
 	  if(passAllCuts[SIGSEL]) histo_EM   ->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[SIGSEL]) histo_EMNoW->Fill(MVAVar,1.);
+          EM_mva_tree->Write();
         }
         else if(theCategory == 2){
 	  if(passAllCuts[SIGSEL]) histo_Zjets   ->Fill(MVAVar,totalWeight);
@@ -1569,6 +1632,7 @@ void zhAnalysis(
             if(passAllCuts[CR2SEL]) N_C+=totalWeight;
             if(passAllCuts[CR12SEL]) N_D+=totalWeight;
           }
+          Zjets_mva_tree->Write();
         }
         else if(theCategory == 3){
 	  if(passAllCuts[SIGSEL]) {
@@ -1608,7 +1672,7 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_WZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_WZ_CMS_MVAMETBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_WZ_CMS_MVAMETBoundingDown->Fill(MVAVar,totalWeight);
-          
+          WZ_mva_tree->Write();
 	}
         else if(theCategory == 4){
 	  if(passAllCuts[SIGSEL]) {
@@ -1655,6 +1719,7 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ZZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ZZ_CMS_MVAMETBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_ZZ_CMS_MVAMETBoundingDown->Fill(MVAVar,totalWeight);
+          ZZ_mva_tree->Write();
         }
         else if(theCategory == 5){
 	  if(passAllCuts[SIGSEL]) {
@@ -1693,6 +1758,7 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_VVV_CMS_MVAMETBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_VVV_CMS_MVAMETBoundingDown->Fill(MVAVar,totalWeight);
+          VVV_mva_tree->Write();
         }
         else if(theCategory == 6){
 	  if(passAllCuts[SIGSEL]) {
@@ -1731,6 +1797,7 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ZH_hinv_CMS_MVAMETBoundingUp  [nModel]->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Fill(MVAVar,totalWeight);
+          signal_mva_trees[nModel]->Write();
         }
         else if(theCategory == 7){
 	  if(passAllCuts[SIGSEL]) {
@@ -1769,6 +1836,7 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ggZH_hinv_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[METDOWN])histo_ggZH_hinv_CMS_MVAMETBoundingDown->Fill(MVAVar,totalWeight);
+          signal_mva_trees[nModel]->Write();
         }
 	else {
 	  printf("CATEGORY PROBLEM!\n"); return;
@@ -1781,6 +1849,7 @@ void zhAnalysis(
     }
 
   } // end of chain
+  mva_trees->Close();
 
   // "-1" to remove the Higgs contribution
   double sumEvents = 0;
@@ -1792,6 +1861,7 @@ void zhAnalysis(
   printf("-----------------------------------------------------------------------------------------------------------\n");
   printf("Printing yields and statistical uncertainties for all signal models\n\n");
   for(int nModel=0; nModel<nSigModels; nModel++) {
+    if(MVAVarType==3 && !(nModel==0 || nModel == plotModel)) continue;
     printf("Model: %s\n", signalName_[nModel].Data()); 
     printf("                    em                      mm                      ee                      ll\n");
     printf("-----------------------------------------------------------------------------------------------------------\n");
@@ -2056,7 +2126,7 @@ void zhAnalysis(
   char outputLimits[200];
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-
+    if(MVAVarType==3 && !(nModel==0 || nModel == plotModel)) continue;
     sprintf(outputLimits,"MitZHAnalysis/plots/zll%shinv%s_%s_input_%s.root", addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
@@ -2226,6 +2296,39 @@ void zhAnalysis(
     histo_ZZ_CMS_PUBoundingDown	                                ->Write();
     histo_ggZH_hinv_CMS_PUBoundingUp                            ->Write();
     histo_ggZH_hinv_CMS_PUBoundingDown                          ->Write();
+    
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]                      ->Write();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]                    ->Write();
+    histo_VVV_CMS_BDTMuonScaleBoundingUp	                                ->Write();
+    histo_VVV_CMS_BDTMuonScaleBoundingDown	                        ->Write();
+    histo_WZ_CMS_BDTMuonScaleBoundingUp	                                ->Write();
+    histo_WZ_CMS_BDTMuonScaleBoundingDown	                                ->Write();
+    histo_ZZ_CMS_BDTMuonScaleBoundingUp	                                ->Write();
+    histo_ZZ_CMS_BDTMuonScaleBoundingDown	                                ->Write();
+    histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp                            ->Write();
+    histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown                          ->Write();
+    
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]                      ->Write();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]                    ->Write();
+    histo_VVV_CMS_BDTElectronScaleBoundingUp	                                ->Write();
+    histo_VVV_CMS_BDTElectronScaleBoundingDown	                        ->Write();
+    histo_WZ_CMS_BDTElectronScaleBoundingUp	                                ->Write();
+    histo_WZ_CMS_BDTElectronScaleBoundingDown	                                ->Write();
+    histo_ZZ_CMS_BDTElectronScaleBoundingUp	                                ->Write();
+    histo_ZZ_CMS_BDTElectronScaleBoundingDown	                                ->Write();
+    histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp                            ->Write();
+    histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown                          ->Write();
+    
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]                      ->Write();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]                    ->Write();
+    histo_VVV_CMS_BDTMETScaleBoundingUp	                                ->Write();
+    histo_VVV_CMS_BDTMETScaleBoundingDown	                        ->Write();
+    histo_WZ_CMS_BDTMETScaleBoundingUp	                                ->Write();
+    histo_WZ_CMS_BDTMETScaleBoundingDown	                                ->Write();
+    histo_ZZ_CMS_BDTMETScaleBoundingUp	                                ->Write();
+    histo_ZZ_CMS_BDTMETScaleBoundingDown	                                ->Write();
+    histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp                            ->Write();
+    histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown                          ->Write();
     
     histo_WZ_CMS_EWKCorrUp	                                ->Write();
     histo_WZ_CMS_EWKCorrDown	                                ->Write();

@@ -124,11 +124,11 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory->AddSignalTree(signal_mva_tree_[nModel], signalWeight);
   }
   // Background trees
-  TTree *Zjets_mva_tree    = (TTree*) mva_input_trees->Get("bkg_mva_tree_Zjets"); factory->AddBackgroundTree(Zjets_mva_tree , 1);
+  //TTree *Zjets_mva_tree    = (TTree*) mva_input_trees->Get("bkg_mva_tree_Zjets"); factory->AddBackgroundTree(Zjets_mva_tree , 1);
   TTree *EM_mva_tree       = (TTree*) mva_input_trees->Get("bkg_mva_tree_EM");    factory->AddBackgroundTree(EM_mva_tree    , 1);
   TTree *WZ_mva_tree       = (TTree*) mva_input_trees->Get("bkg_mva_tree_WZ");    factory->AddBackgroundTree(WZ_mva_tree    , 1);
   TTree *ZZ_mva_tree       = (TTree*) mva_input_trees->Get("bkg_mva_tree_ZZ");    factory->AddBackgroundTree(ZZ_mva_tree    , 1);
-  TTree *VVV_mva_tree      = (TTree*) mva_input_trees->Get("bkg_mva_tree_VVV");   factory->AddBackgroundTree(VVV_mva_tree   , 1);
+  //TTree *VVV_mva_tree      = (TTree*) mva_input_trees->Get("bkg_mva_tree_VVV");   factory->AddBackgroundTree(VVV_mva_tree   , 1);
   factory->SetWeightExpression( "mva_weight");
   if(mode==1) {
     TString optionString="!H:!V:FitMethod=GA:EffSel:Steps=50:Cycles=5:PopSize=400:SC_steps=10:SC_rate=5:SC_factor=0.95";
@@ -157,7 +157,7 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>120 && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1 && (mva_delphi_jet_MET > 0.5 || mva_delphi_jet_MET < 0)";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT_massIndependent_"+mediator, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massIndependent_"+mediator, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   } else if(mode==3) {
     factory->AddVariable( "mva_balance"                       , "Balance"                           , ""    , 'F');
     factory->AddVariable( "mva_cos_theta_star_l1"             , "cos #theta^{*}_{l1}"               , ""    , 'F');
@@ -181,7 +181,7 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
     factory->AddVariable( "ptl1mptl2_over_ptll"               , "Lepton Balance"                    , ""    , 'F');
     TCut preselectionCut = "mva_MET>80  && mva_3lveto==1 && mva_mll_minus_mZ <= 30 && mva_ntaus==0 && mva_btag_veto==1 && (mva_delphi_jet_MET > 0.5 || mva_delphi_jet_MET < 0)";
     factory->PrepareTrainingAndTestTree(preselectionCut, "");
-    factory->BookMethod( TMVA::Types::kBDT, "BDT_massDependent_"+signal_model, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning");
+    factory->BookMethod( TMVA::Types::kBDT, "BDT_massDependent_"+signal_model, "!H:!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning");
   }
 
   factory->TrainAllMethods();

@@ -24,7 +24,7 @@ bool isMINIAOD[5] = {true, true, true, true, true};
 int whichSkim = 2;
 bool usePureMC = false; 
 double mcPrescale = 1.0;
-bool useZZWZEWKUnc = false;
+bool useZZWZEWKUnc = true;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -169,7 +169,9 @@ void zzAnalysis(
   TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
   delete fMuIsoSF;
 
-  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 1000}; TString addChan = "1";
+  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 1000}; TString addChan = "1";
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
@@ -630,7 +632,7 @@ void zzAnalysis(
       bool passNjets      = idJet.size() <= 1;
       bool passMET        = theZZllnnMET.Pt() > 50;
       bool passPTFrac     = ptFrac < 0.4;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.8;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.6;
       bool passPTLL       = dilepZll.Pt() > 60;
       bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET};
@@ -1249,7 +1251,7 @@ void zzAnalysis(
 
       if(nb != 1){
       if(useZZWZEWKUnc){
-      newcardShape << Form("CMS_zllhinv_ZZWW_EWKCorr               lnN    -   %7.5f   -     -     -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
+      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -   %7.5f   -     -     -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
       } else {
       newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	

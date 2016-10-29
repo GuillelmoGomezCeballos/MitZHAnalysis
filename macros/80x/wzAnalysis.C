@@ -33,7 +33,7 @@ int whichSkim = 2;
 double mcPrescale = 1.0;
 bool usePureMC = false;
 bool isWZhinv = true;
-bool useZZWZEWKUnc = false;
+bool useZZWZEWKUnc = true;
 
 double overallZgSF[1] = {0.8};
 
@@ -52,7 +52,7 @@ void wzAnalysis(
   TString filesPathDA  = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
   if(isMINIAOD) filesPathDA = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
   TString filesPathMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
-  Double_t lumi = 20.0;
+  Double_t lumi = 20;
 
   //*******************************************************
   //Input Files
@@ -65,6 +65,7 @@ void wzAnalysis(
   if(isMINIAOD) triggerSuffix = "";
   if      (period==1){
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x_20p0ifb.root";
+  //puPath = "MitAnalysisRunII/data/80x/puWeights_80x_13p0ifb_62_64_66.root";
   if(isMINIAOD) {
     infilenamev.push_back(Form("%sdata_Run2016B_skim.root",filesPathDA.Data())); infilecatv.push_back(0);
     infilenamev.push_back(Form("%sdata_Run2016C_skim.root",filesPathDA.Data())); infilecatv.push_back(0);
@@ -211,8 +212,22 @@ void wzAnalysis(
   }
 
   TString ECMsb  = "13TeV2016";
-  //const int nBinMVA = 5; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5};
-  const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350};
+  //const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  //if(isWZhinv) {
+  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
+  //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 350;
+  //}
+  //const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300, 400, 500, 600, 700};
+  //if(isWZhinv) {
+  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
+  //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 300; xbins[9] = 350;
+  //  xbins[10]= 400; xbins[11]= 500; xbins[12]=1000;
+  //}
+  const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  if(isWZhinv) {
+    xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
+    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] =1000;
+  }
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
@@ -761,7 +776,7 @@ void wzAnalysis(
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;
       bool passPTFrac     = ptFrac < 0.4;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.8;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.6;
       bool passPTLL       = dilepZ.Pt() > 60;
       bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET;

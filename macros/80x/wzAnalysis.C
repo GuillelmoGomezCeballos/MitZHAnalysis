@@ -217,16 +217,10 @@ void wzAnalysis(
   //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
   //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 350;
   //}
-  //const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300, 400, 500, 600, 700};
-  //if(isWZhinv) {
-  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
-  //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 300; xbins[9] = 350;
-  //  xbins[10]= 400; xbins[11]= 500; xbins[12]=1000;
-  //}
   const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
   if(isWZhinv) {
     xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
-    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] =1000;
+    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
   }
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);

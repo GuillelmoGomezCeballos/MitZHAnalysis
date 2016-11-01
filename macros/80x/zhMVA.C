@@ -188,4 +188,3 @@ void zhMVA(unsigned int mode, string mediator="", string signal_model="") {
   factory->TestAllMethods();
   factory->EvaluateAllMethods();
 }
-

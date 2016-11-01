@@ -160,6 +160,3 @@ double getMVAVar(
   }
   return MVAVar;
 }
-
-
-  

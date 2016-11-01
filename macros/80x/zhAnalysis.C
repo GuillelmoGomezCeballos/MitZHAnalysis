@@ -24,13 +24,16 @@
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
+// 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
+
+
 bool isMINIAOD[5] = {true, true, true, true, true};
 int whichSkim = 4;
 bool useZjetsTemplate = false;
 bool usePureMC = true; 
 bool useEMFromData = true;
-bool useVVFromData = false;
-bool useZZWZEWKUnc = false;
+bool useVVFromData = true;
+bool useZZWZEWKUnc = true;
 double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
@@ -44,12 +47,11 @@ void zhAnalysis(
  Int_t typeSel = 3,
  Int_t plotModel = 0,
  bool verbose = false,
- string the_BDT_weights="",
- string subdirectory=""
+ string the_BDT_weights=""
  ){
-  if(subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
-  system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
-  system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
+
+  system("mkdir -p MitZHAnalysis/datacards");
+  system("mkdir -p MitZHAnalysis/plots");
   bool makeMVAtrees=false;
   bool useBDT=false;
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
@@ -230,7 +232,6 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1"); infileName_.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root", filesPathDMMC.Data())); infileCategory_.push_back(6); signalIndex_.push_back(i); i++;
   }
-
 /*
   { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep monoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
@@ -364,11 +365,11 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {0, 50, 100, 110, 120, 130, 140, 150, 170, 200, 250, 300, 400, 500}; TString addChan = "1";
+  const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -764,7 +765,7 @@ void zhAnalysis(
     bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
   }}}
   TFile *mva_trees;
-  TTree *data_mva_tree, *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
+  TTree *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
@@ -787,22 +788,9 @@ void zhAnalysis(
            mva_ptl2,
            mva_ptl1mptl2_over_ptll,
            mva_response,
-           mva_weight,
-           aux_MET_JESup,
-           aux_MET_JESdown,
-           aux_PUscale,
-           aux_QCDscale_r1f2,
-           aux_QCDscale_r1f5,
-           aux_QCDscale_r2f1,
-           aux_QCDscale_r2f2,
-           aux_QCDscale_r5f1,
-           aux_QCDscale_r5f5,
-           aux_EWKscale;
-  Float_t  aux_PDFscale[102];
+           mva_weight;
   UChar_t  mva_njets,
-           mva_ntaus,
-           aux_njets_JESup,
-           aux_njets_JESdown;
+           mva_ntaus;
   Bool_t   mva_btag_veto,
            mva_3lveto;
   if(makeMVAtrees) {
@@ -864,14 +852,14 @@ void zhAnalysis(
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
       reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
-      //reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
+      reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
       reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
       reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
       reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
       reader->AddVariable( "mva_MET"                           , &mva_MET                );
       reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      //reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
+      reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
       reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
       reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
       reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
@@ -907,7 +895,6 @@ void zhAnalysis(
     TFile the_input_file(infileName_[ifile]);
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
-    if(MVAVarType==3 && nModel>0 && nModel!=plotModel) continue;
     TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
     TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
@@ -1168,7 +1155,7 @@ void zhAnalysis(
       if(infileCategory_[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100;
 
       bool passPTFrac    = ptFrac < 0.4;
-      bool passDPhiZMET  = dPhiDiLepMET > 2.8;
+      bool passDPhiZMET  = dPhiDiLepMET > 2.6;
       //bool passBtagVeto  = bDiscrMax < 0.800 && idSoft.size() == 0;
       bool passBtagVeto  = bDiscrMax < 0.800;
       bool passPTLL      = dilep.Pt() > 60;
@@ -1176,7 +1163,7 @@ void zhAnalysis(
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
-      bool passDelphiLL  = drll < 2.0;//dphill < TMath::Pi()/2.;
+      bool passDelphiLL  = drll < 1.8;//dphill < TMath::Pi()/2.;
 
       bool passZMassLarge = TMath::Abs(dilep.M()-91.1876) < 30.0;
       bool passZMassSB    = (dilep.M() > 110.0 && dilep.M() < 200.0);
@@ -1225,9 +1212,9 @@ void zhAnalysis(
      }
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
-       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET;
-       passAllCuts[TIGHTSEL] = (passAllCuts[PRESEL] && passMETTight && bdt_value>=0);
-       passAllCuts[SIGSEL] = passAllCuts[SIGSEL] || passAllCuts[TIGHTSEL]; 
+       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
+       passAllCuts[SIGSEL] = passAllCuts[PRESEL] && passMETTight;
+       passAllCuts[TIGHTSEL] = passAllCuts[TIGHTSEL] && bdt_value>0;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -1334,12 +1321,12 @@ void zhAnalysis(
         if(isNeuDupl[ngen] == 0 || isGenDupl[ngen] == 0) {
 	  the_rhoP4 = the_rhoP4 + *(TLorentzVector*)(*eventMonteCarlo.p4)[ngen];
 	}
-        if(isNeuDupl[ngen] == 0) numberGoodGenLep[2]++;
+        if(isNeuDupl[ngen] == 0) numberGoodGenLep[0]++;
 	if(isGenDupl[ngen] == 1) continue;
-	numberGoodGenLep[0]++;
+	numberGoodGenLep[1]++;
 	if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Pt() <= 10 ||
 	   TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Eta()) >= 2.5) continue;
-	numberGoodGenLep[1]++;
+	numberGoodGenLep[2]++;
       }
       vector<int> isGenLep; unsigned int goodIsGenLep = 0;
       for(unsigned nl=0; nl<idLep.size(); nl++){
@@ -1494,40 +1481,6 @@ void zhAnalysis(
         mva_ntaus               = (unsigned char) numberGoodTaus; 
         mva_btag_veto           = passBtagVeto; 
         mva_3lveto              = pass3rdLVeto;
-        // Auxiliary variables
-        if(theCategory==3) {
-          aux_EWKscale = 0.1; // WZ EWK uncertainty
-        } else if(theCategory==4) {
-          if(infileName_[ifile].Contains("GluGlu") == kFALSE) { // qq ZZ EWK uncertainty
-	        if(the_rho <= 0.3) aux_EWKscale=(TMath::Abs((theZZCorr[0]-1)*(15.99/9.89-1)));
-	        else               aux_EWKscale=(TMath::Abs((theZZCorr[0]-1)               ));
-          } else {
-            aux_EWKscale = 0.3; // gg ZZ EWK uncertainty
-          }
-        } else aux_EWKscale = 0;
-        aux_MET_JESup           = (double)(*eventMet.ptJESUP)[0];
-        aux_MET_JESdown         = (double)(*eventMet.ptJESDOWN)[0];
-        if(theCategory == 3 || theCategory == 4 || theCategory == 5 || theCategory == 6 || theCategory == 7) { // PDF and QCD scale
-          if(initPDFTag != -1)                                   for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]) - 1.;
-          else if(infileName_[ifile].Contains("powheg") == true) for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]) - 1.;
-          else                                                   for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = 0;
-          aux_QCDscale_r1f2       = TMath::Abs((double)eventMonteCarlo.r1f2) - 1.;
-          aux_QCDscale_r1f5       = TMath::Abs((double)eventMonteCarlo.r1f5) - 1.;
-          aux_QCDscale_r2f1       = TMath::Abs((double)eventMonteCarlo.r2f1) - 1.;
-          aux_QCDscale_r2f2       = TMath::Abs((double)eventMonteCarlo.r2f2) - 1.;
-          aux_QCDscale_r5f1       = TMath::Abs((double)eventMonteCarlo.r5f1) - 1.;
-          aux_QCDscale_r5f5       = TMath::Abs((double)eventMonteCarlo.r5f5) - 1.;
-        } else {
-          for(int npdf=0; npdf<102; npdf++) aux_PDFscale[npdf] = 0;
-          aux_QCDscale_r1f2       = 0;
-          aux_QCDscale_r1f5       = 0;
-          aux_QCDscale_r2f1       = 0;
-          aux_QCDscale_r2f2       = 0;
-          aux_QCDscale_r5f1       = 0;
-          aux_QCDscale_r5f5       = 0;
-        }
-        aux_njets_JESup         = idJetUp.size();
-        aux_njets_JESdown       = idJetDown.size();
       }
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
 
@@ -1587,7 +1540,7 @@ void zhAnalysis(
 	    else if(thePlot == 33 && passNMinusOne[3])       {makePlot = true;theVar = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt();}
 	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
 	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
-        else if(thePlot == 36 && passAllCuts[TIGHTSEL] && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(1., TMath::Max(-1.,bdt_value));}
+            else if(thePlot == 36 && passAllCuts[TIGHTSEL] && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(1., TMath::Max(-1.,bdt_value));}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }
@@ -1869,7 +1822,6 @@ void zhAnalysis(
   printf("-----------------------------------------------------------------------------------------------------------\n");
   printf("Printing yields and statistical uncertainties for all signal models\n\n");
   for(int nModel=0; nModel<nSigModels; nModel++) {
-    if(MVAVarType==3 && !(nModel==0 || nModel == plotModel)) continue;
     printf("Model: %s\n", signalName_[nModel].Data()); 
     printf("                    em                      mm                      ee                      ll\n");
     printf("-----------------------------------------------------------------------------------------------------------\n");
@@ -2019,9 +1971,13 @@ void zhAnalysis(
     int theBin = 2;
     double the_bck = histo_EM->GetBinContent(theBin) + histo_WZ->GetBinContent(theBin) + histo_ZZ->GetBinContent(theBin) + histo_VVV->GetBinContent(theBin);
     double the_data = histo_Data->GetBinContent(theBin);
-    double the_DY = histo_Zjets->GetBinContent(theBin);
-    double the_sf = the_DY > 0 ? (the_data-the_bck)/the_DY : 1.;
+    double the_sf;
+    //if(MVAVarType!=3) { 
+    the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(theBin);
     printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(theBin),the_sf);
+    //} else {
+    //  the_sf=1.068889;
+    //}
     histo_Zjets->Scale(the_sf);
     histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
   }
@@ -2084,7 +2040,7 @@ void zhAnalysis(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"MitZHAnalysis/plots%s/histo%szh%s_nice_%s_%d.root",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -2134,7 +2090,7 @@ void zhAnalysis(
   char outputLimits[200];
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-    if(MVAVarType==3 && !(nModel==0 || nModel == plotModel)) continue;
+
     sprintf(outputLimits,"MitZHAnalysis/plots/zll%shinv%s_%s_input_%s.root", addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
@@ -2305,39 +2261,6 @@ void zhAnalysis(
     histo_ggZH_hinv_CMS_PUBoundingUp                            ->Write();
     histo_ggZH_hinv_CMS_PUBoundingDown                          ->Write();
     
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]                      ->Write();
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]                    ->Write();
-    histo_VVV_CMS_BDTMuonScaleBoundingUp	                                ->Write();
-    histo_VVV_CMS_BDTMuonScaleBoundingDown	                        ->Write();
-    histo_WZ_CMS_BDTMuonScaleBoundingUp	                                ->Write();
-    histo_WZ_CMS_BDTMuonScaleBoundingDown	                                ->Write();
-    histo_ZZ_CMS_BDTMuonScaleBoundingUp	                                ->Write();
-    histo_ZZ_CMS_BDTMuonScaleBoundingDown	                                ->Write();
-    histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp                            ->Write();
-    histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown                          ->Write();
-    
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]                      ->Write();
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]                    ->Write();
-    histo_VVV_CMS_BDTElectronScaleBoundingUp	                                ->Write();
-    histo_VVV_CMS_BDTElectronScaleBoundingDown	                        ->Write();
-    histo_WZ_CMS_BDTElectronScaleBoundingUp	                                ->Write();
-    histo_WZ_CMS_BDTElectronScaleBoundingDown	                                ->Write();
-    histo_ZZ_CMS_BDTElectronScaleBoundingUp	                                ->Write();
-    histo_ZZ_CMS_BDTElectronScaleBoundingDown	                                ->Write();
-    histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp                            ->Write();
-    histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown                          ->Write();
-    
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]                      ->Write();
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]                    ->Write();
-    histo_VVV_CMS_BDTMETScaleBoundingUp	                                ->Write();
-    histo_VVV_CMS_BDTMETScaleBoundingDown	                        ->Write();
-    histo_WZ_CMS_BDTMETScaleBoundingUp	                                ->Write();
-    histo_WZ_CMS_BDTMETScaleBoundingDown	                                ->Write();
-    histo_ZZ_CMS_BDTMETScaleBoundingUp	                                ->Write();
-    histo_ZZ_CMS_BDTMETScaleBoundingDown	                                ->Write();
-    histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp                            ->Write();
-    histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown                          ->Write();
-    
     histo_WZ_CMS_EWKCorrUp	                                ->Write();
     histo_WZ_CMS_EWKCorrDown	                                ->Write();
     histo_ZZ_CMS_EWKCorrUp	                                ->Write();
@@ -2356,17 +2279,6 @@ void zhAnalysis(
     double syst_WZl[2] = {1.010, 1.003};
     if(nJetsType > 0) syst_WZl[1] = 1.012;
     
-    // Get total systematics for each process, for each bin
-    double process_syst_bins[nBinMVA][7];
-    // Get systmatics across all signal bins, by process and type
-    double process_syst_type[7][28];
-    // From the above we calculate the total systematics by process
-    for(int processType=0; processType<7; processType++) {
-      for(int systType=0; systType<28; systType++) {
-        process_syst_type[processType][systType] = 0;
-      }
-    }
-
     for(int nb=1; nb<=nBinMVA; nb++){
       double nggZHEvt = histo_ggZH_hinv->GetBinContent(nb);
       if(nModel != 0) nggZHEvt = 0.0;
@@ -2544,292 +2456,8 @@ void zhAnalysis(
 	//                                                   systVV[1],syst_EWKCorrUp[1]-1,systQCDScale[3]-1,systPDF[3]-1);
       }
 
-      process_syst_bins[nb-1][0] = sqrt( // qq Signal
-        pow(1.-lumiE,2) +
-        pow(1.-systLepEffM[0],2) + 
-        pow(1.-systLepEffE[0],2) + 
-        pow(1.-systLepResM[0],2) + 
-        pow(1.-systLepResE[0],2) + 
-        pow(systPUDown[0]  -  systPUUp[0],2)/4. + 
-        pow(systMetDown[0] - systMetUp[0],2)/4. +
-        pow(systJesDown[0] - systJesUp[0],2)/4. +
-        0.03*0.03 +
-        pow(1.-syst_btag,2) +
-        pow(1.-systPDF[0],2) + 
-        pow(pdfTotal[0],2) + 
-        pow(1.-systQCDScale[0],2) +
-        pow(qcdScaleTotal[0],2)
-      );
-      process_syst_bins[nb-1][1] = sqrt( // DY
-        pow(1.-lumiE,2) +
-        1. // 100% from DY normalization
-      );
-      process_syst_bins[nb-1][2] = sqrt( // VVV
-        pow(1.-lumiE,2) +
-        pow(1.-systLepEffM[1],2) + 
-        pow(1.-systLepEffE[1],2) + 
-        pow(1.-systLepResM[1],2) + 
-        pow(1.-systLepResE[1],2) + 
-        pow( systPUDown[1] -  systPUUp[1],2)/4. + 
-        pow(systMetDown[1] - systMetUp[1],2)/4. +
-        pow(systJesDown[1] - systJesUp[1],2)/4. +
-        pow(1.-syst_btag,2) +
-        pow(1.-systPDF[1],2) + 
-        pow(1.-systQCDScale[1],2)
-      );
-      process_syst_bins[nb-1][3] = sqrt( // WZ
-        pow(1.-lumiE,2) +
-        pow(1.-systLepEffM[2],2) + 
-        pow(1.-systLepEffE[2],2) + 
-        pow(1.-systLepResM[2],2) + 
-        pow(1.-systLepResE[2],2) + 
-        pow( systPUDown[2] -  systPUUp[2],2)/4. + 
-        pow(systMetDown[2] - systMetUp[2],2)/4. +
-        pow(systJesDown[2] - systJesUp[2],2)/4. +
-        pow(1.-syst_btag,2) +
-        pow(1.-systPDF[2],2) + 
-        pow(1.-systQCDScale[2],2) 
-      );
-      process_syst_bins[nb-1][4] = sqrt( // ZZ
-        pow(1.-lumiE,2) +
-        pow(1.-systLepEffM[3],2) + 
-        pow(1.-systLepEffE[3],2) + 
-        pow(1.-systLepResM[3],2) + 
-        pow(1.-systLepResE[3],2) + 
-        pow( systPUDown[3] -  systPUUp[3],2)/4. + 
-        pow(systMetDown[3] - systMetUp[3],2)/4. +
-        pow(systJesDown[3] - systJesUp[3],2)/4. +
-        pow(1.-syst_btag,2) +
-        pow(1.-systPDF[3],2) + 
-        pow(1.-systQCDScale[3],2) 
-      );
-      process_syst_bins[nb-1][5] = sqrt( // EM
-        pow(1.-lumiE,2) +
-        pow(1.-systEM[0],2) + 
-        (systEM[1]!=0 ? 1./systEM[1] : 1.)
-      );
-      process_syst_bins[nb-1][6] = sqrt( // gg Signal
-        pow(1.-lumiE,2) +
-        pow(1.-systLepEffM[4],2) + 
-        pow(1.-systLepEffE[4],2) + 
-        pow(1.-systLepResM[4],2) + 
-        pow(1.-systLepResE[4],2) + 
-        pow( systPUDown[4] -  systPUUp[4],2)/4. + 
-        pow(systMetDown[4] - systMetUp[4],2)/4. +
-        pow(systJesDown[4] - systJesUp[4],2)/4. +
-        0.03*0.03 +
-        pow(1.-syst_btag,2) +
-        pow(1.-systPDF[4],2) + 
-        pow(pdfTotal[1],2) + 
-        pow(1.-systQCDScale[4],2) +
-        pow(qcdScaleTotal[1],2)
-      );
-      if(nb>=3) {
-        // qq signal systs by type
-        process_syst_type[0][0]  +=  TMath::Abs(1.-lumiE)*histo_ZH_hinv[nModel]->GetBinContent(nb);                             //lumi2016
-        process_syst_type[0][1]  +=  TMath::Abs(1.-systLepEffM[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                    //eff_m
-        process_syst_type[0][2]  +=  TMath::Abs(1.-systLepEffE[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                    //eff_e
-        process_syst_type[0][3]  +=  TMath::Abs(1.-systLepResM[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                    //scale_m
-        process_syst_type[0][4]  +=  TMath::Abs(1.-systLepResE[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                    //scale_e
-        process_syst_type[0][5]  +=  TMath::Abs(( systPUUp[0] - systPUDown[0])/2.)*histo_ZH_hinv[nModel]->GetBinContent(nb);    //pu2016
-        process_syst_type[0][6]  +=  TMath::Abs((systMetUp[0] -systMetDown[0])/2.)*histo_ZH_hinv[nModel]->GetBinContent(nb);    //scale_met
-        process_syst_type[0][7]  +=  TMath::Abs((systJesUp[0] -systJesDown[0])/2.)*histo_ZH_hinv[nModel]->GetBinContent(nb);    //scale_j
-        process_syst_type[0][8]  +=  0.03*histo_ZH_hinv[nModel]->GetBinContent(nb);                                             //UEPS
-        process_syst_type[0][9]  +=  TMath::Abs(1.-syst_btag)*histo_ZH_hinv[nModel]->GetBinContent(nb);                         //eff_b
-        process_syst_type[0][10] +=  TMath::Abs(1.-systPDF[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                        //pdf_qqbar_ACCEPT
-        process_syst_type[0][11] +=  0;                                                                                         //pdf_gg_ACCEPT
-        process_syst_type[0][12] +=  pdfTotal[0]*histo_ZH_hinv[nModel]->GetBinContent(nb);                                      //pdf_qqbar
-        process_syst_type[0][13] +=  0;                                                                                         //pdf_gg
-        process_syst_type[0][14] +=  TMath::Abs(1.-systQCDScale[0])*histo_ZH_hinv[nModel]->GetBinContent(nb);                   //QCDscale_VH_ACCEPT
-        process_syst_type[0][15] +=  0;                                                                                         //QCDscale_ggVH_ACCEPT
-        process_syst_type[0][16] +=  qcdScaleTotal[0]*histo_ZH_hinv[nModel]->GetBinContent(nb);                                 //QCDscale_VH
-        process_syst_type[0][17] +=  0;                                                                                         //QCDscale_ggVH
-        process_syst_type[0][18] +=  0;                                                                                         //QCDscale_VVV
-        process_syst_type[0][19] +=  0;                                                                                         //QCDscale_VV
-        process_syst_type[0][20] +=  0;                                                                                         //WZ_EWKCorr
-        process_syst_type[0][21] +=  0;                                                                                         //ZZ_EwkCorr
-        process_syst_type[0][22] +=  0;                                                                                         //ggZZCorr
-        process_syst_type[0][23] +=  0;                                                                                         //WZ_lep2016
-        process_syst_type[0][24] +=  0;                                                                                         //WZ_tau2016
-        process_syst_type[0][25] +=  0;                                                                                         //ZLLNorm2016
-        process_syst_type[0][26] +=  0;                                                                                         //EMSyst
-        process_syst_type[0][27] +=  0;                                                                                         //EMNorm
-        // DY systs by type
-        process_syst_type[1][0]  +=  0;                                                            //lumi2016
-        process_syst_type[1][1]  +=  0;                                                            //eff_m
-        process_syst_type[1][2]  +=  0;                                                            //eff_e
-        process_syst_type[1][3]  +=  0;                                                            //scale_m
-        process_syst_type[1][4]  +=  0;                                                            //scale_e
-        process_syst_type[1][5]  +=  0;                                                            //pu2016
-        process_syst_type[1][6]  +=  0;                                                            //scale_met
-        process_syst_type[1][7]  +=  0;                                                            //scale_j
-        process_syst_type[1][8]  +=  0;                                                            //UEPS
-        process_syst_type[1][9]  +=  0;                                                            //eff_b
-        process_syst_type[1][10] +=  0;                                                            //pdf_qqbar_ACCEPT
-        process_syst_type[1][11] +=  0;                                                            //pdf_gg_ACCEPT
-        process_syst_type[1][12] +=  0;                                                            //pdf_qqbar
-        process_syst_type[1][13] +=  0;                                                            //pdf_gg
-        process_syst_type[1][14] +=  0;                                                            //QCDscale_VH_ACCEPT
-        process_syst_type[1][15] +=  0;                                                            //QCDscale_ggVH_ACCEPT
-        process_syst_type[1][16] +=  0;                                                            //QCDscale_VH
-        process_syst_type[1][17] +=  0;                                                            //QCDscale_ggVH
-        process_syst_type[1][18] +=  0;                                                            //QCDscale_VVV
-        process_syst_type[1][19] +=  0;                                                            //QCDscale_VV
-        process_syst_type[1][20] +=  0;                                                            //WZ_EWKCorr
-        process_syst_type[1][21] +=  0;                                                            //ZZ_EwkCorr
-        process_syst_type[1][22] +=  0;                                                            //ggZZCorr
-        process_syst_type[1][23] +=  0;                                                            //WZ_lep2016
-        process_syst_type[1][24] +=  0;                                                            //WZ_tau2016
-        process_syst_type[1][25] +=  histo_Zjets->GetBinContent(nb);                               //ZLLNorm2016
-        process_syst_type[1][26] +=  0;                                                            //EMSyst
-        process_syst_type[1][27] +=  0;                                                            //EMNorm
-        // VVV signal systs by type
-        process_syst_type[2][0]  +=  TMath::Abs(1.-lumiE)*histo_VVV->GetBinContent(nb);                             //lumi2016
-        process_syst_type[2][1]  +=  TMath::Abs(1.-systLepEffM[1])*histo_VVV->GetBinContent(nb);                    //eff_m
-        process_syst_type[2][2]  +=  TMath::Abs(1.-systLepEffE[1])*histo_VVV->GetBinContent(nb);                    //eff_e
-        process_syst_type[2][3]  +=  TMath::Abs(1.-systLepResM[1])*histo_VVV->GetBinContent(nb);                    //scale_m
-        process_syst_type[2][4]  +=  TMath::Abs(1.-systLepResE[1])*histo_VVV->GetBinContent(nb);                    //scale_e
-        process_syst_type[2][5]  +=  TMath::Abs(( systPUUp[1] - systPUDown[1])/2.)*histo_VVV->GetBinContent(nb);    //pu2016
-        process_syst_type[2][6]  +=  TMath::Abs((systMetUp[1] -systMetDown[1])/2.)*histo_VVV->GetBinContent(nb);    //scale_met
-        process_syst_type[2][7]  +=  TMath::Abs((systJesUp[1] -systJesDown[1])/2.)*histo_VVV->GetBinContent(nb);    //scale_j
-        process_syst_type[2][8]  +=  0;                                                                             //UEPS
-        process_syst_type[2][9]  +=  TMath::Abs(1.-syst_btag)*histo_VVV->GetBinContent(nb);                         //eff_b
-        process_syst_type[2][10] +=  TMath::Abs(1.-systPDF[1])*histo_VVV->GetBinContent(nb);                        //pdf_qqbar_ACCEPT
-        process_syst_type[2][11] +=  0;                                                                             //pdf_gg_ACCEPT
-        process_syst_type[2][12] +=  pdfTotal[0]*histo_VVV->GetBinContent(nb);                                      //pdf_qqbar
-        process_syst_type[2][13] +=  0;                                                                             //pdf_gg
-        process_syst_type[2][14] +=  0;                                                                             //QCDscale_VH_ACCEPT
-        process_syst_type[2][15] +=  0;                                                                             //QCDscale_ggVH_ACCEPT
-        process_syst_type[2][16] +=  0;                                                                             //QCDscale_VH
-        process_syst_type[2][17] +=  0;                                                                             //QCDscale_ggVH
-        process_syst_type[2][18] +=  TMath::Abs(1.-systQCDScale[1])*histo_VVV->GetBinContent(nb);                   //QCDscale_VVV
-        process_syst_type[2][19] +=  0;                                                                             //QCDscale_VV
-        process_syst_type[2][20] +=  0;                                                                             //WZ_EWKCorr
-        process_syst_type[2][21] +=  0;                                                                             //ZZ_EwkCorr
-        process_syst_type[2][22] +=  0;                                                                             //ggZZCorr
-        process_syst_type[2][23] +=  0;                                                                             //WZ_lep2016
-        process_syst_type[2][24] +=  0;                                                                             //WZ_tau2016
-        process_syst_type[2][25] +=  0;                                                                             //ZLLNorm2016
-        process_syst_type[2][26] +=  0;                                                                             //EMSyst
-        process_syst_type[2][27] +=  0;                                                                             //EMNorm
-        // WZ signal systs by type
-        process_syst_type[3][0]  +=  TMath::Abs(1.-lumiE)*histo_WZ->GetBinContent(nb);                                   //lumi2016
-        process_syst_type[3][1]  +=  TMath::Abs(1.-systLepEffM[2])*histo_WZ->GetBinContent(nb);                          //eff_m
-        process_syst_type[3][2]  +=  TMath::Abs(1.-systLepEffE[2])*histo_WZ->GetBinContent(nb);                          //eff_e
-        process_syst_type[3][3]  +=  TMath::Abs(1.-systLepResM[2])*histo_WZ->GetBinContent(nb);                          //scale_m
-        process_syst_type[3][4]  +=  TMath::Abs(1.-systLepResE[2])*histo_WZ->GetBinContent(nb);                          //scale_e
-        process_syst_type[3][5]  +=  TMath::Abs(( systPUUp[2] - systPUDown[2])/2.)*histo_WZ->GetBinContent(nb);          //pu2016
-        process_syst_type[3][6]  +=  TMath::Abs((systMetUp[2] -systMetDown[2])/2.)*histo_WZ->GetBinContent(nb);          //scale_met
-        process_syst_type[3][7]  +=  TMath::Abs((systJesUp[2] -systJesDown[2])/2.)*histo_WZ->GetBinContent(nb);          //scale_j
-        process_syst_type[3][8]  +=  0;                                                                                  //UEPS
-        process_syst_type[3][9]  +=  TMath::Abs(1.-syst_btag)*histo_WZ->GetBinContent(nb);                               //eff_b
-        process_syst_type[3][10] +=  TMath::Abs(1.-systPDF[2])*histo_WZ->GetBinContent(nb);                              //pdf_qqbar_ACCEPT
-        process_syst_type[3][11] +=  0;                                                                                  //pdf_gg_ACCEPT
-        process_syst_type[3][12] +=  0;                                                                                  //pdf_qqbar
-        process_syst_type[3][13] +=  0;                                                                                  //pdf_gg
-        process_syst_type[3][14] +=  0;                                                                                  //QCDscale_VH_ACCEPT
-        process_syst_type[3][15] +=  0;                                                                                  //QCDscale_ggVH_ACCEPT
-        process_syst_type[3][16] +=  0;                                                                                  //QCDscale_VH
-        process_syst_type[3][17] +=  0;                                                                                  //QCDscale_ggVH
-        process_syst_type[3][18] +=  0;                                                                                  //QCDscale_VVV
-        process_syst_type[3][19] +=  TMath::Abs(1.-systQCDScale[2])*histo_WZ->GetBinContent(nb);                         //QCDscale_VV
-        process_syst_type[3][20] +=  TMath::Abs((syst_EWKCorrUp[0]-syst_EWKCorrDown[0])/2.)*histo_WZ->GetBinContent(nb); //WZ_EWKCorr
-        process_syst_type[3][21] +=  0;                                                                                  //ZZ_EwkCorr
-        process_syst_type[3][22] +=  0;                                                                                  //ggZZCorr
-        process_syst_type[3][23] +=  TMath::Abs(1.-syst_WZl[0])*histo_WZ->GetBinContent(nb);                             //WZ_lep2016
-        process_syst_type[3][24] +=  TMath::Abs(1.-syst_WZl[1])*histo_WZ->GetBinContent(nb);                             //WZ_tau2016
-        process_syst_type[3][25] +=  0;                                                                                  //ZLLNorm2016
-        process_syst_type[3][26] +=  0;                                                                                  //EMSyst
-        // ZZ signal systs by type
-        process_syst_type[4][0]  +=  TMath::Abs(1.-lumiE)*histo_ZZ->GetBinContent(nb);                                   //lumi2016
-        process_syst_type[4][1]  +=  TMath::Abs(1.-systLepEffM[3])*histo_ZZ->GetBinContent(nb);                          //eff_m
-        process_syst_type[4][2]  +=  TMath::Abs(1.-systLepEffE[3])*histo_ZZ->GetBinContent(nb);                          //eff_e
-        process_syst_type[4][3]  +=  TMath::Abs(1.-systLepResM[3])*histo_ZZ->GetBinContent(nb);                          //scale_m
-        process_syst_type[4][4]  +=  TMath::Abs(1.-systLepResE[3])*histo_ZZ->GetBinContent(nb);                          //scale_e
-        process_syst_type[4][5]  +=  TMath::Abs(( systPUUp[3] - systPUDown[3])/2.)*histo_ZZ->GetBinContent(nb);          //pu2016
-        process_syst_type[4][6]  +=  TMath::Abs((systMetUp[3] -systMetDown[3])/2.)*histo_ZZ->GetBinContent(nb);          //scale_met
-        process_syst_type[4][7]  +=  TMath::Abs((systJesUp[3] -systJesDown[3])/2.)*histo_ZZ->GetBinContent(nb);          //scale_j
-        process_syst_type[4][8]  +=  0;                                                                                  //UEPS
-        process_syst_type[4][9]  +=  TMath::Abs(1.-syst_btag)*histo_ZZ->GetBinContent(nb);                               //eff_b
-        process_syst_type[4][10] +=  TMath::Abs(1.-systPDF[3])*histo_ZZ->GetBinContent(nb);                              //pdf_qqbar_ACCEPT
-        process_syst_type[4][11] +=  0;                                                                                  //pdf_gg_ACCEPT
-        process_syst_type[4][12] +=  0;                                                                                  //pdf_qqbar
-        process_syst_type[4][13] +=  0;                                                                                  //pdf_gg
-        process_syst_type[4][14] +=  0;                                                                                  //QCDscale_VH_ACCEPT
-        process_syst_type[4][15] +=  0;                                                                                  //QCDscale_ggVH_ACCEPT
-        process_syst_type[4][16] +=  0;                                                                                  //QCDscale_VH
-        process_syst_type[4][17] +=  0;                                                                                  //QCDscale_ggVH
-        process_syst_type[4][18] +=  0;                                                                                  //QCDscale_VVV
-        process_syst_type[4][19] +=  TMath::Abs(1.-systQCDScale[3])*histo_ZZ->GetBinContent(nb);                         //QCDscale_VV
-        process_syst_type[4][20] +=  0;                                                                                  //WZ_EWKCorr
-        process_syst_type[4][22] +=  TMath::Abs((syst_EWKCorrUp[1]-syst_EWKCorrDown[1])/2.)*histo_ZZ->GetBinContent(nb); //ZZ_EWKCorr
-        process_syst_type[4][22] +=  TMath::Abs((syst_EWKCorrUp[2]-syst_EWKCorrDown[2])/2.)*histo_ZZ->GetBinContent(nb); //ggZZCorr
-        process_syst_type[4][23] +=  0;                                                                                  //WZ_lep2016
-        process_syst_type[4][24] +=  0;                                                                                  //WZ_tau2016
-        process_syst_type[4][25] +=  0;                                                                                  //ZLLNorm2016
-        process_syst_type[4][26] +=  0;                                                                                  //EMSyst
-        process_syst_type[4][27] +=  0;                                                                                  //EMNorm
-        // EM systs by type
-        process_syst_type[5][0]  +=  0;                                                            //lumi2016
-        process_syst_type[5][1]  +=  0;                                                            //eff_m
-        process_syst_type[5][2]  +=  0;                                                            //eff_e
-        process_syst_type[5][3]  +=  0;                                                            //scale_m
-        process_syst_type[5][4]  +=  0;                                                            //scale_e
-        process_syst_type[5][5]  +=  0;                                                            //pu2016
-        process_syst_type[5][6]  +=  0;                                                            //scale_met
-        process_syst_type[5][7]  +=  0;                                                            //scale_j
-        process_syst_type[5][8]  +=  0;                                                            //UEPS
-        process_syst_type[5][9]  +=  0;                                                            //eff_b
-        process_syst_type[5][10] +=  0;                                                            //pdf_qqbar_ACCEPT
-        process_syst_type[5][11] +=  0;                                                            //pdf_gg_ACCEPT
-        process_syst_type[5][12] +=  0;                                                            //pdf_qqbar
-        process_syst_type[5][13] +=  0;                                                            //pdf_gg
-        process_syst_type[5][14] +=  0;                                                            //QCDscale_VH_ACCEPT
-        process_syst_type[5][15] +=  0;                                                            //QCDscale_ggVH_ACCEPT
-        process_syst_type[5][16] +=  0;                                                            //QCDscale_VH
-        process_syst_type[5][17] +=  0;                                                            //QCDscale_ggVH
-        process_syst_type[5][18] +=  0;                                                            //QCDscale_VVV
-        process_syst_type[5][19] +=  0;                                                            //QCDscale_VV
-        process_syst_type[5][20] +=  0;                                                            //WZ_EWKCorr
-        process_syst_type[5][21] +=  0;                                                            //ZZ_EwkCorr
-        process_syst_type[5][22] +=  0;                                                            //ggZZCorr
-        process_syst_type[5][23] +=  0;                                                            //WZ_lep2016
-        process_syst_type[5][24] +=  0;                                                            //WZ_tau2016
-        process_syst_type[5][25] +=  0;                                                            //ZLLNorm2016
-        process_syst_type[5][26] +=  TMath::Abs(1.-systEM[0])*histo_EM->GetBinContent(nb);         //EMSyst
-        process_syst_type[5][27] +=  histo_EM->GetBinContent(nb) / sqrt(systEM[1]);                //EMNorm
-        // gg signal systs by type
-        process_syst_type[6][0]  +=  TMath::Abs(1.-lumiE)*histo_ggZH_hinv->GetBinContent(nb);                           //lumi2016
-        process_syst_type[6][1]  +=  TMath::Abs(1.-systLepEffM[4])*histo_ggZH_hinv->GetBinContent(nb);                  //eff_m
-        process_syst_type[6][2]  +=  TMath::Abs(1.-systLepEffE[4])*histo_ggZH_hinv->GetBinContent(nb);                  //eff_e
-        process_syst_type[6][3]  +=  TMath::Abs(1.-systLepResM[4])*histo_ggZH_hinv->GetBinContent(nb);                  //scale_m
-        process_syst_type[6][4]  +=  TMath::Abs(1.-systLepResE[4])*histo_ggZH_hinv->GetBinContent(nb);                  //scale_e
-        process_syst_type[6][5]  +=  TMath::Abs(( systPUUp[4] - systPUDown[4])/2.)*histo_ggZH_hinv->GetBinContent(nb);  //pu2016
-        process_syst_type[6][6]  +=  TMath::Abs((systMetUp[4] -systMetDown[4])/2.)*histo_ggZH_hinv->GetBinContent(nb);  //scale_met
-        process_syst_type[6][7]  +=  TMath::Abs((systJesUp[4] -systJesDown[4])/2.)*histo_ggZH_hinv->GetBinContent(nb);  //scale_j
-        process_syst_type[6][8]  +=  0.03*histo_ggZH_hinv->GetBinContent(nb);                                           //UEPS
-        process_syst_type[6][9]  +=  TMath::Abs(1.-syst_btag)*histo_ggZH_hinv->GetBinContent(nb);                       //eff_b
-        process_syst_type[6][10] +=  0;                                                                                 //pdf_qqbar_ACCEPT
-        process_syst_type[6][11] +=  TMath::Abs(1.-systPDF[4])*histo_ggZH_hinv->GetBinContent(nb);                      //pdf_gg_ACCEPT
-        process_syst_type[6][12] +=  0;                                                                                 //pdf_qqbar
-        process_syst_type[6][13] +=  pdfTotal[1]*histo_ggZH_hinv->GetBinContent(nb);                                    //pdf_gg
-        process_syst_type[6][14] +=  0;                                                                                 //QCDscale_VH_ACCEPT
-        process_syst_type[6][15] +=  TMath::Abs(1.-systQCDScale[4])*histo_ggZH_hinv->GetBinContent(nb);                 //QCDscale_ggVH_ACCEPT
-        process_syst_type[6][16] +=  0;                                                                                 //QCDscale_VH
-        process_syst_type[6][17] +=  qcdScaleTotal[1]*histo_ggZH_hinv->GetBinContent(nb);                               //QCDscale_ggVH
-        process_syst_type[6][18] +=  0;                                                                                 //QCDscale_VVV
-        process_syst_type[6][19] +=  0;                                                                                 //QCDscale_VV
-        process_syst_type[6][20] +=  0;                                                                                 //WZ_EWKCorr
-        process_syst_type[6][21] +=  0;                                                                                 //ZZ_EwkCorr
-        process_syst_type[6][22] +=  0;                                                                                 //ggZZCorr
-        process_syst_type[6][23] +=  0;                                                                                 //WZ_lep2016
-        process_syst_type[6][24] +=  0;                                                                                 //WZ_tau2016
-        process_syst_type[6][25] +=  0;                                                                                 //ZLLNorm2016
-        process_syst_type[6][26] +=  0;                                                                                 //EMSyst
-        process_syst_type[6][27] +=  0;                                                                                 //EMNorm
-      }
       char outputLimitsShape[200];                                            
-      sprintf(outputLimitsShape,"MitZHAnalysis/datacards%s/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
       ofstream newcardShape;
       newcardShape.open(outputLimitsShape);
       newcardShape << Form("imax 1 number of channels\n");
@@ -2870,14 +2498,15 @@ void zhAnalysis(
       newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
+      int theVVBin = nb-1;if(nb>=8) theVVBin = 8-1;
       if(useZZWZEWKUnc){
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      newcardShape << Form("CMS_zllhinv_ZZWW_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",theVVBin);		
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",theVVBin);	
+      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[1]-1.0)*(syst_EWKCorrUp[1]-1.0)));		
       } else {
-      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
+      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",theVVBin);		
       newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		
-      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
+      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",theVVBin);	
       newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1, systVV[1]);	
       }
       }
@@ -2907,69 +2536,22 @@ void zhAnalysis(
 
       newcardShape << Form("CMS_zllhinv_EMNorm2016_%s_%s               lnU	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),2.0);      
   
-      if     (histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 && histo_ZH_hinvNoW[nModel]->GetBinContent(nb) < 20  ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d	  gmN %d  %7.5f -      -    -	 -    -      -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb)  ,histo_ZH_hinv[nModel]  ->GetBinContent(nb)/histo_ZH_hinvNoW[nModel]  ->GetBinContent(nb));
-      else if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0                                                      ) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d	    lnN    %7.5f -      -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb)  );
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d    lnN    %7.5f -      -	 -    -    -	 -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb)  );
   
-      if     (histo_Zjets->GetBinContent(nb)     > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAZjetsSatBounding2016_%s_Bin%d  lnN      -  %7.5f   -    -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb)    );
+      if(histo_Zjets->GetBinContent(nb)           > 0) newcardShape << Form("CMS_zllhinv%s_MVAZjetsSatBounding2016_%s_Bin%d  lnN	-  %7.5f   -	-    -    -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb)    );
   
-      if     (histo_VVV->GetBinContent(nb)       > 0 && histo_VVVNoW->GetBinContent(nb) < 20      ) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d    gmN %d    -	  -  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_VVVNoW      ->GetBinContent(nb)  ,histo_VVV	 ->GetBinContent(nb)/histo_VVVNoW      ->GetBinContent(nb));
-      else if(histo_VVV->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d    lnN      -	-  %7.5f   -    -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)      /histo_VVV->GetBinContent(nb)      );
+      if(histo_VVV->GetBinContent(nb)             > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d    lnN	-   -  %7.5f   -    -	 -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)	   /histo_VVV->GetBinContent(nb)      );
   
-      if     (histo_WZ->GetBinContent(nb)        > 0 && histo_WZNoW->GetBinContent(nb) < 20       ) newcardShape << Form("CMS_zllhinv%s_MVAWZSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_WZNoW	    ->GetBinContent(nb)  ,histo_WZ	 ->GetBinContent(nb)/histo_WZNoW       ->GetBinContent(nb));
-      else if(histo_WZ->GetBinContent(nb)        > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAWZSatBounding2016_%s_Bin%d	    lnN      -	-     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_WZ->GetBinError(nb)       /histo_WZ->GetBinContent(nb)       );
+      if(histo_WZ->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAWZSatBounding2016_%s_Bin%d     lnN      -  -     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_WZ->GetBinError(nb)	/histo_WZ->GetBinContent(nb)	   );
   
-      if     (histo_ZZ->GetBinContent(nb)       > 0 && histo_ZZNoW->GetBinContent(nb) < 20        ) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ZZNoW	    ->GetBinContent(nb)  ,histo_ZZ	 ->GetBinContent(nb)/histo_ZZNoW       ->GetBinContent(nb));
-      else if(histo_ZZ->GetBinContent(nb)	       > 0                                        ) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d	    lnN      -	-     -    -  %7.5f  -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ->GetBinError(nb)       /histo_ZZ->GetBinContent(nb)       );
+      if(histo_ZZ->GetBinContent(nb)	          > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d     lnN	  -  -     -	-  %7.5f  -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ->GetBinError(nb)	    /histo_ZZ->GetBinContent(nb)       );
   
-      if      (histo_EM->GetBinContent(nb)       > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAEMSatBounding2016_%s_Bin%d	    lnN      -	-     -    -    -  %7.5f   -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_EM->GetBinError(nb)       /histo_EM->GetBinContent(nb)	  );
+      if(histo_EM->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMSatBounding2016_%s_Bin%d     lnN	  -  -     -	-    -  %7.5f	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_EM->GetBinError(nb)	    /histo_EM->GetBinContent(nb)       );
   
-      if     (histo_ggZH_hinv->GetBinContent(nb) > 0 && histo_ggZH_hinvNoW->GetBinContent(nb) < 20) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d	  gmN %d    -	  -	-    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,(int)histo_ggZH_hinvNoW->GetBinContent(nb)  ,histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinvNoW->GetBinContent(nb));
-      else if(histo_ggZH_hinv->GetBinContent(nb) > 0                                              ) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
-  
+      if(histo_ggZH_hinv->GetBinContent(nb)       > 0) newcardShape << Form("CMS_zllhinv%s_MVAggZHSatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
     }
-    syst_processTypes[nModel][histBins] =0;
-    for(int systType=0; systType<28; systType++) {
-      syst_processTypes[nModel][histBins] += pow(
-        process_syst_type[1][systType] + 
-        process_syst_type[2][systType] + 
-        process_syst_type[3][systType] + 
-        process_syst_type[4][systType] + 
-        process_syst_type[5][systType] 
-      ,2);
-    }
-    for(int processType=0; processType<7; processType++) {
-      process_syst[nModel][processType]=0;
-      for(int systType=0; systType<28; systType++) {
-        process_syst[nModel][processType] += pow(process_syst_type[processType][systType], 2);
-      }
-      process_syst[nModel][processType] = sqrt(process_syst[nModel][processType]);
-    }
-    yield_processTypes[nModel][0] = histo_Data           ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][0]);
-    yield_processTypes[nModel][1] = histo_EM             ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][1]);
-    yield_processTypes[nModel][2] = histo_Zjets          ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][2]);
-    yield_processTypes[nModel][3] = histo_WZ             ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][3]);
-    yield_processTypes[nModel][4] = histo_ZZ             ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][4]);
-    yield_processTypes[nModel][5] = histo_VVV            ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][5]);
-    yield_processTypes[nModel][6] = histo_ZH_hinv[nModel]->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][6]);
-    yield_processTypes[nModel][7] = histo_ggZH_hinv      ->IntegralAndError(3, nBinMVA, stat_processTypes[nModel][7]);
-    yield_processTypes[nModel][histBins] = yield_processTypes[nModel][1] + yield_processTypes[nModel][2] + yield_processTypes[nModel][3] + yield_processTypes[nModel][4] + yield_processTypes[nModel][5];
-    stat_processTypes[nModel][histBins] = sqrt(
-      pow(stat_processTypes[nModel][1], 2) + 
-      pow(stat_processTypes[nModel][2], 2) + 
-      pow(stat_processTypes[nModel][3], 2) + 
-      pow(stat_processTypes[nModel][4], 2) + 
-      pow(stat_processTypes[nModel][5], 2)
-    );
-    syst_processTypes[nModel][0] = 0;
-    syst_processTypes[nModel][1] = process_syst[nModel][5];
-    syst_processTypes[nModel][2] = process_syst[nModel][1];
-    syst_processTypes[nModel][3] = process_syst[nModel][3];
-    syst_processTypes[nModel][4] = process_syst[nModel][4];
-    syst_processTypes[nModel][5] = process_syst[nModel][2];
-    syst_processTypes[nModel][6] = process_syst[nModel][0];
-    syst_processTypes[nModel][7] = process_syst[nModel][6];
-    syst_processTypes[nModel][histBins] = sqrt(syst_processTypes[nModel][8]); //all background
-  }
+
+  } // end loop over models
   
   bool doABCDstudy=false;  
   if(doABCDstudy) { // Output result of ABCD study for DY 
@@ -3004,24 +2586,4 @@ void zhAnalysis(
     printf("N_B*N_C/N_D - N_A         = %f\n", (N_B*N_C/N_D)-N_A);
     printf("(N_B*N_C/N_D - N_A) / N_A = %f\n", ((N_B*N_C/N_D)-N_A)/N_A);
   }
-
-  printf("-----------------------------------------------------------------------------------------------------------\n");
-  printf("Printing yields and stat/syst uncertainties for the full selection\n\n");
-  for(int nModel=0; nModel<nSigModels; nModel++) {
-    printf("Model: %s (# %d)\n", signalName_[nModel].Data(), nModel); 
-    printf("-----------------------------------------------------------------------------------------------------------\n");
-    printf("Selection: %s\n",selTypeName[TIGHTSEL].Data());
-    for(int np=0; np<histBins; np++) {       
-       printf("(%6s): %9.2f +/- %7.2f +/- %7.2f\n",
-       processName[np].Data(),
-         yield_processTypes[nModel][np], stat_processTypes[nModel][np], syst_processTypes[nModel][np]
-       );
-    }
-    printf("(...bkg): %9.2f +/- %7.2f +/- %7.2f\n",
-      yield_processTypes[nModel][histBins], stat_processTypes[nModel][histBins], syst_processTypes[nModel][histBins] 
-    );
-    printf("-----------------------------------------------------------------------------------------------------------\n");
-  }
 }
-
-

@@ -732,7 +732,7 @@ void zzAnalysis(
       
       // Evaluate nominal BDT value
       double bdt_value=-1;
-      if(useBDT) {
+      if(useBDT && passZZhinvSel) {
         TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]]),
                        lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]),
                        MET     = theZZllnnMET,
@@ -750,7 +750,7 @@ void zzAnalysis(
       // Do the BDT nuisance evaluations
       double bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
       double MVAVar_muonScaleDown=-9999, MVAVar_muonScaleUp=-9999, MVAVar_electronScaleDown=-9999, MVAVar_electronScaleUp=-9999, MVAVar_METScaleDown=-9999, MVAVar_METScaleUp=-9999, MVAVar_jetScaleDown=-9999, MVAVar_jetScaleUp=-9999;
-      if(useBDT) {
+      if(useBDT && passZZhinvSel) {
         TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]]),
                        lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]),
                        MET     = theZZllnnMET,

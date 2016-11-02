@@ -986,6 +986,8 @@ void zzAnalysis(
           MVAVarMETSyst[1] = TMath::Min(theFakeMETDown.Pt(),xbins[nBinMVA]-0.001);
         } else if(MVAVarType==3) {
           MVAVar = getMVAVar(MVAVarType, passZZhinvSel, typePair, theZZllnnMET.Pt(), 0, dilepZll.M(), bdt_value, xbins[nBinMVA]);
+          MVAVarMETSyst[0] = MVAVar; 
+          MVAVarMETSyst[1] = MVAVar; 
         }
         if     (theCategory == 0){
 	  if(passZZhinvSel) histo_Data->Fill(MVAVar,totalWeight);

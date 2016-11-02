@@ -1155,9 +1155,15 @@ void wzAnalysis(
 	double MVAVar = (double)type3l;
 	double MVAVarMETSyst[2] = {(double)type3l, (double)type3l};	
 	if(isWZhinv){
-	  MVAVar = TMath::Min(theFakeMET.Pt(),xbins[nBinMVA]-0.001);
-	  MVAVarMETSyst[0] = TMath::Min(theFakeMETUp.Pt(),xbins[nBinMVA]-0.001);
-	  MVAVarMETSyst[1] = TMath::Min(theFakeMETDown.Pt(),xbins[nBinMVA]-0.001);
+      if(MVAVarType==1) {
+  	    MVAVar = TMath::Min(theFakeMET.Pt(),xbins[nBinMVA]-0.001);
+  	    MVAVarMETSyst[0] = TMath::Min(theFakeMETUp.Pt(),xbins[nBinMVA]-0.001);
+  	    MVAVarMETSyst[1] = TMath::Min(theFakeMETDown.Pt(),xbins[nBinMVA]-0.001);
+      } else if(MVAVarType==3) {
+        MVAVar = getMVAVar(MVAVarType, passAllCuts[WZSEL], typePair, theFakeMET.Pt(), 0, dilepZ.M(), bdt_value, xbins[nBinMVA]);
+        MVAVarMETSyst[0] = MVAVar; 
+        MVAVarMETSyst[1] = MVAVar; 
+      }
 	}
 
         if     (theCategory == 0){

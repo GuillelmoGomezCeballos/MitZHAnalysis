@@ -20,7 +20,6 @@
 #include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
-#include "MitAnalysisRunII/macros/80x/helicity.h"
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
@@ -370,7 +369,7 @@ void zhAnalysis(
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -906,6 +905,7 @@ void zhAnalysis(
     TFile the_input_file(infileName_[ifile]);
     int nModel = (infileCategory_[ifile]==6 || infileCategory_[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
+    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
     TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
@@ -1267,20 +1267,20 @@ void zhAnalysis(
         double lepton1_scale_variation, lepton2_scale_variation;
         // BDT variation with the muon scale variation (flat 1%)
         lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13 ? 0.01 : 0;
         bdt_muonScaleUp = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
 	MVAVar_muonScaleUp = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_muonScaleUp, xbins[nBinMVA]);
         lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13 ? -0.01 : 0;
         bdt_muonScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
 	MVAVar_muonScaleDown = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_muonScaleDown, xbins[nBinMVA]);
         // BDT variation with the electron scale variation (flat 1%)
         lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11 ? 0.01 : 0;
         bdt_electronScaleUp = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
 	MVAVar_electronScaleUp = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_electronScaleUp, xbins[nBinMVA]);
         lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
-        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? -0.01 : 0;
+        lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11 ? -0.01 : 0;
         bdt_electronScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
 	MVAVar_electronScaleDown = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_electronScaleDown, xbins[nBinMVA]);
         // BDT variation with the MET scale variation (from Nero)
@@ -1833,6 +1833,7 @@ void zhAnalysis(
   printf("-----------------------------------------------------------------------------------------------------------\n");
   printf("Printing yields and statistical uncertainties for all signal models\n\n");
   for(int nModel=0; nModel<nSigModels; nModel++) {
+    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     printf("Model: %s\n", signalName_[nModel].Data()); 
     printf("                    em                      mm                      ee                      ll\n");
     printf("-----------------------------------------------------------------------------------------------------------\n");
@@ -2083,6 +2084,7 @@ void zhAnalysis(
     histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[i-1]  ->Add(histo_ggZH_hinv); histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[i-1]->SetBinContent(i,TMath::Max(histo_ggZH_hinv->GetBinContent(i)+factorDown*histo_ggZH_hinv->GetBinError(i),0.000001));
 
     for(int nModel=0; nModel<nSigModels; nModel++) { 
+      if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
       histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]      ->SetBinContent(i,TMath::Max(histo_ZH_hinv[nModel]->GetBinContent(i)+factorUp  *histo_ZH_hinv[nModel]->GetBinError(i),0.000001));
       histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]    ->SetBinContent(i,TMath::Max(histo_ZH_hinv[nModel]->GetBinContent(i)+factorDown*histo_ZH_hinv[nModel]->GetBinError(i),0.000001));
       histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][i-1]  ->Add(histo_ZH_hinv[nModel]);
@@ -2101,7 +2103,7 @@ void zhAnalysis(
   char outputLimits[200];
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-
+    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     sprintf(outputLimits,"MitZHAnalysis/plots%s/zll%shinv%s_%s_input_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();

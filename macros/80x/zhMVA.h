@@ -2,6 +2,7 @@
 #include <TLorentzVector.h>
 #include <TMath.h>
 #include "TMVA/Reader.h"
+#include "MitAnalysisRunII/macros/80x/helicity.h"
 
 // mvaNuisances:
 //   Access the MVA variables

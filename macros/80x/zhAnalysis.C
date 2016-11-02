@@ -47,11 +47,12 @@ void zhAnalysis(
  Int_t typeSel = 3,
  Int_t plotModel = 0,
  bool verbose = false,
- string the_BDT_weights=""
+ string the_BDT_weights="",
+ string subdirectory=""
  ){
-
-  system("mkdir -p MitZHAnalysis/datacards");
-  system("mkdir -p MitZHAnalysis/plots");
+  if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
+  system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
+  system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
   bool makeMVAtrees=false;
   bool useBDT=false;
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
@@ -365,11 +366,11 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
+  // const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -765,7 +766,7 @@ void zhAnalysis(
     bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
   }}}
   TFile *mva_trees;
-  TTree *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
+  TTree *data_mva_tree, *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
@@ -788,9 +789,21 @@ void zhAnalysis(
            mva_ptl2,
            mva_ptl1mptl2_over_ptll,
            mva_response,
-           mva_weight;
+           mva_weight,
+           aux_PDFscale[102],
+           aux_PUscale,
+           aux_QCDscale_r1f2,
+           aux_QCDscale_r1f5,
+           aux_QCDscale_r2f1,
+           aux_QCDscale_r2f2,
+           aux_QCDscale_r5f1,
+           aux_QCDscale_r5f5,
+           aux_MET_JESup,
+           aux_MET_JESdown;
   UChar_t  mva_njets,
-           mva_ntaus;
+           mva_ntaus,
+           aux_njets_JESup,
+           aux_njets_JESdown;
   Bool_t   mva_btag_veto,
            mva_3lveto;
   if(makeMVAtrees) {
@@ -852,14 +865,12 @@ void zhAnalysis(
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
       reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
-      reader->AddVariable( "mva_delphi_jet_MET"                , &mva_delphi_jet_MET     );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
       reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
       reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
       reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
       reader->AddVariable( "mva_MET"                           , &mva_MET                );
       reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_mTjetMET"                      , &mva_mTjetMET           );
       reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
       reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
       reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
@@ -1212,9 +1223,9 @@ void zhAnalysis(
      }
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
-       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto;
-       passAllCuts[SIGSEL] = passAllCuts[PRESEL] && passMETTight;
-       passAllCuts[TIGHTSEL] = passAllCuts[TIGHTSEL] && bdt_value>0;
+       passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET;
+       passAllCuts[SIGSEL] = (passAllCuts[PRESEL] && bdt_value>0 && passMETTight) || (passZMass && passNjets && passMT && passMET && !passMETTight && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto);
+       passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && bdt_value>0 && passMETTight;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -2040,7 +2051,7 @@ void zhAnalysis(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"MitZHAnalysis/plots/histo%szh%s_nice_%s_%d.root",addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots%s/histo%szh%s_nice_%s_%d.root",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -2091,7 +2102,7 @@ void zhAnalysis(
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
 
-    sprintf(outputLimits,"MitZHAnalysis/plots/zll%shinv%s_%s_input_%s.root", addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
+    sprintf(outputLimits,"MitZHAnalysis/plots%s/zll%shinv%s_%s_input_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
     
@@ -2457,7 +2468,7 @@ void zhAnalysis(
       }
 
       char outputLimitsShape[200];                                            
-      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards%s/histo_limits_zll%shinv%s_%s_shape_%s_bin%d.txt",subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb-1);
       ofstream newcardShape;
       newcardShape.open(outputLimitsShape);
       newcardShape << Form("imax 1 number of channels\n");

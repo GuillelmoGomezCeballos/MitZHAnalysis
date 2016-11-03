@@ -60,7 +60,7 @@ void zhAnalysis(
   TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
   TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
   TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 20.0;
+  Double_t lumi = 40.0;
   TString processTag = "";
 
   //*******************************************************
@@ -365,11 +365,11 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Float_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  // const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -2252,6 +2252,41 @@ void zhAnalysis(
     histo_ggZH_hinv_CMS_MVAMETBoundingUp                        ->Write();
     histo_ggZH_hinv_CMS_MVAMETBoundingDown                      ->Write();
     
+    if(useBDT) {
+      histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]                  ->Write();
+      histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]                ->Write();
+      histo_VVV_CMS_BDTMuonScaleBoundingUp	                        ->Write();
+      histo_VVV_CMS_BDTMuonScaleBoundingDown	                        ->Write();
+      histo_WZ_CMS_BDTMuonScaleBoundingUp	                        ->Write();
+      histo_WZ_CMS_BDTMuonScaleBoundingDown	                        ->Write();
+      histo_ZZ_CMS_BDTMuonScaleBoundingUp	                        ->Write();
+      histo_ZZ_CMS_BDTMuonScaleBoundingDown	                        ->Write();
+      histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp                        ->Write();
+      histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown                      ->Write();
+      
+      histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]                  ->Write();
+      histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]                ->Write();
+      histo_VVV_CMS_BDTElectronScaleBoundingUp	                        ->Write();
+      histo_VVV_CMS_BDTElectronScaleBoundingDown	                        ->Write();
+      histo_WZ_CMS_BDTElectronScaleBoundingUp	                        ->Write();
+      histo_WZ_CMS_BDTElectronScaleBoundingDown	                        ->Write();
+      histo_ZZ_CMS_BDTElectronScaleBoundingUp	                        ->Write();
+      histo_ZZ_CMS_BDTElectronScaleBoundingDown	                        ->Write();
+      histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp                        ->Write();
+      histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown                      ->Write();
+      
+      histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]                  ->Write();
+      histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]                ->Write();
+      histo_VVV_CMS_BDTMETScaleBoundingUp	                        ->Write();
+      histo_VVV_CMS_BDTMETScaleBoundingDown	                        ->Write();
+      histo_WZ_CMS_BDTMETScaleBoundingUp	                        ->Write();
+      histo_WZ_CMS_BDTMETScaleBoundingDown	                        ->Write();
+      histo_ZZ_CMS_BDTMETScaleBoundingUp	                        ->Write();
+      histo_ZZ_CMS_BDTMETScaleBoundingDown	                        ->Write();
+      histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp                        ->Write();
+      histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown                      ->Write();
+    }
+
     histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]	                ->Write();
     histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]                ->Write(); 
     histo_VVV_CMS_MVAJESBoundingUp	                        ->Write();
@@ -2511,7 +2546,7 @@ void zhAnalysis(
       newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
-      int theVVBin = nb-1;if(nb>=8) theVVBin = 8-1;
+      int theVVBin = nb-1;if(nb>=8 && MVAVarType==1) theVVBin = 8-1;
       if(useZZWZEWKUnc){
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",theVVBin);		
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",theVVBin);	

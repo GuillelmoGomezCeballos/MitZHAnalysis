@@ -216,17 +216,31 @@ void wzAnalysis(
   }
 
   TString ECMsb  = "13TeV2016";
-  //const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
   //if(isWZhinv) {
   //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
   //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 350;
   //}
-  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  if(isWZhinv) {
+    xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
+    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
+  }
+  //const int MVAVarType = 1; const int nBinMVA = 11; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300, 400, 500, 600};
   //if(isWZhinv) {
-  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
-  //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
+  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 160; xbins[4] = 240; 
+  //  xbins[5] = 320; xbins[6] = 400; xbins[7] = 480; xbins[8] = 560; xbins[9] = 640;
+  //  xbins[10]= 800; xbins[11]=1200;
   //}
-  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 1; const int nBinMVA = 21; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121};
+  //if(isWZhinv) {
+  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 150; xbins[4] = 200; 
+  //  xbins[5] = 250; xbins[6] = 300; xbins[7] = 350; xbins[8] = 400; xbins[9] = 450;
+  //  xbins[10]= 500; xbins[11]= 550; xbins[12]= 600; xbins[13]= 650; xbins[14]= 700;
+  //  xbins[15]= 750; xbins[16]= 800; xbins[17]= 850; xbins[18]= 900; xbins[19]= 950;
+  //  xbins[20]=1000; xbins[21]=1200;
+  //}
   if(MVAVarType==3 || MVAVarType==4) useBDT=true;
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,

@@ -221,10 +221,11 @@ void wzAnalysis(
   //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
   //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 350;
   //}
-  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300, 400, 500, 600, 700};
   if(isWZhinv) {
     xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
-    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
+    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 300; xbins[9] = 350;
+    xbins[10]= 400; xbins[11]= 500; xbins[12]= 600;
   }
   //const int MVAVarType = 1; const int nBinMVA = 11; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300, 400, 500, 600};
   //if(isWZhinv) {
@@ -888,10 +889,10 @@ void wzAnalysis(
 
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;
-      bool passPTFrac     = ptFrac < 0.4;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.6;
+      bool passPTFrac     = ptFrac < 1;//0.4;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.0;//2.6;
       bool passPTLL       = dilepZ.Pt() > 60;
-      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET;
 
       double deltaPhiLeptonMet = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
@@ -1625,11 +1626,11 @@ void wzAnalysis(
       if(TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb) -histo_ZZ ->GetBinContent(nb))     > systQCDScale[3]) systQCDScale[3] = TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]   ->GetBinContent(nb)-histo_ZZ ->GetBinContent(nb));
       if(TMath::Abs(histo_Higgs_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_Higgs->GetBinContent(nb)) > systQCDScale[4]) systQCDScale[4] = TMath::Abs(histo_Higgs_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_Higgs->GetBinContent(nb));
     }                 
-    if(histo_Zg ->GetBinContent(nb)   != 0) systQCDScale[0] = 1 + systQCDScale[0]/histo_Zg   ->GetBinContent(nb); else systQCDScale[0] = 1;
-    if(histo_VVV->GetBinContent(nb)   != 0) systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV  ->GetBinContent(nb); else systQCDScale[1] = 1;
-    if(histo_WZ ->GetBinContent(nb)   != 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ   ->GetBinContent(nb); else systQCDScale[2] = 1;
-    if(histo_ZZ ->GetBinContent(nb)   != 0) systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ   ->GetBinContent(nb); else systQCDScale[3] = 1;
-    if(histo_Higgs->GetBinContent(nb) != 0) systQCDScale[4] = 1 + systQCDScale[4]/histo_Higgs->GetBinContent(nb); else systQCDScale[4] = 1;
+    if(histo_Zg ->GetBinContent(nb)   > 0) systQCDScale[0] = 1 + systQCDScale[0]/histo_Zg   ->GetBinContent(nb); else systQCDScale[0] = 1;
+    if(histo_VVV->GetBinContent(nb)   > 0) systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV  ->GetBinContent(nb); else systQCDScale[1] = 1;
+    if(histo_WZ ->GetBinContent(nb)   > 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ   ->GetBinContent(nb); else systQCDScale[2] = 1;
+    if(histo_ZZ ->GetBinContent(nb)   > 0) systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ   ->GetBinContent(nb); else systQCDScale[3] = 1;
+    if(histo_Higgs->GetBinContent(nb) > 0) systQCDScale[4] = 1 + systQCDScale[4]/histo_Higgs->GetBinContent(nb); else systQCDScale[4] = 1;
     printf("QCDScale(%d): %f %f %f %f %f\n",nb,systQCDScale[0],systQCDScale[1],systQCDScale[2],systQCDScale[3],systQCDScale[4]);
     
     // PDF study
@@ -1769,7 +1770,7 @@ void wzAnalysis(
     newcardShape << Form("process 1 2 6 3 4 5 7\n");
     else
     newcardShape << Form("process 1 2 0 3 4 5 6\n");
-    newcardShape << Form("rate %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",histo_Zg->GetBinContent(nb),histo_VVV->GetBinContent(nb),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),TMath::Max(histo_FakeM->GetBinContent(nb),0.0),TMath::Max(histo_FakeE->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb));
+    newcardShape << Form("rate %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",TMath::Max(histo_Zg->GetBinContent(nb),0.0),TMath::Max(histo_VVV->GetBinContent(nb),0.0),TMath::Max(histo_WZ->GetBinContent(nb),0.0),TMath::Max(histo_ZZ->GetBinContent(nb),0.0),TMath::Max(histo_FakeM->GetBinContent(nb),0.0),TMath::Max(histo_FakeE->GetBinContent(nb),0.0),TMath::Max(histo_Higgs->GetBinContent(nb),0.0));
     newcardShape << Form("lumi_%4s                               lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE); 		
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);

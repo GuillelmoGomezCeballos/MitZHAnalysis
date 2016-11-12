@@ -2346,11 +2346,11 @@ void zhAnalysis(
         if(TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)       -histo_ZZ     ->GetBinContent(nb))   > systQCDScale[3]) systQCDScale[3] = TMath::Abs(histo_ZZ_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)       -histo_ZZ       ->GetBinContent(nb));
         if(TMath::Abs(histo_ggZH_hinv_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb)) > systQCDScale[0]) systQCDScale[0] = TMath::Abs(histo_ggZH_hinv_CMS_QCDScaleBounding[nqcd]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb));
       }                 
-      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0)   systQCDScale[0] = 1 + sqrt(TMath::Max(systQCDScale[0]*systQCDScale[0]/histo_ZH_hinv[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb) - qcdScaleTotal[0]*qcdScaleTotal[0],0.0)); else systQCDScale[0] = 1;
-      if(histo_VVV->GetBinContent(nb) > 0) systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV      ->GetBinContent(nb); else systQCDScale[1] = 1;
-      if(histo_WZ->GetBinContent(nb) > 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ       ->GetBinContent(nb); else systQCDScale[2] = 1;
-      if(histo_ZZ->GetBinContent(nb) > 0) systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ       ->GetBinContent(nb); else systQCDScale[3] = 1;
-      if(histo_ggZH_hinv->GetBinContent(nb) > 0) systQCDScale[4] = 1 + sqrt(TMath::Max(systQCDScale[4]*systQCDScale[4]/histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb) - qcdScaleTotal[1]*qcdScaleTotal[1],0.0)); else systQCDScale[4] = 1;
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0) systQCDScale[0] = 1 + sqrt(TMath::Max(systQCDScale[0]*systQCDScale[0]/histo_ZH_hinv[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb) - qcdScaleTotal[0]*qcdScaleTotal[0],0.0)); else systQCDScale[0] = 1;
+      if(histo_VVV->GetBinContent(nb)             > 0) systQCDScale[1] = 1 + systQCDScale[1]/histo_VVV      ->GetBinContent(nb); else systQCDScale[1] = 1;
+      if(histo_WZ->GetBinContent(nb)              > 0) systQCDScale[2] = 1 + systQCDScale[2]/histo_WZ       ->GetBinContent(nb); else systQCDScale[2] = 1;
+      if(histo_ZZ->GetBinContent(nb)              > 0) systQCDScale[3] = 1 + systQCDScale[3]/histo_ZZ       ->GetBinContent(nb); else systQCDScale[3] = 1;
+      if(histo_ggZH_hinv->GetBinContent(nb)       > 0) systQCDScale[4] = 1 + sqrt(TMath::Max(systQCDScale[4]*systQCDScale[4]/histo_ggZH_hinv->GetBinContent(nb)/histo_ggZH_hinv->GetBinContent(nb) - qcdScaleTotal[1]*qcdScaleTotal[1],0.0)); else systQCDScale[4] = 1;
       for(int ntype=0; ntype<5; ntype++) if(systQCDScale[ntype] < 0) systQCDScale[ntype] = 1.0;
       if(verbose) printf("QCDScale(%d): %f %f %f %f %f\n",nb,systQCDScale[0],systQCDScale[1],systQCDScale[2],systQCDScale[3],systQCDScale[4]);
   
@@ -2549,15 +2549,14 @@ void zhAnalysis(
       newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
 
       if(useVVFromData && nb != 1){
-      int theVVBin = nb-1;if(nb>=8 && MVAVarType==1) theVVBin = 8-1;
       if(useZZWZEWKUnc){
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",theVVBin);		
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",theVVBin);	
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
+      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
       newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[1]-1.0)*(syst_EWKCorrUp[1]-1.0)));		
       } else {
-      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",theVVBin);		
+      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
       newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		
-      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",theVVBin);	
+      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
       newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1, systVV[1]);	
       }
       }

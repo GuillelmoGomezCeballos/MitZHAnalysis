@@ -50,6 +50,7 @@ void wzAnalysis(
  ){
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
+  system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
 
   bool useBDT=false;
   Int_t period = 1;
@@ -221,12 +222,13 @@ void wzAnalysis(
   //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
   //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 350;
   //}
-  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
-  //if(isWZhinv) {
-  //  xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
-  //  xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
-  //}
-  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 100, 200, 300};
+  if(isWZhinv) {
+    xbins[0] = 0;   xbins[1] = 50;  xbins[2] = 100; xbins[3] = 125; xbins[4] = 150; 
+    xbins[5] = 175; xbins[6] = 200; xbins[7] = 250; xbins[8] = 600;
+  }
+  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 11; Float_t xbins[nBinMVA+1] =  {-2, -1, .5, .6, .7, .74, .78, .80, .82, .84, .86, 1.}; TString addChan = "3";
   if(MVAVarType==3 || MVAVarType==4) useBDT=true;
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
@@ -663,7 +665,7 @@ void wzAnalysis(
            ) passFilter[1] = kTRUE;
         }
       } else { passFilter[1] = kTRUE;}
-
+      
       if(passFilter[0] == kFALSE) continue;
       if(passFilter[1] == kFALSE) continue;
       vector<int> idLep; vector<int> idTight; vector<int> idSoft; unsigned int goodIsTight = 0;
@@ -699,6 +701,7 @@ void wzAnalysis(
       if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
 
       passFilter[4] = TMath::Abs(signQ) == 1;
+      
       if(passFilter[4] == kFALSE) continue;
 
       int nFakeCount = 0;
@@ -713,7 +716,7 @@ void wzAnalysis(
           double deltaRllAux = ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl0]])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl1]]));
           if(deltaRllAux < deltaRllMin) deltaRllMin = deltaRllAux;
 
-	  if((int)(*eventLeptons.pdgId)[idLep[nl0]] * (int)(*eventLeptons.pdgId)[idLep[nl1]] > 0) continue;
+	  if((int)(*eventLeptons.pdgId)[idLep[nl0]] + (int)(*eventLeptons.pdgId)[idLep[nl1]] != 0) continue; // OSSF pairs only
           TLorentzVector dilepAux(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl1])) ) ));
 
 	  if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]])==TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl1]]) &&
@@ -785,7 +788,6 @@ void wzAnalysis(
 	   selectIdIsoCut(type3rdLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[2]]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Pt()),
 	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Eta()),(double)(*eventLeptons.iso)[idLep[2]],(int)(*eventLeptons.selBits)[idLep[2]],(double)(*eventLeptons.mva)[idLep[2]]);
       }
-
       if(tight3rdLepId == false) continue;
 
       if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[2]]]) == 13) type3l += 0;
@@ -803,7 +805,9 @@ void wzAnalysis(
       passFilter[ 5] = minMassll > 4;
       passFilter[ 6] = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 30;
       passFilter[ 7] = minMassZ > minMass && minMassZ < maxMass && type3l != 4;
-      passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20;
+      passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Pt() > (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==11 ? 25 : 20) && // Z(ee) 25/20 Z(mm) 20/20
+                       ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Pt() > 20 &&
+                       ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20; // W lepton 20 GeV
       passFilter[ 9] = mass3l > 100;
       passFilter[10] = true; if(applyBtagging) passFilter[10] = bDiscrMax < 0.935;
       passFilter[11] = true;
@@ -885,9 +889,10 @@ void wzAnalysis(
 
       double deltaPhiTriLeptonMet = TMath::Abs(trilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtEvent = TMath::Sqrt(2.0*trilep.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiTriLeptonMet)));
+      double mtDilepFakeMET = TMath::Sqrt(2.0*dilepZ.Pt()*theFakeMET.Pt()*(1.0 - cos(dilepZ.DeltaPhi(theFakeMET))));
       
       // Evaluate nominal BDT value
-      double bdt_value=-1;
+      double bdt_value=-2;
       if(useBDT && passAllCuts[WZSEL]) {
         TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]]),
                        lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]),
@@ -1182,7 +1187,7 @@ void wzAnalysis(
         }
         else if(theCategory == 2){
 	  if(passAllCuts[WZSEL]) {
-	     histo_Zg->Fill(MVAVar,totalWeight);
+         histo_Zg->Fill(MVAVar,totalWeight);
 
 	     histo_Zg_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
 	     histo_Zg_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
@@ -1501,7 +1506,7 @@ void wzAnalysis(
     histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]->Add(histo_Higgs  ); histo_Higgs_CMS_MVAHiggsStatBoundingBinDown[i-1]   ->SetBinContent(i,TMath::Max(histo_Higgs ->GetBinContent(i)+factorDown*histo_Higgs    ->GetBinError(i),0.000001));
   }
   char outputLimits[200];
-  sprintf(outputLimits,"wz3l%2s_input_%4s.root",finalStateName,ECMsb.Data());
+  sprintf(outputLimits,"MitZHAnalysis/plots%s/wz3l%2s_input_%4s.root",subdirectory.c_str(),finalStateName,ECMsb.Data());
   TFile* outFileLimits = new TFile(outputLimits,"recreate");
   outFileLimits->cd();
   histo_Data   ->Write();

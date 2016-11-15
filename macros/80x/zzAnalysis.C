@@ -38,6 +38,7 @@ void zzAnalysis(
  ){
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
+  system("mkdir -p MitZHAnalysis/plots");
   bool useBDT=false;
 
   Int_t period = 1;
@@ -127,7 +128,7 @@ void zzAnalysis(
   infileName_.push_back(Form("%sttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_mWCutfix+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3_ext1-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
   infileName_.push_back(Form("%sGluGluHToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
   infileName_.push_back(Form("%sVBF_HToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
-  
+
   //infileName_.clear();infileCategory_.clear();
   //infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));						  infileCategory_.push_back(1);
   //infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));	 infileCategory_.push_back(2);
@@ -174,8 +175,10 @@ void zzAnalysis(
   delete fMuIsoSF;
 
   //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 8; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 600}; TString addChan = "1";
-  const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
+  const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 11; Float_t xbins[nBinMVA+1] = {0, 50, 100, 160, 240, 320, 400, 480, 560, 640, 800, 1200}; TString addChan = "1";
+  //const int MVAVarType = 1; const int nBinMVA = 21; Float_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1200}; TString addChan = "1";
+  //const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
   TMVA::Reader *reader; // =new TMVA::Reader();
@@ -724,10 +727,10 @@ void zzAnalysis(
       }
       bool passNjets      = idJet.size() <= 1;
       bool passMET        = theZZllnnMET.Pt() > 50;
-      bool passPTFrac     = ptFrac < 0.4;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.6;
+      bool passPTFrac     = ptFrac < 1; //0.4;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.0; //2.6;
       bool passPTLL       = dilepZll.Pt() > 60;
-      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET};
       
       // Evaluate nominal BDT value
@@ -1419,8 +1422,8 @@ void zzAnalysis(
  
       double systPUUp  [3] = {1.0,1.0,1.0};
       double systPUDown[3] = {1.0,1.0,1.0};
-      if(histo_VVV->GetBinContent(nb)        > 0 && histo_VVV_CMS_PUBoundingUp          ->GetBinContent(nb) > 0) systPUUp  [0] = histo_VVV_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-      if(histo_VVV->GetBinContent(nb)        > 0 && histo_VVV_CMS_PUBoundingDown        ->GetBinContent(nb) > 0) systPUDown[0] = histo_VVV_CMS_PUBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_PUBoundingUp          ->GetBinContent(nb) > 0) systPUUp  [0] = histo_ZZ_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+      if(histo_ZZ->GetBinContent(nb)        > 0 && histo_ZZ_CMS_PUBoundingDown        ->GetBinContent(nb) > 0) systPUDown[0] = histo_ZZ_CMS_PUBoundingDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_PUBoundingUp         ->GetBinContent(nb) > 0) systPUUp  [1] = histo_VVV_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
       if(histo_VVV->GetBinContent(nb)       > 0 && histo_VVV_CMS_PUBoundingDown       ->GetBinContent(nb) > 0) systPUDown[1] = histo_VVV_CMS_PUBoundingDown->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
       if(histo_Higgs->GetBinContent(nb)     > 0 && histo_Higgs_CMS_PUBoundingUp       ->GetBinContent(nb) > 0) systPUUp  [2] = histo_Higgs_CMS_PUBoundingUp  ->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
@@ -1448,7 +1451,7 @@ void zzAnalysis(
       newcardShape << Form("bin hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d hinv%2s%4s%d\n",finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1,finalStateName,ECMsb.Data(),nb-1);
       newcardShape << Form("process ZH_hinv ZZ VVV Higgs Fake\n");
       newcardShape << Form("process 0 1 2 3 4\n");
-      newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f\n",0.0,histo_ZZ->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_Higgs->GetBinContent(nb),TMath::Max(histo_Fake->GetBinContent(nb),0.0));
+      newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f\n",0.0,histo_ZZ->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),TMath::Max(histo_Higgs->GetBinContent(nb),0.0),TMath::Max(histo_Fake->GetBinContent(nb),0.0));
       newcardShape << Form("lumi_%4s                               lnN  1.000 %7.5f %7.5f %7.5f   -\n",ECMsb.Data(),lumiE,lumiE,lumiE);		       
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2]);
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2]);
@@ -1479,10 +1482,10 @@ void zzAnalysis(
       newcardShape << Form("CMS_BDT_scale_MET                 lnN	- %7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   -  \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2]);	    
       }
 
-      if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZSatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb));
-      if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVSatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb));  
-      if(histo_Higgs->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAHiggsSatBounding2016_%s_Bin%d   lnN     1.000   -	  -   %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs->GetBinError(nb)/histo_Higgs->GetBinContent(nb));
-      if(histo_Fake ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMSatBounding2016_%s_Bin%d      lnN     1.000   -	  -	-  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Fake ->GetBinError(nb)/histo_Fake ->GetBinContent(nb));
+      if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb));
+      if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb));  
+      if(histo_Higgs->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAHiggsStatBounding2016_%s_Bin%d   lnN     1.000   -	  -   %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs->GetBinError(nb)/histo_Higgs->GetBinContent(nb));
+      if(histo_Fake ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding2016_%s_Bin%d      lnN     1.000   -	  -	-  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Fake ->GetBinError(nb)/histo_Fake ->GetBinContent(nb));
     }
   }
 

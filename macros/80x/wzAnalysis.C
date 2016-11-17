@@ -234,7 +234,7 @@ void wzAnalysis(
   //  xbins[5] = 320; xbins[6] = 400; xbins[7] = 480; xbins[8] = 560; xbins[9] = 640;
   //  xbins[10]= 800; xbins[11]=1200;
   //}
-  //const int MVAVarType = 3; const int nBinMVA = 15; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 18; Float_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4}; TString addChan = "3";
   //const int MVAVarType = 3; const int nBinMVA = 11; Float_t xbins[nBinMVA+1] =  {-2, -1, .5, .6, .7, .74, .78, .80, .82, .84, .86, 1.}; TString addChan = "3";
   //const int MVAVarType = 1; const int nBinMVA = 21; Float_t xbins[nBinMVA+1] = {0, 1, 2, 3, 4, 5, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121};
   //if(isWZhinv) {
@@ -680,7 +680,7 @@ void wzAnalysis(
            ) passFilter[1] = kTRUE;
         }
       } else { passFilter[1] = kTRUE;}
-      
+
       if(passFilter[0] == kFALSE) continue;
       if(passFilter[1] == kFALSE) continue;
       vector<int> idLep; vector<int> idTight; vector<int> idSoft; unsigned int goodIsTight = 0;
@@ -697,7 +697,7 @@ void wzAnalysis(
 
       if(goodIsTight == idTight.size()) passFilter[3] = kTRUE;
       if(usePureMC ==  true && passFilter[3] == kFALSE) continue;
-      if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <= 20 ||
+      if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <= 25 ||
          ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <= 20 ||
          ((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Pt() <= 10) continue;
 
@@ -716,7 +716,6 @@ void wzAnalysis(
       if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
 
       passFilter[4] = TMath::Abs(signQ) == 1;
-      
       if(passFilter[4] == kFALSE) continue;
 
       int nFakeCount = 0;
@@ -803,6 +802,7 @@ void wzAnalysis(
 	   selectIdIsoCut(type3rdLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[2]]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Pt()),
 	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Eta()),(double)(*eventLeptons.iso)[idLep[2]],(int)(*eventLeptons.selBits)[idLep[2]],(double)(*eventLeptons.mva)[idLep[2]]);
       }
+
       if(tight3rdLepId == false) continue;
 
       if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[2]]]) == 13) type3l += 0;
@@ -820,9 +820,12 @@ void wzAnalysis(
       passFilter[ 5] = minMassll > 4;
       passFilter[ 6] = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 30;
       passFilter[ 7] = minMassZ > minMass && minMassZ < maxMass && type3l != 4;
-      passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Pt() > (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==11 ? 25 : 20) && // Z(ee) 25/20 Z(mm) 20/20
-                       ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Pt() > 20 &&
-                       ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20; // W lepton 20 GeV
+      passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20;
+      if(isWZHinv){
+        passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Pt() > 25 &&
+                         ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Pt() > 20 &&
+                         ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20;
+      }
       passFilter[ 9] = mass3l > 100;
       passFilter[10] = true; if(applyBtagging) passFilter[10] = bDiscrMax < 0.935;
       passFilter[11] = true;
@@ -904,7 +907,6 @@ void wzAnalysis(
 
       double deltaPhiTriLeptonMet = TMath::Abs(trilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtEvent = TMath::Sqrt(2.0*trilep.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiTriLeptonMet)));
-      double mtDilepFakeMET = TMath::Sqrt(2.0*dilepZ.Pt()*theFakeMET.Pt()*(1.0 - cos(dilepZ.DeltaPhi(theFakeMET))));
       
       // Evaluate nominal BDT value
       double bdt_value=-2;
@@ -1202,7 +1204,7 @@ void wzAnalysis(
         }
         else if(theCategory == 2){
 	  if(passAllCuts[WZSEL]) {
-         histo_Zg->Fill(MVAVar,totalWeight);
+             histo_Zg->Fill(MVAVar,totalWeight);
 
 	     histo_Zg_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
 	     histo_Zg_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));

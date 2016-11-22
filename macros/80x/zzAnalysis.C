@@ -21,7 +21,7 @@
 #include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
-bool isMINIAOD[5] = {true, true, true, true, true};
+bool isMINIAOD = false;
 int whichSkim = 2;
 bool usePureMC = false; 
 double mcPrescale = 1.0;
@@ -42,11 +42,12 @@ void zzAnalysis(
   bool useBDT=false;
 
   Int_t period = 1;
-  TString filesPathDA    = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
+  TString filesPathDA_old = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
+  TString filesPathDA = "/data/t3home000/ceballos/ntuples_skim_80x/met_";
   TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
   TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
   TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 20.0;
+  Double_t lumi = 35;
   bool verbose = true;
 
   //*******************************************************
@@ -56,30 +57,19 @@ void zzAnalysis(
   vector<Int_t> infileCategory_;  
 
   TString puPath = "";
-  TString triggerSuffix[5] = {"*", "*", "*", "*", "*"};
-  if(isMINIAOD[0]) triggerSuffix[0] = "";
-  if(isMINIAOD[1]) triggerSuffix[1] = "";
-  if(isMINIAOD[2]) triggerSuffix[2] = "";
-  if(isMINIAOD[3]) triggerSuffix[3] = "";
-  if(isMINIAOD[4]) triggerSuffix[4] = "";
+  TString triggerSuffix = "*";
+  if(isMINIAOD) triggerSuffix = "";
 
-  puPath = "MitAnalysisRunII/data/80x/puWeights_80x.root";
+  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_37ifb.root";
+
   // Data files
-  if(isMINIAOD[0]) {infileName_.push_back(Form("%sdata_Run2016B_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[1]) {infileName_.push_back(Form("%sdata_Run2016C_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[2]) {infileName_.push_back(Form("%sdata_Run2016D_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[3]) {infileName_.push_back(Form("%sdata_Run2016E_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-
-  if(isMINIAOD[4]) {infileName_.push_back(Form("%sdata_Run2016F_skim.root",filesPathDA_MINIAOD.Data())); infileCategory_.push_back(0);}
-  else             {infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data()));              infileCategory_.push_back(0);}
-  
+  infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA_old.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016G.root",filesPathDA.Data()));   infileCategory_.push_back(0);
+  infileName_.push_back(Form("%sdata_Run2016H.root",filesPathDA.Data()));   infileCategory_.push_back(0); 
 
   if(usePureMC == true){
   infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
@@ -276,13 +266,12 @@ void zzAnalysis(
     else if(thePlot >= 22 && thePlot <= 24) {nBinPlot =  90; xminPlot = 0.0; xmaxPlot = 180.0;}
     else if(thePlot >= 25 && thePlot <= 25) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >= 26 && thePlot <= 26) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot =   2.0;}
-    else if(thePlot >= 27 && thePlot <= 28) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot >= 29 && thePlot <= 29) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 30 && thePlot <= 30) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
     else if(thePlot >= 31 && thePlot <= 33) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     TH1D* histos;
-    if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
-    else                      histos = new TH1D("histos", "histos", nBinMVA, xbins);
+    if(thePlot != allPlots-1 && thePlot != 27 && thePlot != 28) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
+    else                                                        histos = new TH1D("histos", "histos", nBinMVA, xbins);
     histos->Sumw2();
     for(int i=0; i<histBins; i++) histo[thePlot][i] = (TH1D*) histos->Clone(Form("histo%d",i));
     histos->Clear();
@@ -463,6 +452,7 @@ void zzAnalysis(
     eventVertex.setBranchAddresses(the_input_tree);
 
     BareMonteCarlo eventMonteCarlo;
+    eventMonteCarlo.SetExtend();
     eventMonteCarlo.setBranchAddresses(the_input_tree);
 
     TNamed *triggerNames = (TNamed*)the_input_file.FindObjectAny("triggerNames");
@@ -527,27 +517,37 @@ void zzAnalysis(
       if(infileCategory_[ifile] == 0) {
 	for (int nt = 0; nt <(int)numtokens; nt++) {
           if((*eventTrigger.triggerFired)[nt] == 0) continue;
-          if((strcmp(tokens[nt],"HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*") == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v*") == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v*")  == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v*") 	              == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v*") 	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoMu20_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoTkMu20_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoMu22_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoTkMu22_v*") 				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoMu24_v*")				      == 0) ||
-             (strcmp(tokens[nt],"HLT_IsoTkMu24_v*")				      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v*")	      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele25_eta2p1_WPTight_Gsf_v*")                    == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele27_eta2p1_WPLoose_Gsf_v*")                    == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele27_WPTight_Gsf_v*")			      == 0) ||
-             (strcmp(tokens[nt],"HLT_Ele35_WPLoose_Gsf_v*")			      == 0)
+          if((strcmp(tokens[nt],Form("HLT_Ele25_eta2p1_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Ele27_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Ele27_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Ele30_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Ele35_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoMu20_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoMu22_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoMu24_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoMu27_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoTkMu20_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoTkMu22_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoTkMu24_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_IsoTkMu27_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu45_eta2p1_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu50_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_DoubleEle24_22_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ _v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}
@@ -569,7 +569,7 @@ void zzAnalysis(
       if(goodIsTight == idTight.size()) passFilter[3] = kTRUE;
       if(usePureMC ==  true && passFilter[3] == kFALSE) continue;
       if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <= 25 ||
-         ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <= 25 ||
+         ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <= 20 ||
          ((TLorentzVector*)(*eventLeptons.p4)[idLep[2]])->Pt() <= 10 ||
          ((TLorentzVector*)(*eventLeptons.p4)[idLep[3]])->Pt() <= 10) continue;
 
@@ -727,8 +727,8 @@ void zzAnalysis(
       }
       bool passNjets      = idJet.size() <= 1;
       bool passMET        = theZZllnnMET.Pt() > 50;
-      bool passPTFrac     = ptFrac < 1; //0.4;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.0; //2.6;
+      bool passPTFrac     = ptFrac < 1.0;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.0;
       bool passPTLL       = dilepZll.Pt() > 60;
       bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET};
@@ -878,7 +878,7 @@ void zzAnalysis(
         for(unsigned int nl=0; nl<idLep.size(); nl++){
           effSF = effSF * effhDScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),
 	        ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),
-		typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF);
+		typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF,false);
         }
       }
 
@@ -970,8 +970,8 @@ void zzAnalysis(
 	else if(thePlot == 24 && passZHWWSel)             {makePlot = true;theVar = TMath::Abs(dilepZ.DeltaPhi(dilepWW))*180/TMath::Pi();}
 	else if(thePlot == 25 && passZHWWSelNMinusOne[4]) {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
 	else if(thePlot == 26 && passZHWWSel)             {makePlot = true;theVar = TMath::Min(dilepWW.Pt()/dilepZ.Pt(),1.999);}
-	else if(thePlot == 27 && passZZSel)               {makePlot = true;theVar = TMath::Min(theZZllnnMET.Pt(),199.999);}
-	else if(thePlot == 28 && passZZSel)               {makePlot = true;theVar = TMath::Min(dilepZll.Pt(),199.999);}
+	else if(thePlot == 27 && passZZSel)               {makePlot = true;theVar = TMath::Min(theZZllnnMET.Pt(),xbins[nBinMVA]-0.001);}
+	else if(thePlot == 28 && passZZSel)               {makePlot = true;theVar = TMath::Min(dilepZll.Pt(),xbins[nBinMVA]-0.001);}
 	else if(thePlot == 29 && passZZSel)               {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	else if(thePlot == 30 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
 	else if(thePlot == 31 && passZZSel)               {makePlot = true;theVar = dPhiDiLepMET;}

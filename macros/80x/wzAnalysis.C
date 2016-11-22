@@ -758,42 +758,6 @@ void wzAnalysis(
         }
       }
 
-      vector<int> idJet,idJetUp,idJetDown; double btagjet[2] = {0., 0.};
-      bool isBtag = kFALSE;
-      double bDiscrMax = 0.0;
-      double dPhiJetMET = -1.0;
-      double dPhiJetDiLep = -1.0;
-      double theHT = 0;
-      for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
-        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
-        //if(passId == false) continue;        
-
-        Bool_t isLepton = kFALSE;
-        for(unsigned int nl=0; nl<idLep.size(); nl++){
-          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3) isLepton = kTRUE;
-	}
-	if(isLepton == kTRUE) continue;
-
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-        }
-
-	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
-	   (float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
-
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) idJet.push_back(nj);
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.03 > 30) idJetUp.push_back(nj);
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
-
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 30) continue;
-	
-        if     ((float)(*eventJets.bDiscr)[nj] > btagjet[0]) {btagjet[1] = btagjet[0]; btagjet[0] = (float)(*eventJets.bDiscr)[nj];}
-	else if((float)(*eventJets.bDiscr)[nj] > btagjet[1]) {btagjet[1] = (float)(*eventJets.bDiscr)[nj];}
-
-        theHT = theHT + ((TLorentzVector*)(*eventJets.p4)[nj])->Pt();
-      }
-
       for(unsigned nl0=0; nl0<idLep.size(); nl0++){
         if((int)nl0==tagZ[0]||(int)nl0==tagZ[1]) continue;
         tagZ[2] = nl0;
@@ -830,6 +794,51 @@ void wzAnalysis(
       int typePair = 0;
       if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==13) typePair = 1;
       else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==11) typePair = 2;
+
+      TLorentzVector theFakeMET, theFakeMETUp, theFakeMETDown;
+      theFakeMET    .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
+      theFakeMET    .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
+      theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
+      theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
+      theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
+      theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
+
+      vector<int> idJet,idJetUp,idJetDown; double btagjet[2] = {0., 0.};
+      bool isBtag = kFALSE;
+      double bDiscrMax = 0.0;
+      double dPhiJetMET = -1.0;
+      double dPhiJetDiLep = -1.0;
+      double theHT = 0;
+      for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
+        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
+        //if(passId == false) continue;        
+
+        Bool_t isLepton = kFALSE;
+        for(unsigned int nl=0; nl<idLep.size(); nl++){
+          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3) isLepton = kTRUE;
+	}
+	if(isLepton == kTRUE) continue;
+
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
+          if(isWZhinv==false) dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+	  else                dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(theFakeMET));
+        }
+
+	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
+	   (float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
+
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) idJet.push_back(nj);
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.03 > 30) idJetUp.push_back(nj);
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
+
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 30) continue;
+	
+        if     ((float)(*eventJets.bDiscr)[nj] > btagjet[0]) {btagjet[1] = btagjet[0]; btagjet[0] = (float)(*eventJets.bDiscr)[nj];}
+	else if((float)(*eventJets.bDiscr)[nj] > btagjet[1]) {btagjet[1] = (float)(*eventJets.bDiscr)[nj];}
+
+        theHT = theHT + ((TLorentzVector*)(*eventJets.p4)[nj])->Pt();
+      }
 
       passFilter[ 5] = minMassll > 4;
       passFilter[ 6] = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 30;
@@ -896,24 +905,16 @@ void wzAnalysis(
                      (( ( *(TLorentzVector*)(eventJets.p4->At(idJet[0])) ) + ( *(TLorentzVector*)(eventJets.p4->At(idJet[1])) ) )).M() > 500 &&
 		     TMath::Abs(((TLorentzVector*)(*eventJets.p4)[idJet[0]])->Eta()-((TLorentzVector*)(*eventJets.p4)[idJet[1]])->Eta()) > 2.5;
 
-      TLorentzVector theFakeMET, theFakeMETUp, theFakeMETDown;
-      theFakeMET    .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
-      theFakeMET    .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
-      theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
-      theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
-      theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
-      theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
-
       TLorentzVector dilepZ(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) ) ));
       double dPhiDiLepMET = TMath::Abs(dilepZ.DeltaPhi(theFakeMET));
       double ptFrac = TMath::Abs(dilepZ.Pt()-theFakeMET.Pt())/dilepZ.Pt();
 
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;
-      bool passPTFrac     = ptFrac < 1.0;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.0;
+      bool passPTFrac     = ptFrac < 0.4;
+      bool passDPhiZMET   = dPhiDiLepMET > 2.6;
       bool passPTLL       = dilepZ.Pt() > 60;
-      bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET;
 
       double deltaPhiLeptonMet = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));

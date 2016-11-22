@@ -38,7 +38,7 @@ void zzAnalysis(
  ){
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
-  system("mkdir -p MitZHAnalysis/plots");
+  system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
   bool useBDT=false;
 
   Int_t period = 1;
@@ -1209,7 +1209,7 @@ void zzAnalysis(
 
   if(1){
     char outputLimits[200];
-    sprintf(outputLimits,"MitZHAnalysis/plots/zz4l%shinv%s_input_%s.root", addChan.Data(), finalStateName, ECMsb.Data());
+    sprintf(outputLimits,"MitZHAnalysis/plots%s/zz4l%shinv%s_input_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
     

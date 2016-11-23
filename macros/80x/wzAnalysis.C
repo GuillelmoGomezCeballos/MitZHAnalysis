@@ -907,14 +907,20 @@ void wzAnalysis(
       TLorentzVector dilepZ(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) ) ));
       double dPhiDiLepMET = TMath::Abs(dilepZ.DeltaPhi(theFakeMET));
       double ptFrac = TMath::Abs(dilepZ.Pt()-theFakeMET.Pt())/dilepZ.Pt();
+      double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
+      double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
+      double drll = sqrt(dphill*dphill+detall*detall);
+      bool passDelphiLL  = drll < 1.8;//dphill < TMath::Pi()/2.;
 
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;
       bool passPTFrac     = ptFrac < 1.0;
       bool passDPhiZMET   = dPhiDiLepMET > 2.0;
       bool passPTLL       = dilepZ.Pt() > 60;
-      bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      //bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passDPhiJetMET = true;
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET;
+      //if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL;
 
       double deltaPhiLeptonMet = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtLN = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiLeptonMet)));
@@ -1481,7 +1487,7 @@ void wzAnalysis(
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     for(int j=0; j<allStates; j++){
       char output[200];
-      sprintf(output,"histowz_nice_%d_%d.root",j,thePlot);	  
+      sprintf(output,"MitZHAnalysis/plots%s/histowz_nice_%d_%d.root",subdirectory.c_str(), j,thePlot);	  
       TFile* outFilePlotsNote = new TFile(output,"recreate");
       outFilePlotsNote->cd();
       for(int np=0; np<histBins; np++) histo[j][thePlot][np]->Write();

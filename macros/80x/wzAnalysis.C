@@ -744,7 +744,7 @@ void wzAnalysis(
           double deltaRllAux = ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl0]])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl1]]));
           if(deltaRllAux < deltaRllMin) deltaRllMin = deltaRllAux;
 
-	  if((int)(*eventLeptons.pdgId)[idLep[nl0]] + (int)(*eventLeptons.pdgId)[idLep[nl1]] != 0) continue; // OSSF pairs only
+	  if((int)(*eventLeptons.pdgId)[idLep[nl0]] * (int)(*eventLeptons.pdgId)[idLep[nl1]] > 0) continue;
           TLorentzVector dilepAux(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[nl1])) ) ));
 
 	  if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]])==TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl1]]) &&
@@ -911,7 +911,7 @@ void wzAnalysis(
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
-      bool useZHcuts = false;
+      bool useZHcuts = true;
       bool passDelphiLL   = useZHcuts ? (drll < 1.8) : (true);
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;

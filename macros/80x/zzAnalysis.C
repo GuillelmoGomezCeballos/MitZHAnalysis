@@ -611,7 +611,7 @@ void zzAnalysis(
       
       // Removing events with no Z candidate at all
       if(tagZ[0] == -1) continue;
-      
+
       for(unsigned nl=0; nl<idLep.size(); nl++){
         if(tagZ[0] == (int)nl || tagZ[1] == (int)nl) continue;
 	if(tagZ[2] == -1) tagZ[2] = nl;
@@ -619,6 +619,28 @@ void zzAnalysis(
       }
 
       if(tagZ[0] == -1 || tagZ[1] == -1 || tagZ[2] == -1 || tagZ[3] == -1) printf("TAGZ PROBLEM!: %d %d %d %d\n",tagZ[0],tagZ[1],tagZ[2],tagZ[3]);
+
+      TLorentzVector fourLep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[2])) ) + 
+        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[3])) ) ));
+      double mass4l = fourLep.M();
+      int typeL[2] = {0,0};
+      for(unsigned nl0=0; nl0<idLep.size(); nl0++){
+        if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 11) typeL[0]++;
+        else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 13) typeL[1]++;
+        else {printf("ZZ4lPROBLEM!\n");assert(0);return;}
+      }
+
+      int type4l = 0;
+      if     (typeL[0] == 4) type4l = 0;
+      else if(typeL[1] == 4) type4l = 1;
+      else if(typeL[0] == 2) type4l = 2;
+      else		     type4l = 3;
+      // Determine flavor of the pair (0 means e-mu pair, 1 means mu-mu, 2 means e-e)
+      int typePair = 0;
+      if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==13) typePair = 1;
+      else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==11) typePair = 2;
 
       TLorentzVector dilepZ (( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) ) ));
       TLorentzVector dilepLL(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) ) ));
@@ -648,8 +670,8 @@ void zzAnalysis(
           theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
           theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
 	  theOtherZZllnnMET = theFakeMET[0];
-	} else { // (1) => nn, (2) ==> ll
-	  printf("IMPOSSIBLE!!!\n");
+	} else if(type4l != 3) { // (1) => nn, (2) ==> ll
+	  printf("IMPOSSIBLE!!!: %f %f %d %d %d %d %d\n",minMassZ[0],minMassZ[1],tagZ[0],tagZ[1],tagZ[2],tagZ[3],type4l);
 	}
         dPhiDiLepMET = TMath::Abs(dilepZll.DeltaPhi(theZZllnnMET));
         ptFrac = TMath::Abs(dilepZll.Pt()-theZZllnnMET.Pt())/dilepZll.Pt();
@@ -683,28 +705,6 @@ void zzAnalysis(
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
       }
 
-      TLorentzVector fourLep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + 
-        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) + 
-        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[2])) ) + 
-        		       ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[3])) ) ));
-      double mass4l = fourLep.M();
-      int typeL[2] = {0,0};
-      for(unsigned nl0=0; nl0<idLep.size(); nl0++){
-        if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 11) typeL[0]++;
-        else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl0]]) == 13) typeL[1]++;
-        else {printf("ZZ4lPROBLEM!\n");assert(0);return;}
-      }
-
-      int type4l = 0;
-      if     (typeL[0] == 4) type4l = 0;
-      else if(typeL[1] == 4) type4l = 1;
-      else if(typeL[0] == 2) type4l = 2;
-      else		     type4l = 3;
-      // Determine flavor of the pair (0 means e-mu pair, 1 means mu-mu, 2 means e-e)
-      int typePair = 0;
-      if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==13) typePair = 1;
-      else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[0]]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[tagZ[1]]])==11) typePair = 2;
-
       passFilter[5]  = typeL[0] == 4 || typeL[1] == 4 || (typeL[0] == 2 && typeL[1] == 2);
       passFilter[6]  = minMassll > 4.0;
       passFilter[7]  = minMassZ[0] > 76.1876 && minMassZ[0] < 106.1876 && minMassZ[1] > 76.1876 && minMassZ[1] < 106.1876;
@@ -730,7 +730,7 @@ void zzAnalysis(
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
-      bool useZHcuts = false;
+      bool useZHcuts = true;
       bool passDelphiLL   = useZHcuts ? (drll < 1.8) : (true);
       bool passNjets      = idJet.size() <= 1;
       bool passMET        = theZZllnnMET.Pt() > 50;

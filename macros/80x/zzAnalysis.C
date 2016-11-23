@@ -631,6 +631,29 @@ void zzAnalysis(
       dilepWW.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+dilepLL.Py());
       dilepWW.SetPz(0.0);
 
+      double dPhiDiLepMET = 0, ptFrac = 0;
+      { // MET emulation l -> nu
+        TLorentzVector theFakeMET[2];
+        theFakeMET[0].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
+        theFakeMET[0].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
+        theFakeMET[1].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+        theFakeMET[1].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+        if(TMath::Abs(minMassZ[0]-91.1876) < TMath::Abs(minMassZ[1]-91.1876)) { // (1) => ll, (2) => nn
+	  theZZllnnMET = theFakeMET[1];
+          dilepZll = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) );
+          dilepZnn = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) );
+          theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+          theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+          theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+          theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+	  theOtherZZllnnMET = theFakeMET[0];
+	} else { // (1) => nn, (2) ==> ll
+	  printf("IMPOSSIBLE!!!\n");
+	}
+        dPhiDiLepMET = TMath::Abs(dilepZll.DeltaPhi(theZZllnnMET));
+        ptFrac = TMath::Abs(dilepZll.Pt()-theZZllnnMET.Pt())/dilepZll.Pt();
+      }
+      
       vector<int> idJet,idJetUp,idJetDown;
       bool isBtag = kFALSE;
       double bDiscrMax = 0.0;
@@ -648,7 +671,7 @@ void zzAnalysis(
 	if(isLepton == kTRUE) continue;
 
         if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(theZZllnnMET);
         }
 
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
@@ -703,35 +726,20 @@ void zzAnalysis(
 				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12]};
       bool passZHWWSel = passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13];
 
-      TLorentzVector theFakeMETUp, theFakeMETDown, theZZllnnMET, theOtherZZllnnMET, dilepZll, dilepZnn; double dPhiDiLepMET = 0, ptFrac = 0;
-      if(passZZSel){
-        TLorentzVector theFakeMET[2];
-        theFakeMET[0].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Px());
-        theFakeMET[0].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Py());
-        theFakeMET[1].SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
-        theFakeMET[1].SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
-        if(TMath::Abs(minMassZ[0]-91.1876) < TMath::Abs(minMassZ[1]-91.1876)) { // (1) => ll, (2) => nn
-	  theZZllnnMET = theFakeMET[1];
-          dilepZll = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) );
-          dilepZnn = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) );
-          theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
-          theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
-          theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
-          theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
-	  theOtherZZllnnMET = theFakeMET[0];
-	} else { // (1) => nn, (2) ==> ll
-	  printf("IMPOSSIBLE!!!\n");
-	}
-        dPhiDiLepMET = TMath::Abs(dilepZll.DeltaPhi(theZZllnnMET));
-        ptFrac = TMath::Abs(dilepZll.Pt()-theZZllnnMET.Pt())/dilepZll.Pt();
-      }
+      TLorentzVector theFakeMETUp, theFakeMETDown, theZZllnnMET, theOtherZZllnnMET, dilepZll, dilepZnn;
+
+      double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
+      double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
+      double drll = sqrt(dphill*dphill+detall*detall);
+      bool useZHcuts = false;
+      bool passDelphiLL   = useZHcuts ? (drll < 1.8) : (true);
       bool passNjets      = idJet.size() <= 1;
       bool passMET        = theZZllnnMET.Pt() > 50;
-      bool passPTFrac     = ptFrac < 1.0;
-      bool passDPhiZMET   = dPhiDiLepMET > 2.0;
+      bool passPTFrac     = ptFrac < (useZHcuts ? 0.4 : 1.0);
+      bool passDPhiZMET   = dPhiDiLepMET > (useZHcuts ? 2.6 : 2.0);
       bool passPTLL       = dilepZll.Pt() > 60;
-      bool passDPhiJetMET = true;//dPhiJetMET == -1 || dPhiJetMET >= 0.5;
-      bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET};
+      bool passDPhiJetMET = useZHcuts ? (dPhiJetMET == -1 || dPhiJetMET >= 0.5) : (true);
+      bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL};
       
       // Evaluate nominal BDT value
       double bdt_value=-1;
@@ -1527,7 +1535,7 @@ void zzAnalysis(
     sumEventsType[3],sqrt(sumEventsTypeE[3]));
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"histozz_nice_%d.root",thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots%s/histozz_nice_%d.root",subdirectory.c_str(), thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();

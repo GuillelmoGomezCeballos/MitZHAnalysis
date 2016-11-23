@@ -631,6 +631,7 @@ void zzAnalysis(
       dilepWW.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()+dilepLL.Py());
       dilepWW.SetPz(0.0);
 
+      TLorentzVector theFakeMETUp, theFakeMETDown, theZZllnnMET, theOtherZZllnnMET, dilepZll, dilepZnn;
       double dPhiDiLepMET = 0, ptFrac = 0;
       { // MET emulation l -> nu
         TLorentzVector theFakeMET[2];
@@ -671,7 +672,7 @@ void zzAnalysis(
 	if(isLepton == kTRUE) continue;
 
         if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(theZZllnnMET);
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(theZZllnnMET));
         }
 
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
@@ -725,8 +726,6 @@ void zzAnalysis(
 				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11]                   && passFilter[13],
 				      passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12]};
       bool passZHWWSel = passFilter[6] && passFilter[8] && passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13];
-
-      TLorentzVector theFakeMETUp, theFakeMETDown, theZZllnnMET, theOtherZZllnnMET, dilepZll, dilepZnn;
 
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());

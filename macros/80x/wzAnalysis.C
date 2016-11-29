@@ -52,6 +52,7 @@ void wzAnalysis(
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
 
+  bool printMCEventList=false;
   bool useBDT=false;
   Int_t period = 1;
   TString filesPathDA_old = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
@@ -541,6 +542,14 @@ void wzAnalysis(
   TH1D* histo_Higgs_CMS_PUBoundingUp           	= new TH1D( Form("histo_Higgs_CMS_puUp")  , Form("histo_Higgs_CMS_puUp")  , nBinMVA, xbins); histo_Higgs_CMS_PUBoundingUp  ->Sumw2();
   TH1D* histo_Higgs_CMS_PUBoundingDown         	= new TH1D( Form("histo_Higgs_CMS_puDown"), Form("histo_Higgs_CMS_puDown"), nBinMVA, xbins); histo_Higgs_CMS_PUBoundingDown->Sumw2();
 
+  char outputEventList[200];
+  sprintf(outputEventList,"MitZHAnalysis/datacards%s/eventlist_wz_MC.csv",subdirectory.c_str());
+  ofstream eventList;
+  if(printMCEventList) {
+    eventList.open(outputEventList);
+    eventList << "eventNumber,njets,realMET,fakeMET,balance,dPhiZMET,ZpT,dPhiJetMET,pdgl1,pdgl2,pdgl3\n";
+  }
+
   unsigned int numberOfLeptons = 3;
 
   double totalEventsProcess[50];
@@ -619,8 +628,7 @@ void wzAnalysis(
           the_PDF_tree->GetEntry(i);
 	  printf("PDF(%d): %s\n",i,weightDef);
         }
-      }
-      else {
+      } else {
         printf("PDFTree not available\n");
       }
       //return;
@@ -702,8 +710,9 @@ void wzAnalysis(
         if(selectIdIsoCut(typeLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
 	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
 	                                                                                               {idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep); }
-        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
+        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep); }
+        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
+        else if(selectIdIsoCut("veto",TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
       }
       if(idLep.size()!=idTight.size()) {assert(1); return;}
       if(idLep.size()==numberOfLeptons) passFilter[2] = kTRUE;
@@ -911,7 +920,7 @@ void wzAnalysis(
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
-      bool useZHcuts = true;
+      bool useZHcuts = false;
       bool passDelphiLL   = useZHcuts ? (drll < 1.8) : (true);
       bool passNjets      = idJet.size() <= 1;
       bool passFakeMET    = theFakeMET.Pt() > 50;
@@ -921,7 +930,8 @@ void wzAnalysis(
       bool passDPhiJetMET = useZHcuts ? (dPhiJetMET == -1 || dPhiJetMET >= 0.5) : (true);
 
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL;
-
+      if(printMCEventList && infilecatv[ifile] == 3 && theFakeMET.Pt() > 100 && passAllCuts[WZSEL])
+        eventList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theFakeMET.Pt(), ptFrac, dPhiDiLepMET, dilepZ.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]]);
       double deltaPhiLeptonMet = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtLN = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiLeptonMet)));
 
@@ -1412,6 +1422,7 @@ void wzAnalysis(
 
   } // end of chain
 
+  if(printMCEventList) eventList.close();
   histo[5][allPlots-1][0]->Add(histo_Data);
   histo[5][allPlots-1][1]->Add(histo_FakeM);
   histo[5][allPlots-1][1]->Add(histo_FakeE);

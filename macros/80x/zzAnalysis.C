@@ -751,7 +751,7 @@ void zzAnalysis(
       bool passPTLL       = dilepZll.Pt() > 60;
       bool passDPhiJetMET = useZHcuts ? (dPhiJetMET == -1 || dPhiJetMET >= 0.5) : (true);
       bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL};
-      if(printMCEventList && infileCategory_[ifile] == 4 && theZZllnnMET.Pt() > 100 && passZZhinvSel)
+      if(printMCEventList && infileName_[ifile].Contains("GluGlu") == kFALSE && infileCategory_[ifile] == 4 && theZZllnnMET.Pt() > 100 && passZZhinvSel)
         eventList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theZZllnnMET.Pt(), ptFrac, dPhiDiLepMET, dilepZll.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[3]]]);
       
       // Evaluate nominal BDT value

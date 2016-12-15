@@ -136,7 +136,7 @@ void wzAnalysis(
   }
   }
   else {assert(0);}
-  
+
   if(infilenamev.size() != infilecatv.size()) {printf("Failure %d != %d\n",(int)infilenamev.size(),(int)infilecatv.size()); assert(0); return;}
 
   //infilenamev.clear();infilecatv.clear();
@@ -377,7 +377,6 @@ void wzAnalysis(
 
   TH1D* histo_Diff = new TH1D("dummy", "dummy",1000,-1,1); histo_Diff->Sumw2();
 
-  double histo_WZ_CMS_QCDScaleInitial[7] = {0,0,0,0,0,0,0};
   TH1D* histo_Zg_CMS_QCDScaleBounding[6];
   TH1D* histo_VVV_CMS_QCDScaleBounding[6];
   TH1D* histo_WZ_CMS_QCDScaleBounding[6];
@@ -626,6 +625,7 @@ void wzAnalysis(
       //return;
     }
 
+    bool errorMsgQCDscale = false;
     unsigned int selBit_= 0;
     the_SelBit_tree->SetBranchAddress("selBit", &selBit_);
     histoWZSEL[0]->Scale(0.0);
@@ -641,17 +641,6 @@ void wzAnalysis(
       if(i%100000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
       if((selBit_ & 0x1<<whichSkim) == 0) continue;
       the_input_tree->GetEntry(i);
-
-      // WZ QCD initial
-      if(infilecatv[ifile] == 3) {
-	histo_WZ_CMS_QCDScaleInitial[0] = histo_WZ_CMS_QCDScaleInitial[0] + TMath::Abs((double)eventMonteCarlo.r1f2);
-	histo_WZ_CMS_QCDScaleInitial[1] = histo_WZ_CMS_QCDScaleInitial[1] + TMath::Abs((double)eventMonteCarlo.r1f5);
-	histo_WZ_CMS_QCDScaleInitial[2] = histo_WZ_CMS_QCDScaleInitial[2] + TMath::Abs((double)eventMonteCarlo.r2f1);
-	histo_WZ_CMS_QCDScaleInitial[3] = histo_WZ_CMS_QCDScaleInitial[3] + TMath::Abs((double)eventMonteCarlo.r2f2);
-	histo_WZ_CMS_QCDScaleInitial[4] = histo_WZ_CMS_QCDScaleInitial[4] + TMath::Abs((double)eventMonteCarlo.r5f1);
-	histo_WZ_CMS_QCDScaleInitial[5] = histo_WZ_CMS_QCDScaleInitial[5] + TMath::Abs((double)eventMonteCarlo.r5f5);
-        histo_WZ_CMS_QCDScaleInitial[6] = histo_WZ_CMS_QCDScaleInitial[6] + 1.0;
-      }
 
       Bool_t passFilter[12] = {kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE,kFALSE};
       if(eventLeptons.p4->GetEntriesFast() >= 2 &&
@@ -1191,16 +1180,20 @@ void wzAnalysis(
 	double MVAVar = (double)type3l;
 	double MVAVarMETSyst[2] = {(double)type3l, (double)type3l};
 	if(isWZhinv){
-      if(MVAVarType==1) {
+          if(MVAVarType==1) {
   	    MVAVar = TMath::Min(theFakeMET.Pt(),xbins[nBinMVA]-0.001);
   	    MVAVarMETSyst[0] = TMath::Min(theFakeMETUp.Pt(),xbins[nBinMVA]-0.001);
   	    MVAVarMETSyst[1] = TMath::Min(theFakeMETDown.Pt(),xbins[nBinMVA]-0.001);
-      } else if(MVAVarType==3) {
-        MVAVar = getMVAVar(MVAVarType, passAllCuts[WZSEL], typePair, theFakeMET.Pt(), 0, dilepZ.M(), bdt_value, xbins[nBinMVA]);
-        MVAVarMETSyst[0] = MVAVar; 
-        MVAVarMETSyst[1] = MVAVar; 
-      }
+          } else if(MVAVarType==3) {
+            MVAVar = getMVAVar(MVAVarType, passAllCuts[WZSEL], typePair, theFakeMET.Pt(), 0, dilepZ.M(), bdt_value, xbins[nBinMVA]);
+            MVAVarMETSyst[0] = MVAVar; 
+            MVAVarMETSyst[1] = MVAVar; 
+          }
 	}
+
+	// Avoid QCD scale weights that are anomalous high
+	double maxQCDscale = (TMath::Abs((double)eventMonteCarlo.r1f2)+TMath::Abs((double)eventMonteCarlo.r1f5)+TMath::Abs((double)eventMonteCarlo.r2f1)+
+                              TMath::Abs((double)eventMonteCarlo.r2f2)+TMath::Abs((double)eventMonteCarlo.r5f1)+TMath::Abs((double)eventMonteCarlo.r5f5))/6.0;
 
         if     (theCategory == 0){
 	  if(passAllCuts[WZSEL]) histo_Data->Fill(MVAVar,totalWeight);
@@ -1220,12 +1213,12 @@ void wzAnalysis(
 	  if(passAllCuts[WZSEL]) {
              histo_Zg->Fill(MVAVar,totalWeight);
 
-	     histo_Zg_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
-	     histo_Zg_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
-	     histo_Zg_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
-	     histo_Zg_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
-	     histo_Zg_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
-	     histo_Zg_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     histo_Zg_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
+	     histo_Zg_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
+	     histo_Zg_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
+	     histo_Zg_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2)/maxQCDscale);
+	     histo_Zg_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1)/maxQCDscale);
+	     histo_Zg_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5)/maxQCDscale);
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_Zg_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
 	     else
@@ -1255,12 +1248,12 @@ void wzAnalysis(
         else if(theCategory == 3){
 	  if(passAllCuts[WZSEL]) {
 	     histo_WZ->Fill(MVAVar,totalWeight);
-	     histo_WZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
-	     histo_WZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
-	     histo_WZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
-	     histo_WZ_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
-	     histo_WZ_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
-	     histo_WZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     histo_WZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
+	     histo_WZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
+	     histo_WZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
+	     histo_WZ_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2)/maxQCDscale);
+	     histo_WZ_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1)/maxQCDscale);
+	     histo_WZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5)/maxQCDscale);
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_WZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
              else
@@ -1290,12 +1283,12 @@ void wzAnalysis(
         else if(theCategory == 4){
 	  if(passAllCuts[WZSEL]) {
 	     histo_ZZ->Fill(MVAVar,totalWeight);
-	     histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
-	     histo_ZZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
-	     histo_ZZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
-	     histo_ZZ_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
-	     histo_ZZ_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
-	     histo_ZZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
+	     histo_ZZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
+	     histo_ZZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
+	     histo_ZZ_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2)/maxQCDscale);
+	     histo_ZZ_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1)/maxQCDscale);
+	     histo_ZZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5)/maxQCDscale);
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
 	     else
@@ -1325,12 +1318,12 @@ void wzAnalysis(
         else if(theCategory == 5){
 	  if(passAllCuts[WZSEL]) {
 	     histo_VVV->Fill(MVAVar,totalWeight);
-	     histo_VVV_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
-	     histo_VVV_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
-	     histo_VVV_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
-	     histo_VVV_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
-	     histo_VVV_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
-	     histo_VVV_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     histo_VVV_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
+	     histo_VVV_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
+	     histo_VVV_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
+	     histo_VVV_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2)/maxQCDscale);
+	     histo_VVV_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1)/maxQCDscale);
+	     histo_VVV_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5)/maxQCDscale);
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
 	     else
@@ -1352,12 +1345,12 @@ void wzAnalysis(
         else if(theCategory == 6){
 	  if(passAllCuts[WZSEL]) {
 	     histo_Higgs->Fill(MVAVar,totalWeight);
-	     histo_Higgs_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2));
-	     histo_Higgs_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5));
-	     histo_Higgs_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1));
-	     histo_Higgs_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2));
-	     histo_Higgs_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1));
-	     histo_Higgs_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
+	     histo_Higgs_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
+	     histo_Higgs_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
+	     histo_Higgs_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
+	     histo_Higgs_CMS_QCDScaleBounding[3]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f2)/maxQCDscale);
+	     histo_Higgs_CMS_QCDScaleBounding[4]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f1)/maxQCDscale);
+	     histo_Higgs_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5)/maxQCDscale);
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
 	     else
@@ -1492,15 +1485,6 @@ void wzAnalysis(
       outFilePlotsNote->Close();
     }
   }
-
-  printf("QCD Init: WZ(%f:%f/%f/%f/%f/%f/%f)\n",
-    histo_WZ_CMS_QCDScaleInitial[6],histo_WZ_CMS_QCDScaleInitial[0],histo_WZ_CMS_QCDScaleInitial[1],histo_WZ_CMS_QCDScaleInitial[2],histo_WZ_CMS_QCDScaleInitial[3],histo_WZ_CMS_QCDScaleInitial[4],histo_WZ_CMS_QCDScaleInitial[5]);
-  for(int nj=0; nj<6; nj++) histo_WZ_CMS_QCDScaleInitial[nj] = histo_WZ_CMS_QCDScaleInitial[nj] / histo_WZ_CMS_QCDScaleInitial[6];
-  printf("QCD RateInit: WZ(%f/%f/%f/%f/%f/%f)\n",
-    histo_WZ_CMS_QCDScaleInitial[0],histo_WZ_CMS_QCDScaleInitial[1],histo_WZ_CMS_QCDScaleInitial[2],histo_WZ_CMS_QCDScaleInitial[3],histo_WZ_CMS_QCDScaleInitial[4],histo_WZ_CMS_QCDScaleInitial[5]);
-
-  // correcting by initial normalization
-  for(int nj=0; nj<6; nj++) histo_WZ_CMS_QCDScaleBounding[nj]->Scale(1.0/histo_WZ_CMS_QCDScaleInitial[nj]);
 
   printf("QCD Corr: WZ(%f:%f/%f/%f/%f/%f/%f) ZZ(%f:%f/%f/%f/%f/%f/%f) VVV(%f:%f/%f/%f/%f/%f/%f) ZH(%f:%f/%f/%f/%f/%f/%f)\n",
     histo_WZ->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[5]->GetSumOfWeights(),
@@ -1713,18 +1697,20 @@ void wzAnalysis(
     else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAMETBoundingDown    ->GetBinContent(nb) > 0) systMet[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAMETBoundingDown->GetBinContent(nb);
     if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAMETBoundingUp   ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs_CMS_MVAMETBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
     else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAMETBoundingDown ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVAMETBoundingDown->GetBinContent(nb);
+    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet] > 1.04) systMet[nmet] = 1.04;
+    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet] < 0.96) systMet[nmet] = 0.96;
 
     double systJes[5] = {1.0,1.0,1.0,1.0,1.0};
-    if     (histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVAJESBoundingUp      ->GetBinContent(nb) > 0) systMet[0] = histo_Zg_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Zg->GetBinContent(nb);
-    else if(histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systMet[0] = histo_Zg->GetBinContent(nb)/histo_Zg_CMS_MVAJESBoundingDown->GetBinContent(nb);
-    if     (histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systMet[1] = histo_VVV_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
-    else if(histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVAJESBoundingDown   ->GetBinContent(nb) > 0) systMet[1] = histo_VVV->GetBinContent(nb)/histo_VVV_CMS_MVAJESBoundingDown->GetBinContent(nb);
-    if     (histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systMet[2] = histo_WZ_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
-    else if(histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systMet[2] = histo_WZ->GetBinContent(nb)/histo_WZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
-    if     (histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systMet[3] = histo_ZZ_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-    else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systMet[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
-    if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingUp   ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
-    else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingDown ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    if     (histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVAJESBoundingUp      ->GetBinContent(nb) > 0) systJes[0] = histo_Zg_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Zg->GetBinContent(nb);
+    else if(histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systJes[0] = histo_Zg->GetBinContent(nb)/histo_Zg_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    if     (histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systJes[1] = histo_VVV_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+    else if(histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVAJESBoundingDown   ->GetBinContent(nb) > 0) systJes[1] = histo_VVV->GetBinContent(nb)/histo_VVV_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    if     (histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systJes[2] = histo_WZ_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+    else if(histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systJes[2] = histo_WZ->GetBinContent(nb)/histo_WZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    if     (histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAJESBoundingUp	    ->GetBinContent(nb) > 0) systJes[3] = histo_ZZ_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+    else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systJes[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingUp   ->GetBinContent(nb) > 0) systJes[4] = histo_Higgs_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+    else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingDown ->GetBinContent(nb) > 0) systJes[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVAJESBoundingDown->GetBinContent(nb);
 
     double systBDTMuonUp  [5] = {1.0,1.0,1.0,1.0,1.0};
     double systBDTMuonDown[5] = {1.0,1.0,1.0,1.0,1.0};
@@ -1803,11 +1789,11 @@ void wzAnalysis(
     newcardShape << Form("%s                                     lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
     newcardShape << Form("CMS_pu2016                             lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systPU[0],systPU[1],systPU[2],systPU[3],systPU[4]);
     newcardShape << Form("CMS_scale_met                          lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systMet[0],systMet[1],systMet[2],systMet[3],systMet[4]);
-    newcardShape << Form("CMS_scale_jes                          lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systJes[0],systJes[1],systJes[2],systJes[3],systJes[4]);
+    newcardShape << Form("CMS_scale_j                            lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systJes[0],systJes[1],systJes[2],systJes[3],systJes[4]);
     newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",1.01,1.01,1.01,1.01,1.01);
     newcardShape << Form("CMS_eff_b_mistag2016                   lnN  %7.5f	-   %7.5f %7.5f   -    -  %7.5f\n",1.02,1.02,1.02,1.02);
     newcardShape << Form("CMS_eff_b_bjet2016                     lnN	    -	  %7.5f   -	-     -    -	-  \n",1.07);
-    newcardShape << Form("pdf_qqbar                              lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systPDF[0],systPDF[1],systPDF[2],systPDF[3],systPDF[4]);
+    newcardShape << Form("pdf_qqbar                              lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01),TMath::Max(systPDF[3],1.01),TMath::Max(systPDF[4],1.01));
     newcardShape << Form("QCDscale_VVV		                 lnN    -     %7.5f   -     -	  -    -    -  \n",systQCDScale[1]); 	   
     newcardShape << Form("QCDscale_VV		                 lnN  %7.5f     -   %7.5f %7.5f   -    -    -  \n",systQCDScale[0],systQCDScale[2],systQCDScale[3]); 	   
     newcardShape << Form("QCDscale_ggH		                 lnN    -       -     -     -     -    -  %7.5f\n",systQCDScale[4]); 	   

@@ -21,13 +21,13 @@
 #include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
-bool isMINIAOD = false;
+bool isMINIAOD = true;
 int whichSkim = 2;
-bool usePureMC = false; 
+bool usePureMC = true; 
 double mcPrescale = 1.0;
 bool useZZWZEWKUnc = true;
-enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
-TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
+enum selType                     {ZZSEL=0,  ZHWWSEL,   ZHSEL, nSelTypes};
+TString selTypeName[nSelTypes]= {"ZZSEL",  "ZHWWSEL", "ZHSEL",};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
@@ -43,12 +43,9 @@ void zzAnalysis(
   bool useBDT=false;
 
   Int_t period = 1;
-  TString filesPathDA_old = "/scratch/ceballos/ntuples_weightsDA_80x/met_";
-  TString filesPathDA = "/data/t3home000/ceballos/ntuples_skim_80x/met_";
-  TString filesPathDA_MINIAOD = "/scratch5/dhsu/ntuples_goodrun_80x/met_";
-  TString filesPathMC    = "/scratch5/ceballos/ntuples_weightsMC_80x/met_";
-  TString filesPathDMMC  = "/scratch5/ceballos/ntuples_weightsMC_80x/";
-  Double_t lumi = 35;
+  TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  Double_t lumi = 36.5;
   bool verbose = true;
 
   //*******************************************************
@@ -64,61 +61,63 @@ void zzAnalysis(
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x_37ifb.root";
 
   // Data files
-  infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA_old.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016G.root",filesPathDA.Data()));   infileCategory_.push_back(0);
-  infileName_.push_back(Form("%sdata_Run2016H.root",filesPathDA.Data()));   infileCategory_.push_back(0); 
-
-  if(usePureMC == true){
-  infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1+AODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIIFall15DR76-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));						   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));    infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sGluGluHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));      infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sGluGluHToTauTau_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sVBFHToTauTau_M125_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));                infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sZZTo2L2Nu_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));  				   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 			   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));			   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));           infileCategory_.push_back(1);
-  //infileName_.push_back(Form("%stZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		   infileCategory_.push_back(1);
-  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		           infileCategory_.push_back(1);
+  if(isMINIAOD) {
+    infileName_.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016G.root",filesPathDA.Data())); infileCategory_.push_back(0);
+    infileName_.push_back(Form("%sdata_Run2016H.root",filesPathDA.Data())); infileCategory_.push_back(0);
+  } else {
   }
 
-  infileName_.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));					   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	 	   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));	 	   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo4e_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
-  infileName_.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		 	   infileCategory_.push_back(4);
+  if(usePureMC == true){
+  infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV.root",filesPathMC.Data()));					      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));        infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));    infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8.root",filesPathMC.Data()));               infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));		              infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sVBFHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));                            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZZTo2L2Nu_13TeV_powheg_pythia8.root",filesPathMC.Data()));  				      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));                   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data())); 			      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));	      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));           infileCategory_.push_back(1);
+  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1.root",filesPathMC.Data())); 		      infileCategory_.push_back(1);
+  }
 
-  infileName_.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
-  infileName_.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
-  infileName_.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
-  infileName_.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data()));		   infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8.root",filesPathMC.Data()));					      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));	 	      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));	 	      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4e_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(4);
+  infileName_.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(4);
 
-  infileName_.push_back(Form("%sVHToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8+RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1+AODSIM.root",filesPathMC.Data())); 		   infileCategory_.push_back(6);
-  infileName_.push_back(Form("%sttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_mWCutfix+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3_ext1-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
-  infileName_.push_back(Form("%sGluGluHToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
-  infileName_.push_back(Form("%sVBF_HToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8+RunIISpring16DR80-PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1+RAWAODSIM.root",filesPathMC.Data()));  infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infileCategory_.push_back(5);
+  infileName_.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));	      infileCategory_.push_back(5);
+
+  infileName_.push_back(Form("%sVHToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data())); 		      infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_mWCutfix.root",filesPathMC.Data()));    infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sGluGluHToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8.root",filesPathMC.Data()));               infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sVBF_HToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8.root",filesPathMC.Data()));                 infileCategory_.push_back(6);
 
   //infileName_.clear();infileCategory_.clear();
   //infileName_.push_back(Form("%sWWTo2L2Nu_13TeV-powheg+RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1+AODSIM.root",filesPath.Data()));						  infileCategory_.push_back(1);
@@ -132,7 +131,7 @@ void zzAnalysis(
   InitializeJetIdCuts(fMVACut);
  
   TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
-  TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeights"));     assert(fhDPU);    fhDPU    ->SetDirectory(0);
+  TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPU);    fhDPU    ->SetDirectory(0);
   TH1D *fhDPUUp   = (TH1D*)(fPUFile->Get("puWeightsUp"));   assert(fhDPUUp);  fhDPUUp  ->SetDirectory(0);
   TH1D *fhDPUDown = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPUDown);fhDPUDown->SetDirectory(0);
   delete fPUFile;
@@ -288,6 +287,15 @@ void zzAnalysis(
   sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
   sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
   sprintf(finalStateName,"llll1j");
+
+  const int allStates = 4;
+  double bgdDecay[nSelTypes*allStates][histBins],weiDecay[nSelTypes*allStates][histBins];
+  for(unsigned int i=0; i<nSelTypes*allStates; i++) {
+    for(int j=0; j<histBins; j++) {
+      bgdDecay[i][j] = 0.0; weiDecay[i][j] = 0.0; 
+    }
+  }
+
   TString ECMsb  = "13TeV2016";
 
   TH1D* histo_Fake_CMS_MVAFakeStatBoundingUp           = new TH1D( Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Fake_CMS_zz4l%s_MVAFakeStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Fake_CMS_MVAFakeStatBoundingUp  ->Sumw2();
@@ -431,12 +439,13 @@ void zzAnalysis(
   // Chain Loop
   //*******************************************************
   for(UInt_t ifile=0; ifile<infileName_.size(); ifile++) {
+    printf("sampleNames(%d): %s\n",ifile,infileName_[ifile].Data());
 
-    TFile the_input_file(infileName_[ifile]);
-    TTree *the_input_tree = (TTree*)the_input_file.FindObjectAny("events");
-    //TTree *the_input_all  = (TTree*)the_input_file.FindObjectAny("all");
-    TTree *the_PDF_tree   = (TTree*)the_input_file.FindObjectAny("pdfReweight");
-    TTree *the_SelBit_tree= (TTree*)the_input_file.FindObjectAny("SelBit_tree");
+    TFile *the_input_file = TFile::Open(infileName_[ifile].Data());
+    TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
+    //TTree *the_input_all  = (TTree*)the_input_file->FindObjectAny("all");
+    TTree *the_SelBit_tree= (TTree*)the_input_file->FindObjectAny("SelBit_tree");
+    TTree *the_PDF_tree   = (TTree*)the_input_file->FindObjectAny("pdfReweight");
 
     BareEvent eventEvent;
     eventEvent.setBranchAddresses(the_input_tree);
@@ -464,7 +473,7 @@ void zzAnalysis(
     eventMonteCarlo.SetExtend();
     eventMonteCarlo.setBranchAddresses(the_input_tree);
 
-    TNamed *triggerNames = (TNamed*)the_input_file.FindObjectAny("triggerNames");
+    TNamed *triggerNames = (TNamed*)the_input_file->FindObjectAny("triggerNames");
     char **tokens;
     size_t numtokens;
     tokens = strsplit(triggerNames->GetTitle(), ",", &numtokens);
@@ -474,7 +483,6 @@ void zzAnalysis(
       }
     }
     else {
-      printf("sampleNames(%d): %s\n",ifile,infileName_[ifile].Data());
     }
 
     char weightDef[256];
@@ -492,7 +500,7 @@ void zzAnalysis(
 	if(initPDFTag != -1) break;
       }
     }
-    if(infileCategory_[ifile] != 0 && initPDFTag == -1 && infileName_[ifile].Contains("powheg") == false) {
+    if(infileCategory_[ifile] != 0 && initPDFTag == -1) {
       printf("PDFTAG PROBLEM\n");
       if(the_PDF_tree) {
         printf("PDFTree Entries: %d\n",(int)the_PDF_tree->GetEntries());
@@ -527,36 +535,30 @@ void zzAnalysis(
 	for (int nt = 0; nt <(int)numtokens; nt++) {
           if((*eventTrigger.triggerFired)[nt] == 0) continue;
           if((strcmp(tokens[nt],Form("HLT_Ele25_eta2p1_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Ele27_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Ele27_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Ele30_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Ele35_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoMu20_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoMu22_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoMu24_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoMu27_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoTkMu20_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoTkMu22_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoTkMu24_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_IsoTkMu27_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu45_eta2p1_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu50_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_DoubleEle24_22_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-             (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0)
+	     (strcmp(tokens[nt],Form("HLT_Ele27_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_IsoMu24_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_IsoTkMu24_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Ele27_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Ele30_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Ele35_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_DoubleEle24_22_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_IsoMu22_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_IsoTkMu22_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu45_eta2p1_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu50_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
+	     (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0)
              ) passFilter[1] = kTRUE;
 	}
       } else { passFilter[1] = kTRUE;}
@@ -568,11 +570,11 @@ void zzAnalysis(
         if(selectIdIsoCut(typeLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
 	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
 	                                                                                               {idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep); }
-        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
-        else if(selectIdIsoCut("veto",TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
-	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
-	                                                                                               {idTight.push_back(0); idLep.push_back(nlep);}
+        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep); }
+        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
+        //else if(selectIdIsoCut("veto",TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
+	//   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
+	//                                                                                               {idTight.push_back(0); idLep.push_back(nlep);}
       }
       if(idLep.size()!=idTight.size()) {assert(1); return;}
       if(idLep.size()==numberOfLeptons) passFilter[2] = kTRUE;
@@ -677,10 +679,10 @@ void zzAnalysis(
 	  theZZllnnMET = theFakeMET[1];
           dilepZll = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[0]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[1]])) );
           dilepZnn = ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[2]])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[tagZ[3]])) );
-          theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
-          theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESUP  )[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
-          theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.p4)[0])->Px()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
-          theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.p4)[0])->Py()*(double)(*eventMet.ptJESDOWN)[0]/((TLorentzVector*)(*eventMet.p4)[0])->Pt()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+          theFakeMETUp  .SetPx(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+          theFakeMETUp  .SetPy(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
+          theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Px());
+          theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[3]]])->Py());
 	  theOtherZZllnnMET = theFakeMET[0];
 	} else if(type4l != 3) { // (1) => nn, (2) ==> ll
 	  printf("IMPOSSIBLE!!!: %f %f %d %d %d %d %d\n",minMassZ[0],minMassZ[1],tagZ[0],tagZ[1],tagZ[2],tagZ[3],type4l);
@@ -727,9 +729,8 @@ void zzAnalysis(
       passFilter[12] = bDiscrMax < 0.560 && idJet.size() <= 1;
       passFilter[13] = fourLep.Pt() > 30 || type4l == 3;
 
-      bool passNMinusOne[2] = {                 passFilter[6],
-                               passFilter[5]                 };
-      bool passAllCuts = passFilter[5] && passFilter[6];
+      bool passNMinusOne = passFilter[5];
+      bool passZZLoose = passFilter[5] && passFilter[6];
       bool passZZSel = passFilter[5] && passFilter[6] && passFilter[7];
       bool passZHWWSelNMinusOne[6] = {passFilter[6] &&                  passFilter[9] && passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13],
                                       passFilter[6] && passFilter[8] &&                  passFilter[10] && passFilter[11] && passFilter[12] && passFilter[13],
@@ -765,12 +766,14 @@ void zzAnalysis(
       }
       
       bool passSystCuts[nSystTypes] = {
-          passZZSel && idJetUp.size() <= 1   && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
-	  passZZSel && idJetDown.size() <= 1 && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
-          passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET,
-	  passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET
+          passZZSel && idJetUp.size() <= 1   && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL,
+	  passZZSel && idJetDown.size() <= 1 && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL,
+          passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL,
+	  passZZSel && passNjets             && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL
       };
       
+      bool passAllCuts[nSelTypes] = {passZZSel,passZHWWSel,passZZhinvSel};
+
       // Do the BDT nuisance evaluations
       double bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
       double MVAVar_muonScaleDown=-9999, MVAVar_muonScaleUp=-9999, MVAVar_electronScaleDown=-9999, MVAVar_electronScaleUp=-9999, MVAVar_METScaleDown=-9999, MVAVar_METScaleUp=-9999, MVAVar_jetScaleDown=-9999, MVAVar_jetScaleUp=-9999;
@@ -936,8 +939,7 @@ void zzAnalysis(
       }
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infileCategory_[ifile] == 0) mcWeight = 1.0;
-      //double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale;
-      double totalWeight = mcWeight*theLumi*puWeight*fakeSF*theMCPrescale;
+      double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale;
       if(totalWeight == 0) continue;
 
       double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
@@ -961,19 +963,26 @@ void zzAnalysis(
       // end event weighting
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passZZSel) sumEventsProcess[ifile] += totalWeight;
 
+      for(unsigned int i=0; i<nSelTypes; i++) {
+        if(passAllCuts[i]) {
+          bgdDecay[i+type4l*nSelTypes][theCategory] += totalWeight;
+          weiDecay[i+type4l*nSelTypes][theCategory] += totalWeight*totalWeight;
+        }
+      }
+
       for(int thePlot=0; thePlot<allPlots; thePlot++){
 	double theVar = 0.0;
 	bool makePlot = false;
-	if     (thePlot ==  0 && passAllCuts)             {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
-	else if(thePlot ==  1 && passNMinusOne[0])        {makePlot = true;theVar = type4l;}
-	else if(thePlot ==  2 && passNMinusOne[1])        {makePlot = true;theVar = TMath::Min(minMassll,99.999);}
-	else if(thePlot ==  3 && passAllCuts)             {makePlot = true;theVar = TMath::Min(minMassZ[0],199.999);}
-	else if(thePlot ==  4 && passAllCuts)             {makePlot = true;theVar = TMath::Min(minMassZ[1],199.999);}
-	else if(thePlot ==  5 && passAllCuts)             {makePlot = true;theVar = TMath::Min(deltaRllMin,3.999);}
-	else if(thePlot ==  6 && passAllCuts)             {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
-	else if(thePlot ==  7 && passAllCuts)             {makePlot = true;theVar = TMath::Min(bDiscrMax,0.999);}
-	else if(thePlot ==  8 && passAllCuts)             {makePlot = true;theVar = dPhiJetMET*180/TMath::Pi();}
-	else if(thePlot ==  9 && passAllCuts)             {makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
+	if     (thePlot ==  0 && passZZLoose)             {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
+	else if(thePlot ==  1 && passZZSel)               {makePlot = true;theVar = type4l;}
+	else if(thePlot ==  2 && passNMinusOne)           {makePlot = true;theVar = TMath::Min(minMassll,99.999);}
+	else if(thePlot ==  3 && passZZLoose)             {makePlot = true;theVar = TMath::Min(minMassZ[0],199.999);}
+	else if(thePlot ==  4 && passZZLoose)             {makePlot = true;theVar = TMath::Min(minMassZ[1],199.999);}
+	else if(thePlot ==  5 && passZZSel)               {makePlot = true;theVar = TMath::Min(deltaRllMin,3.999);}
+	else if(thePlot ==  6 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	else if(thePlot ==  7 && passZZSel)               {makePlot = true;theVar = TMath::Min(bDiscrMax,0.999);}
+	else if(thePlot ==  8 && passZZSel)               {makePlot = true;theVar = dPhiJetMET*180/TMath::Pi();}
+	else if(thePlot ==  9 && passZZSel)               {makePlot = true;theVar = dPhiLepMETMin*180/TMath::Pi();}
 	else if(thePlot == 10 && passZZSel)               {makePlot = true;theVar = TMath::Min((double)mass4l,399.999);}
 	else if(thePlot == 11 && passZZhinvSel) 	  {makePlot = true;theVar = TMath::Min(TMath::Max(theZZllnnMET.Pt()     ,0.001),399.999);}
 	else if(thePlot == 12 && passZZhinvSel) 	  {makePlot = true;theVar = TMath::Min(TMath::Max(theOtherZZllnnMET.Pt(),0.001),399.999);}
@@ -1038,8 +1047,6 @@ void zzAnalysis(
 	     histo_ZZ_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
-             else if(infileName_[ifile].Contains("powheg") == true)
-	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
 	     else
 	     for(int npdf=0; npdf<102; npdf++) histo_ZZ_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
              if     (type4l == 0) histo_ZZ_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
@@ -1084,8 +1091,6 @@ void zzAnalysis(
 	     histo_VVV_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
-             else if(infileName_[ifile].Contains("powheg") == true)
-	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
 	     else
 	     for(int npdf=0; npdf<102; npdf++) histo_VVV_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
              if     (type4l == 0) histo_VVV_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
@@ -1130,8 +1135,6 @@ void zzAnalysis(
 	     histo_Higgs_CMS_QCDScaleBounding[5]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r5f5));
 	     if(initPDFTag != -1)
 	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]));
-             else if(infileName_[ifile].Contains("powheg") == true)
-	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight*TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+0]));
 	     else
 	     for(int npdf=0; npdf<102; npdf++) histo_Higgs_CMS_PDFBounding[npdf]->Fill(MVAVar,totalWeight);
              if     (type4l == 0) histo_Higgs_CMS_MVALepEffEBoundingAvg ->Fill(MVAVar,totalWeight*1.00);
@@ -1169,10 +1172,9 @@ void zzAnalysis(
 	  printf("CATEGORY PROBLEM!\n"); return;
 	}
       }
-      
     }
     printf("eff_cuts: %f\n",sumEventsProcess[ifile]);
-
+    the_input_file->Close();
   } // end of chain
 
   if(printMCEventList) eventList.close();
@@ -1190,6 +1192,36 @@ void zzAnalysis(
   histo[allPlots-1][4]->Add(histo_ZZ);
   histo[allPlots-1][5]->Add(histo_VVV);
   histo[allPlots-1][6]->Add(histo_Higgs);  
+
+  double theZZSF = 1.0;
+  if(1) {
+    double theData = bgdDecay[ZZSEL+nSelTypes*0][0]+bgdDecay[ZZSEL+nSelTypes*1][0]+bgdDecay[ZZSEL+nSelTypes*2][0]+bgdDecay[ZZSEL+nSelTypes*3][0];
+    double theSig  = bgdDecay[ZZSEL+nSelTypes*0][4]+bgdDecay[ZZSEL+nSelTypes*1][4]+bgdDecay[ZZSEL+nSelTypes*2][4]+bgdDecay[ZZSEL+nSelTypes*3][4];
+    double theBck  = bgdDecay[ZZSEL+nSelTypes*0][1]+bgdDecay[ZZSEL+nSelTypes*1][1]+bgdDecay[ZZSEL+nSelTypes*2][1]+bgdDecay[ZZSEL+nSelTypes*3][1]+
+                     bgdDecay[ZZSEL+nSelTypes*0][5]+bgdDecay[ZZSEL+nSelTypes*1][5]+bgdDecay[ZZSEL+nSelTypes*2][5]+bgdDecay[ZZSEL+nSelTypes*3][5]+
+                     bgdDecay[ZZSEL+nSelTypes*0][6]+bgdDecay[ZZSEL+nSelTypes*1][6]+bgdDecay[ZZSEL+nSelTypes*2][6]+bgdDecay[ZZSEL+nSelTypes*3][6];
+    theZZSF = (theData-theBck)/theSig; 
+    printf("SF: %f (%f/%f/%f)\n",theZZSF,theData,theBck,theSig); // histo[allPlots-1][4]->Scale(theZZSF);
+    histo[ 0][4]->Scale(theZZSF);
+    histo[ 1][4]->Scale(theZZSF);
+    histo[ 2][4]->Scale(theZZSF);
+    histo[ 3][4]->Scale(theZZSF);
+    histo[ 4][4]->Scale(theZZSF);
+    histo[ 5][4]->Scale(theZZSF);
+    histo[ 6][4]->Scale(theZZSF);
+    histo[ 7][4]->Scale(theZZSF);
+    histo[ 8][4]->Scale(theZZSF);
+    histo[ 9][4]->Scale(theZZSF);
+    histo[10][4]->Scale(theZZSF);
+    histo[13][4]->Scale(theZZSF);
+    histo[27][4]->Scale(theZZSF);
+    histo[28][4]->Scale(theZZSF);
+    histo[29][4]->Scale(theZZSF);
+    histo[30][4]->Scale(theZZSF);
+    histo[31][4]->Scale(theZZSF);
+    histo[32][4]->Scale(theZZSF);
+    histo[33][4]->Scale(theZZSF);
+  }
 
   for(int i=1; i<=histo_ZZ->GetNbinsX(); i++) {
     double factorUp = +1.0; double factorDown = -1.0;
@@ -1511,42 +1543,32 @@ void zzAnalysis(
     }
   }
 
-  double sumEvents = 0;
-  for(int np=1; np<histBins; np++) sumEvents += histo[0][np]->GetSumOfWeights();
-  printf("yields: %f |",histo[0][0]->GetSumOfWeights());
-  for(int np=1; np<histBins; np++) printf(" %.3f",histo[0][np]->GetSumOfWeights());
-  printf(" = %.3f\n",sumEvents);
-  double sumEventsType[5] = {0,0,0,0,0};
-  double sumEventsTypeE[5] = {0,0,0,0,0};
-  printf("                  all                 4e                  4m                  2e2m\n");
-  printf("---------------------------------------------------------------------------------------\n");
-  for(int np=0; np<histBins; np++) {
-    double sumEvents = 0.; double sumEventsE = 0.;
-    for(int i=1; i<=3; i++) {sumEvents = sumEvents + histo[1][np]->GetBinContent(i); sumEventsE = sumEventsE + histo[1][np]->GetBinError(i)*histo[1][np]->GetBinError(i);}
-    if(np!=0){
-    sumEventsType[0] = sumEventsType[0] + sumEvents;                      sumEventsTypeE[0] = sumEventsTypeE[0] + sumEventsE * sumEventsE;
-    sumEventsType[1] = sumEventsType[1] + histo[1][np]->GetBinContent(1); sumEventsTypeE[1] = sumEventsTypeE[1] + histo[1][np]->GetBinError(1) * histo[1][np]->GetBinError(1);
-    sumEventsType[2] = sumEventsType[2] + histo[1][np]->GetBinContent(2); sumEventsTypeE[2] = sumEventsTypeE[2] + histo[1][np]->GetBinError(2) * histo[1][np]->GetBinError(2);
-    sumEventsType[3] = sumEventsType[3] + histo[1][np]->GetBinContent(3); sumEventsTypeE[3] = sumEventsTypeE[3] + histo[1][np]->GetBinError(3) * histo[1][np]->GetBinError(3);
-    sumEventsType[4] = sumEventsType[4] + histo[1][np]->GetBinContent(4); sumEventsTypeE[4] = sumEventsTypeE[4] + histo[1][np]->GetBinError(4) * histo[1][np]->GetBinError(4);
+  for(int ns=0; ns<nSelTypes; ns++) {
+    printf("Selection: %s\n",selTypeName[ns].Data());
+    double sumEventsType[4] = {0,0,0,0}; double sumEventsTypeE[4] = {0,0,0,0};
+    for(int np=0; np<histBins; np++) {       
+      double theSF = 1.0;
+      if((ns == ZZSEL) && np == 4) theSF = theZZSF;
+       printf("(%6s): %8.2f +/- %6.2f | %8.2f +/- %6.2f | %8.2f +/- %6.2f | %8.2f +/- %6.2f -> %8.2f +/- %6.2f\n",
+       processName[np].Data(),bgdDecay[ns+nSelTypes*0][np]*theSF,sqrt(weiDecay[ns+nSelTypes*0][np])*theSF,bgdDecay[ns+nSelTypes*1][np]*theSF,sqrt(weiDecay[ns+nSelTypes*1][np])*theSF,
+                              bgdDecay[ns+nSelTypes*2][np]*theSF,sqrt(weiDecay[ns+nSelTypes*2][np])*theSF,bgdDecay[ns+nSelTypes*3][np]*theSF,sqrt(weiDecay[ns+nSelTypes*3][np])*theSF,
+                              (bgdDecay[ns+nSelTypes*0][np]+bgdDecay[ns+nSelTypes*1][np]+bgdDecay[ns+nSelTypes*2][np]+bgdDecay[ns+nSelTypes*3][np])*theSF,
+                              sqrt(weiDecay[ns+nSelTypes*0][np]+weiDecay[ns+nSelTypes*1][np]+weiDecay[ns+nSelTypes*2][np]+weiDecay[ns+nSelTypes*3][np])*theSF);
+       if(np != 0){
+         sumEventsType[0] = sumEventsType[0] + bgdDecay[ns+nSelTypes*0][np]*theSF; sumEventsTypeE[0] = sumEventsTypeE[0] + weiDecay[ns+nSelTypes*0][np]*theSF;
+         sumEventsType[1] = sumEventsType[1] + bgdDecay[ns+nSelTypes*1][np]*theSF; sumEventsTypeE[1] = sumEventsTypeE[1] + weiDecay[ns+nSelTypes*1][np]*theSF;
+         sumEventsType[2] = sumEventsType[2] + bgdDecay[ns+nSelTypes*2][np]*theSF; sumEventsTypeE[2] = sumEventsTypeE[2] + weiDecay[ns+nSelTypes*2][np]*theSF;
+         sumEventsType[3] = sumEventsType[3] + bgdDecay[ns+nSelTypes*3][np]*theSF; sumEventsTypeE[3] = sumEventsTypeE[3] + weiDecay[ns+nSelTypes*3][np]*theSF;
+      }
     }
-    sumEventsE = sqrt(sumEventsE);
-    if(sumEvents>0)
-    printf("(%6s): %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f\n",
-    processName[np].Data(),sumEvents,sumEventsE,
-    histo[1][np]->GetBinContent(1),histo[1][np]->GetBinError(1),
-    histo[1][np]->GetBinContent(2),histo[1][np]->GetBinError(2),
-    histo[1][np]->GetBinContent(3),histo[1][np]->GetBinError(3));
-    if(np==0)
-    printf("---------------------------------------------------------------------------------------\n");
+    printf("(...bkg): %8.2f +/- %6.2f | %8.2f +/- %6.2f | %8.2f +/- %6.2f | %8.2f +/- %6.2f -> %8.2f +/- %6.2f\n",
+           sumEventsType[0],sqrt(sumEventsTypeE[0]),sumEventsType[1],sqrt(sumEventsTypeE[1]),
+	   sumEventsType[2],sqrt(sumEventsTypeE[2]),sumEventsType[3],sqrt(sumEventsTypeE[3]),
+           sumEventsType[0]+sumEventsType[1]+sumEventsType[2]+sumEventsType[3],
+           sqrt(sumEventsTypeE[0]+sumEventsTypeE[1]+sumEventsTypeE[2]+sumEventsTypeE[3]));
+    printf("-----------------------------------------------------------------------------------------------------------\n");
   }
-    printf("---------------------------------------------------------------------------------------\n");
-    printf("(%6s): %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f | %7.2f +/- %5.2f\n",
-    "   all",
-    sumEventsType[0],sqrt(sumEventsTypeE[0]),
-    sumEventsType[1],sqrt(sumEventsTypeE[1]),
-    sumEventsType[2],sqrt(sumEventsTypeE[2]),
-    sumEventsType[3],sqrt(sumEventsTypeE[3]));
+
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
     sprintf(output,"MitZHAnalysis/plots%s/histozz_nice_%d.root",subdirectory.c_str(), thePlot);	  

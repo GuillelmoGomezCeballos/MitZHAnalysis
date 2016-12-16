@@ -1170,7 +1170,6 @@ void zhAnalysis(
 
       double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
       
-      bool passMETMin    = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
       bool passMETTight  = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metTIGHT;
 
       if(MVAVarType == 0)                                            {metMIN = 50; mtMIN = 200;}
@@ -1216,10 +1215,10 @@ void zhAnalysis(
             		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // SIGSEL
         passZMassLarge && !passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWSEL
-        passZMassSB    && !passZMass && passNjets && passMETMin 				     && !passBtagVeto		  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWLOOSESEL
+        passZMassSB    && !passZMass && passNjets && passMET    				     && !passBtagVeto		  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWLOOSESEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // BTAGSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,							 // WZSEL
-	   		   passZMass && passNjets && passMETMin 		     && passDPhiZMET		      && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
+	   		   passZMass && passNjets && passMET    		     && passDPhiZMET		      && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
 	   		   passZMass && passNjets && passMT && passMET &&!passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR1SEL
 	   		   passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR2SEL
 	   		   passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // CR12SEL

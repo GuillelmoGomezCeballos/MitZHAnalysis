@@ -25,7 +25,7 @@ bool isMINIAOD = true;
 int whichSkim = 5;
 bool usePureMC = true; 
 double mcPrescale = 1.0;
-bool usingAllTriggers = false;
+const Int_t period = 1;
 enum selType                     {SIGSEL=0,  ZSEL,   NOBTAG,   ZHPRESEL0,   ZHPRESEL1,   ZHSEL0,   ZHSEL1,   ZHSEL2,  ZHRECSEL0,   ZHRECSEL1,   ZHRECSEL2,  GJETSEL, nSelTypes};
 TString selTypeName[nSelTypes]= {"SIGSEL",  "ZSEL", "NOBTAG", "ZHPRESEL0", "ZHPRESEL1", "ZHSEL0", "ZHSEL1", "ZHSEL2","ZHRECSEL0", "ZHRECSEL1", "ZHRECSEL2","GJETSEL"};
 
@@ -40,7 +40,7 @@ void zgAnalysis(
  Int_t nsel = 0,
  Int_t typeSel = 3,
  TString typeLepSel = "medium",
- Int_t period = 1
+ bool usingAllTriggers = false
  ){
 
   TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/";
@@ -56,7 +56,7 @@ void zgAnalysis(
   double denFRBGE[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   double numFRBGE[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-  if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) filesPathDA  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) filesPathDA  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/";
   if(nsel == 1 || nsel == 2 || nsel == 4 || nsel == 5) filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
   //*******************************************************
   //Input Files
@@ -91,11 +91,11 @@ void zgAnalysis(
   }  
 
   infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-40to130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));infilecatv.push_back(3);
-  infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));    infilecatv.push_back(3);
-  infilenamev.push_back(Form("%sZLLGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));      infilecatv.push_back(3);
-  infilenamev.push_back(Form("%sWGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));        infilecatv.push_back(3);
+  infilenamev.push_back(Form("%sZNuNuGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));	 infilecatv.push_back(3);
+  infilenamev.push_back(Form("%sZLLGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));	 infilecatv.push_back(3);
+  infilenamev.push_back(Form("%sWGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph.root",filesPathMC.Data()));	 infilecatv.push_back(3);
 
-  infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	 infilecatv.push_back(4);
+  infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));   infilecatv.push_back(4);
   infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	 infilecatv.push_back(4);
   }
   else {assert(0);}
@@ -142,11 +142,11 @@ void zgAnalysis(
   delete fMuIsoSF;
 
   double eventsTrg[5] = {0,0,0,0,0};
-  double dataPrescale[5] = {49.564493,9.465889,4.641124,1.807337,1.0};
+  double dataPrescale[5] = {71.353309,13.818569,6.872270,2.456410,1.0};
 
   //const int MVAVarType = 0; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 200, 250, 300, 400, 600, 800, 1000};
   //const int MVAVarType = 0; const int nBinMVA = 13; Float_t xbins[nBinMVA+1] = {50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000};
-  const int MVAVarType = 1; const int nBinMVA = 7; Float_t xbins[nBinMVA+1] = {50, 100, 125, 150, 175, 200, 250, 350};
+  const int MVAVarType = 1; const int nBinMVA = 12; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 17; Float_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 800, 1000};
   //const int MVAVarType = 3; const int nBinMVA = 24; Float_t xbins[nBinMVA+1] = {50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 350};
   //const int MVAVarType = 4; const int nBinMVA = 20; Float_t xbins[nBinMVA+1] =  {0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00};
@@ -531,12 +531,12 @@ void zgAnalysis(
 
       bool passPTFrac    = ptFrac[0] < 0.4;
       if(MVAVarType == 4) passPTFrac = ptFrac[0] < 1.0;
-      bool passDPhiZMET  = dPhiDiLepMET > 2.8;
+      bool passDPhiZMET  = dPhiDiLepMET > 2.6;
       bool passPTLL      = dilep.Pt() > 60;
 
       bool passPTFracRecoil = ptFrac[2] < 0.4;
       if(MVAVarType == 4) passPTFracRecoil = ptFrac[2] < 1.0;
-      bool passDPhiZMETRecoil = dPhiRecoilMET > 2.8;
+      bool passDPhiZMETRecoil = dPhiRecoilMET > 2.6;
 
       bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
       bool passTauVeto    = numberGoodTaus == 0;
@@ -599,11 +599,11 @@ void zgAnalysis(
 
       if(infilecatv[ifile] == 0 && passAllCuts[SIGSEL] && ptPho > 175 && usingAllTriggers == true){
         for (int nt = 0; nt <(int)numtokens; nt++) {
-	  if(strcmp(tokens[nt],"HLT_Photon50_R9Id90_HE10_IsoM_v*") == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[0] = eventsTrg[0] + totalWeight;
-	  if(strcmp(tokens[nt],"HLT_Photon75_R9Id90_HE10_IsoM_v*") == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[1] = eventsTrg[1] + totalWeight;
-	  if(strcmp(tokens[nt],"HLT_Photon90_R9Id90_HE10_IsoM_v*") == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[2] = eventsTrg[2] + totalWeight;
-	  if(strcmp(tokens[nt],"HLT_Photon120_R9Id90_HE10_IsoM_v*") == 0 && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[3] = eventsTrg[3] + totalWeight;
-	  if(strcmp(tokens[nt],"HLT_Photon165_R9Id90_HE10_IsoM_v*") == 0 && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[4] = eventsTrg[4] + totalWeight;
+	  if(strcmp(tokens[nt],Form("HLT_Photon50_R9Id90_HE10_IsoM_v%s",triggerSuffix.Data())) == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[0] = eventsTrg[0] + totalWeight;
+	  if(strcmp(tokens[nt],Form("HLT_Photon75_R9Id90_HE10_IsoM_v%s",triggerSuffix.Data())) == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[1] = eventsTrg[1] + totalWeight;
+	  if(strcmp(tokens[nt],Form("HLT_Photon90_R9Id90_HE10_IsoM_v%s",triggerSuffix.Data())) == 0  && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[2] = eventsTrg[2] + totalWeight;
+	  if(strcmp(tokens[nt],Form("HLT_Photon120_R9Id90_HE10_IsoM_v%s",triggerSuffix.Data())) == 0 && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[3] = eventsTrg[3] + totalWeight;
+	  if(strcmp(tokens[nt],Form("HLT_Photon165_R9Id90_HE10_IsoM_v%s",triggerSuffix.Data())) == 0 && (*eventTrigger.triggerFired)[nt] == 1) eventsTrg[4] = eventsTrg[4] + totalWeight;
         }
       }
 
@@ -664,14 +664,12 @@ void zgAnalysis(
 
       if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
 	double MVAVar = 0.0;
-	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,999.999),50.001);
-	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
-	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,999.999);
-	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),349.999);
-	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],0.999);
+	if     (MVAVarType == 0) MVAVar = TMath::Max(TMath::Min(mtW,xbins[nBinMVA]-0.001),50.001);
+	else if(MVAVarType == 1) MVAVar = TMath::Min((double)theMET.Pt(),xbins[nBinMVA]-0.001);
+	else if(MVAVarType == 2) MVAVar = TMath::Min(mtW,xbins[nBinMVA]-0.001);
+	else if(MVAVarType == 3) MVAVar = TMath::Min((double)theMET.Pt(),xbins[nBinMVA]-0.001);
+	else if(MVAVarType == 4) MVAVar = TMath::Min(ptFrac[0],xbins[nBinMVA]-0.001);
 	else {assert(0); return;}
-
-        //if((MVAVarType == 0 || MVAVarType == 1) && (theMET.Pt() < 100 || mtW < 200)) MVAVar = 55.0;
 
 	double theTemplateWeight = totalWeight;
 	if     (theCategory == 0) theTemplateWeight = theTemplateWeight;

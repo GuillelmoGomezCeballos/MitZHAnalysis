@@ -148,6 +148,7 @@ void zhAnalysis(
     infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
     infilenamev.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()));       infilecatv.push_back(7); signalIndex_.push_back(0);
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
+
   { int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
     signalName_.push_back(Form("mh%d", mH));
     infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); 
@@ -156,7 +157,6 @@ void zhAnalysis(
     infilecatv.push_back(6); signalIndex_.push_back(iH+1);
     iH++;
   }}
-
   { // dark matter models () ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep DarkMatter_MonoZToLL|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
     signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
@@ -224,49 +224,6 @@ void zhAnalysis(
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
   }
-/*
-  { // ls -l /scratch5/ceballos/ntuples_weightsMC_80x/|grep monoz_med|awk '{printf("    signalName\_.push_back(\"%s\"); infileName\_.push_back(Form(\"%s\", filesPathDMMC.Data())); infileCategory\_.push\_back(6); signalIndex\_.push\_back(i); i++;\n",$9,$9)}'
-    int i=signalName_.size();
-    signalName_.push_back("pseudoscalarmonoz_med-10_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-10_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-110_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-110_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-160_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-160_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-210_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-210_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-260_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-260_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-310_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-310_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-360_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-360_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-410_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-410_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-500_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-500_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-600_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-600_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-60_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-60_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("pseudoscalarmonoz_med-700_dm-50"); infilenamev.push_back(Form("%spseudoscalarmonoz_med-700_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1000_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-100_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-10_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-10_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-110_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-110_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1300_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1500_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-160_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-160_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-1800_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-2000_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-210_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-210_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-25_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-25_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-260_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-260_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-300_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-410_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-410_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-600_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-600_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-600_dm-50_gq-0.25"); infilenamev.push_back(Form("%sscalarmonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-60_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-60_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("scalarmonoz_med-700_dm-50"); infilenamev.push_back(Form("%sscalarmonoz_med-700_dm-50.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-1000_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-1000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-100_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-100_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-1300_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-1300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-1500_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-1500_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-1800_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-1800_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-2000_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-2000_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-300_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-300_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("vectormonoz_med-600_dm-50_gq-0.25"); infilenamev.push_back(Form("%svectormonoz_med-600_dm-50_gq-0.25.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-  }
-*/
 
   if(infilenamev.size() != infilecatv.size()) {assert(0); return;}
   
@@ -376,13 +333,13 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Double_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  // const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
+  const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 1; const int nBinMVA = 11; Double_t xbins[nBinMVA+1] = {0, 50, 100, 160, 240, 320, 400, 480, 560, 640, 800, 1200}; TString addChan = "1";
   //const int MVAVarType = 1; const int nBinMVA = 21; Double_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1200}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  const int MVAVarType = 3; const int nBinMVA = 15; Double_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 15; Double_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -440,7 +397,7 @@ void zhAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 39;
+  const int allPlots = 40;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
@@ -482,6 +439,7 @@ void zhAnalysis(
     else if(thePlot == 34) {nBinPlot =  60; xminPlot = 0.0; xmaxPlot =   3.0;}
     else if(thePlot == 35) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot == 36) {nBinPlot = 100; xminPlot =-1.0; xmaxPlot =   1.0;}
+    else if(thePlot == 37) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -730,26 +688,26 @@ void zhAnalysis(
   TH1D* histo_Zjets_CMS_ZjetsSystDown           = new TH1D( Form("histo_Zjets_ZjetsSystDown"), Form("histo_Zjets_ZjetsSystDown"), nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystDown->Sumw2();
 
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]     = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]   = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sAvg" ,          signalName_[nModel].Data(), effMName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]            = new TH1D( Form("histo_ZH_hinv_%s_%sUp",              signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sUp"  ,          signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sDown",            signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sDown",          signalName_[nModel].Data(), effEName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sAvg" ,          signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAMETBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAJESBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTJetScaleBoundingUp [nModel]                = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTJetScaleBoundingDown [nModel]              = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_PUBoundingUp [nModel]                    = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_PUBoundingDown [nModel]                  = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puDown"       , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",  	   signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sAvg" ,	   signalName_[nModel].Data(), effMName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]         = new TH1D( Form("histo_ZH_hinv_%s_%sUp",		   signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sUp"  ,	   signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_%sDown", 	   signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sDown",	   signalName_[nModel].Data(), effEName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",  	   signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sAvg" ,	   signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAMETBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAJESBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()),  	 Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown [nModel]     = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()),  	 Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp [nModel]   = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()),  	 Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown [nModel] = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()),  	 Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()),		Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()),		Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()),		Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()),		Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_PUBoundingUp [nModel]                 = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_puUp"	   , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_PUBoundingDown [nModel]               = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_puDown"	   , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
 
   }
 
@@ -1309,6 +1267,7 @@ void zhAnalysis(
 
       vector<int> idJet,idJetUp,idJetDown,idBJet;
       bool isBtag = kFALSE;
+      double sumPtJets = 0.0;
       double bDiscrMax = 0.0;
       double dPhiJetMET = -1.0;
       double mTJetMET = -1;
@@ -1330,7 +1289,8 @@ void zhAnalysis(
           mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
         }
 
-	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) { 
+	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) {
+           sumPtJets = sumPtJets + ((TLorentzVector*)(*eventJets.p4)[nj])->Pt();
 	   if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
            if ((float)(*eventJets.bDiscr)[nj] > 0.8) idBJet.push_back(nj);
         }
@@ -1392,8 +1352,8 @@ void zhAnalysis(
       // Helicity angle calculation
       double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
       
-      bool passZMass     = dilep.M() > 76.1876 && dilep.M() < 106.1876;
-      bool passNjets     = idJet.size() <= nJetsType;
+      bool passZMass = dilep.M() > 76.1876 && dilep.M() < 106.1876;
+      bool passNjets = idJet.size() <= nJetsType;
 
       double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
       
@@ -1759,6 +1719,7 @@ void zhAnalysis(
 	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
 	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
             else if(thePlot == 36 && passAllCuts[TIGHTSEL] && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(1., TMath::Max(-1.,bdt_value));}
+	    else if(thePlot == 37 && passNMinusOne[2])       {makePlot = true;theVar = TMath::Min(sumPtJets/(sumPtJets+((TLorentzVector*)(*eventMet.p4)[0])->Pt()+dilep.Pt()),0.999);}
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
         }
@@ -2170,7 +2131,7 @@ void zhAnalysis(
   }
 
   // computing DY scale factor using the first bin
-  if(MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4){
+  if((MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4) && histo_Zjets->GetSumOfWeights() > 0.0){
     printf("-----------------------------------------------------------------------------------------------------------\n");
     printf("Computing the Drell-Yan data/MC scale factor using the first shape bin\n\n");
     int theBin = 2;
@@ -2512,83 +2473,82 @@ void zhAnalysis(
     histo_EM               ->Write();
     histo_ggZH_hinv        ->Write();
     
-    histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]	        ->Write();
-    histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]             ->Write();
-    histo_VVV_CMS_MVAVVVStatBoundingUp	                        ->Write();
-    histo_VVV_CMS_MVAVVVStatBoundingDown                        ->Write();
-    histo_WZ_CMS_MVAWZStatBoundingUp	                        ->Write();
-    histo_WZ_CMS_MVAWZStatBoundingDown	                        ->Write();
-    histo_ZZ_CMS_MVAZZStatBoundingUp	                        ->Write();
-    histo_ZZ_CMS_MVAZZStatBoundingDown	                        ->Write();
-    histo_EM_CMS_MVAEMStatBoundingUp	                        ->Write();
-    histo_EM_CMS_MVAEMStatBoundingDown	                        ->Write();
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp                   ->Write();
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown                 ->Write();
+    histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]   ->Write();
+    histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel] ->Write();
+    histo_VVV_CMS_MVAVVVStatBoundingUp	            ->Write();
+    histo_VVV_CMS_MVAVVVStatBoundingDown            ->Write();
+    histo_WZ_CMS_MVAWZStatBoundingUp	            ->Write();
+    histo_WZ_CMS_MVAWZStatBoundingDown	            ->Write();
+    histo_ZZ_CMS_MVAZZStatBoundingUp	            ->Write();
+    histo_ZZ_CMS_MVAZZStatBoundingDown	            ->Write();
+    histo_EM_CMS_MVAEMStatBoundingUp	            ->Write();
+    histo_EM_CMS_MVAEMStatBoundingDown	            ->Write();
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp       ->Write();
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown     ->Write();
     
-    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]              ->Write();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]            ->Write();
-    histo_VVV_CMS_MVALepEffMBoundingUp	                        ->Write();
-    histo_VVV_CMS_MVALepEffMBoundingDown	                ->Write();
-    histo_WZ_CMS_MVALepEffMBoundingUp	                        ->Write();
-    histo_WZ_CMS_MVALepEffMBoundingDown	                        ->Write();
-    histo_ZZ_CMS_MVALepEffMBoundingUp	                        ->Write();
-    histo_ZZ_CMS_MVALepEffMBoundingDown	                        ->Write();
-    histo_ggZH_hinv_CMS_MVALepEffMBoundingUp                    ->Write();
-    histo_ggZH_hinv_CMS_MVALepEffMBoundingDown                  ->Write();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Write();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Write();
+    histo_VVV_CMS_MVALepEffMBoundingUp	            ->Write();
+    histo_VVV_CMS_MVALepEffMBoundingDown	    ->Write();
+    histo_WZ_CMS_MVALepEffMBoundingUp	            ->Write();
+    histo_WZ_CMS_MVALepEffMBoundingDown	            ->Write();
+    histo_ZZ_CMS_MVALepEffMBoundingUp	            ->Write();
+    histo_ZZ_CMS_MVALepEffMBoundingDown	            ->Write();
+    histo_ggZH_hinv_CMS_MVALepEffMBoundingUp        ->Write();
+    histo_ggZH_hinv_CMS_MVALepEffMBoundingDown      ->Write();
     
-    histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]              ->Write();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]            ->Write();
-    histo_VVV_CMS_MVALepEffEBoundingUp	                        ->Write();
-    histo_VVV_CMS_MVALepEffEBoundingDown	                ->Write();
-    histo_WZ_CMS_MVALepEffEBoundingUp	                        ->Write();
-    histo_WZ_CMS_MVALepEffEBoundingDown	                        ->Write();
-    histo_ZZ_CMS_MVALepEffEBoundingUp	                        ->Write();
-    histo_ZZ_CMS_MVALepEffEBoundingDown	                        ->Write();
-    histo_ggZH_hinv_CMS_MVALepEffEBoundingUp                    ->Write();
-    histo_ggZH_hinv_CMS_MVALepEffEBoundingDown                  ->Write();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Write();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Write();
+    histo_VVV_CMS_MVALepEffEBoundingUp	            ->Write();
+    histo_VVV_CMS_MVALepEffEBoundingDown	    ->Write();
+    histo_WZ_CMS_MVALepEffEBoundingUp	            ->Write();
+    histo_WZ_CMS_MVALepEffEBoundingDown	            ->Write();
+    histo_ZZ_CMS_MVALepEffEBoundingUp	            ->Write();
+    histo_ZZ_CMS_MVALepEffEBoundingDown	            ->Write();
+    histo_ggZH_hinv_CMS_MVALepEffEBoundingUp        ->Write();
+    histo_ggZH_hinv_CMS_MVALepEffEBoundingDown      ->Write();
     
-    histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]                  ->Write();
-    histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]                ->Write();
-    histo_VVV_CMS_MVAMETBoundingUp	                        ->Write();
-    histo_VVV_CMS_MVAMETBoundingDown	                        ->Write();
-    histo_WZ_CMS_MVAMETBoundingUp	                        ->Write();
-    histo_WZ_CMS_MVAMETBoundingDown	                        ->Write();
-    histo_ZZ_CMS_MVAMETBoundingUp	                        ->Write();
-    histo_ZZ_CMS_MVAMETBoundingDown	                        ->Write();
-    histo_ggZH_hinv_CMS_MVAMETBoundingUp                        ->Write();
-    histo_ggZH_hinv_CMS_MVAMETBoundingDown                      ->Write();
+    histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]      ->Write();
+    histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]    ->Write();
+    histo_VVV_CMS_MVAMETBoundingUp	            ->Write();
+    histo_VVV_CMS_MVAMETBoundingDown	            ->Write();
+    histo_WZ_CMS_MVAMETBoundingUp	            ->Write();
+    histo_WZ_CMS_MVAMETBoundingDown	            ->Write();
+    histo_ZZ_CMS_MVAMETBoundingUp	            ->Write();
+    histo_ZZ_CMS_MVAMETBoundingDown	            ->Write();
+    histo_ggZH_hinv_CMS_MVAMETBoundingUp            ->Write();
+    histo_ggZH_hinv_CMS_MVAMETBoundingDown          ->Write();
     
-    histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]	                ->Write();
-    histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]                ->Write(); 
-    histo_VVV_CMS_MVAJESBoundingUp	                        ->Write();
-    histo_VVV_CMS_MVAJESBoundingDown	                        ->Write();
-    histo_WZ_CMS_MVAJESBoundingUp 	                        ->Write();
-    histo_WZ_CMS_MVAJESBoundingDown	                        ->Write();
-    histo_ZZ_CMS_MVAJESBoundingUp 	                        ->Write();
-    histo_ZZ_CMS_MVAJESBoundingDown	                        ->Write();
-    histo_ggZH_hinv_CMS_MVAJESBoundingUp	                ->Write();
-    histo_ggZH_hinv_CMS_MVAJESBoundingDown                      ->Write();
+    histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]	    ->Write();
+    histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]    ->Write(); 
+    histo_VVV_CMS_MVAJESBoundingUp	            ->Write();
+    histo_VVV_CMS_MVAJESBoundingDown	            ->Write();
+    histo_WZ_CMS_MVAJESBoundingUp 	            ->Write();
+    histo_WZ_CMS_MVAJESBoundingDown	            ->Write();
+    histo_ZZ_CMS_MVAJESBoundingUp 	            ->Write();
+    histo_ZZ_CMS_MVAJESBoundingDown	            ->Write();
+    histo_ggZH_hinv_CMS_MVAJESBoundingUp	    ->Write();
+    histo_ggZH_hinv_CMS_MVAJESBoundingDown          ->Write();
     
-    histo_ZH_hinv_CMS_PUBoundingUp[nModel]                      ->Write();
-    histo_ZH_hinv_CMS_PUBoundingDown[nModel]                    ->Write();
-    histo_VVV_CMS_PUBoundingUp	                                ->Write();
-    histo_VVV_CMS_PUBoundingDown	                        ->Write();
-    histo_WZ_CMS_PUBoundingUp	                                ->Write();
-    histo_WZ_CMS_PUBoundingDown	                                ->Write();
-    histo_ZZ_CMS_PUBoundingUp	                                ->Write();
-    histo_ZZ_CMS_PUBoundingDown	                                ->Write();
-    histo_ggZH_hinv_CMS_PUBoundingUp                            ->Write();
-    histo_ggZH_hinv_CMS_PUBoundingDown                          ->Write();
+    histo_ZH_hinv_CMS_PUBoundingUp[nModel]          ->Write();
+    histo_ZH_hinv_CMS_PUBoundingDown[nModel]        ->Write();
+    histo_VVV_CMS_PUBoundingUp	                    ->Write();
+    histo_VVV_CMS_PUBoundingDown	            ->Write();
+    histo_WZ_CMS_PUBoundingUp	                    ->Write();
+    histo_WZ_CMS_PUBoundingDown	                    ->Write();
+    histo_ZZ_CMS_PUBoundingUp	                    ->Write();
+    histo_ZZ_CMS_PUBoundingDown	                    ->Write();
+    histo_ggZH_hinv_CMS_PUBoundingUp                ->Write();
+    histo_ggZH_hinv_CMS_PUBoundingDown              ->Write();
     
-    histo_WZ_CMS_EWKCorrUp	                                ->Write();
-    histo_WZ_CMS_EWKCorrDown	                                ->Write();
-    histo_ZZ_CMS_EWKCorrUp	                                ->Write();
-    histo_ZZ_CMS_EWKCorrDown	                                ->Write();
-    histo_ZZ_CMS_ggCorrUp	                                ->Write();
-    histo_ZZ_CMS_ggCorrDown	                                ->Write();
-    
-    histo_Zjets_CMS_ZjetsSystUp	                                ->Write();
-    histo_Zjets_CMS_ZjetsSystDown	                        ->Write();
+    histo_WZ_CMS_EWKCorrUp	                    ->Write();
+    histo_WZ_CMS_EWKCorrDown	                    ->Write();
+    histo_ZZ_CMS_EWKCorrUp	                    ->Write();
+    histo_ZZ_CMS_EWKCorrDown	                    ->Write();
+    histo_ZZ_CMS_ggCorrUp	                    ->Write();
+    histo_ZZ_CMS_ggCorrDown	                    ->Write();
+    histo_Zjets_CMS_ZjetsSystUp	                    ->Write();
+    histo_Zjets_CMS_ZjetsSystDown	            ->Write();
     if(useBDT) {
       bdt_syst_electronScaleUp_VVV       ->Write();
       bdt_syst_electronScaleUp_WZ        ->Write();

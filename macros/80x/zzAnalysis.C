@@ -45,7 +45,7 @@ void zzAnalysis(
   Int_t period = 1;
   TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
   TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
-  Double_t lumi = 36.5;
+  Double_t lumi = 36.8;
   bool verbose = true;
 
   //*******************************************************
@@ -81,9 +81,9 @@ void zzAnalysis(
   infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));    infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));infileCategory_.push_back(1);
   infileName_.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));                   infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
   infileName_.push_back(Form("%sGluGluHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8.root",filesPathMC.Data()));               infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8.root",filesPathMC.Data()));                  infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgenv628_pythia8.root",filesPathMC.Data()));              infileCategory_.push_back(1);
   infileName_.push_back(Form("%sGluGluHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));		              infileCategory_.push_back(1);
   infileName_.push_back(Form("%sVBFHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));                            infileCategory_.push_back(1);
   infileName_.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
@@ -98,7 +98,7 @@ void zzAnalysis(
   infileName_.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));	      infileCategory_.push_back(1);
   infileName_.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));			      infileCategory_.push_back(1);
   infileName_.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));           infileCategory_.push_back(1);
-  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1.root",filesPathMC.Data())); 		      infileCategory_.push_back(1);
+  infileName_.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8.root",filesPathMC.Data())); 		                      infileCategory_.push_back(1);
   }
 
   infileName_.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8.root",filesPathMC.Data()));					      infileCategory_.push_back(4);
@@ -115,7 +115,7 @@ void zzAnalysis(
   infileName_.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));	      infileCategory_.push_back(5);
 
   infileName_.push_back(Form("%sVHToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data())); 		      infileCategory_.push_back(6);
-  infileName_.push_back(Form("%sttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_mWCutfix.root",filesPathMC.Data()));    infileCategory_.push_back(6);
+  infileName_.push_back(Form("%sttHToNonbb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8.root",filesPathMC.Data()));     infileCategory_.push_back(6);
   infileName_.push_back(Form("%sGluGluHToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8.root",filesPathMC.Data()));               infileCategory_.push_back(6);
   infileName_.push_back(Form("%sVBF_HToZZTo4L_M125_13TeV_powheg2_JHUgenV6_pythia8.root",filesPathMC.Data()));                 infileCategory_.push_back(6);
 

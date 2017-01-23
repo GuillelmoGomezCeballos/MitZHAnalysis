@@ -7,7 +7,7 @@
 #include <TH2D.h>
 #include <TH2F.h>
 #include <TMath.h>
-#include <TRandom.h>
+#include <TRandom3.h>
 #include <iostream>
 #include <fstream>
 #include "TMVA/Reader.h"
@@ -42,6 +42,7 @@ TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAG
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
+unsigned int randomToySeed=3393; // dylan's birthday :)
 
 void zhAnalysis(
  unsigned int nJetsType = 1,
@@ -999,7 +1000,7 @@ void zhAnalysis(
   
   const unsigned int num_bdt_toys=1000;
   float bdt_toy_scale[num_bdt_toys];
-  TRandom toy_machine(3393); // Random seed is Dylan's birthday :-)
+  TRandom3 toy_machine(randomToySeed); // Random seed is Dylan's birthday :-)
   // Pointers for TH2 objects to store the toy BDT shapes
   TH2F* histo_bdt_toys_electronScale_VVV, *histo_bdt_toys_electronScale_WZ, *histo_bdt_toys_electronScale_ZZ, *histo_bdt_toys_electronScale_ggZH_hinv, *histo_bdt_toys_electronScale_ZH_hinv[nSigModels];
   TH2F* histo_bdt_toys_muonScale_VVV, *histo_bdt_toys_muonScale_WZ, *histo_bdt_toys_muonScale_ZZ, *histo_bdt_toys_muonScale_ggZH_hinv, *histo_bdt_toys_muonScale_ZH_hinv[nSigModels];

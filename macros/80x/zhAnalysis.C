@@ -7,7 +7,7 @@
 #include <TH2D.h>
 #include <TH2F.h>
 #include <TMath.h>
-#include <TRandom.h>
+#include <TRandom3.h>
 #include <iostream>
 #include <fstream>
 #include "TMVA/Reader.h"
@@ -35,12 +35,14 @@ bool useEMFromData = true;
 bool useVVFromData = true;
 bool useZZWZEWKUnc = true;
 const bool useDYPT = true;
+bool useCachedBDTSystematics=false;
 double mcPrescale = 1.;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
+unsigned int randomToySeed=3393; // dylan's birthday :)
 
 void zhAnalysis(
  unsigned int nJetsType = 1,
@@ -390,6 +392,23 @@ void zhAnalysis(
   //infilenamev.push_back(Form("/home/ceballos/cms/hist/tt_all/t2mit/filefi/044/ZZTo2L2Nu_13TeV_powheg_pythia8_JSON.root")); infilecatv.push_back(5);
 
   int nSigModels=signalName_.size();
+  
+  char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
+  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
+  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
+  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
+  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
+  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
+  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
+  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
+  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
+  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
+  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
+  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
+  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
+  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
+  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
+  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
 
   Float_t fMVACut[4][4];
   InitializeJetIdCuts(fMVACut);
@@ -482,36 +501,6 @@ void zhAnalysis(
   //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
   
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
-  const unsigned int num_bdt_toys=1000;
-  float bdt_toy_scale[num_bdt_toys];
-  TRandom toy_machine(3393);
-  TH2F* histo_bdt_toys_electronScale_VVV, *histo_bdt_toys_electronScale_WZ, *histo_bdt_toys_electronScale_ZZ, *histo_bdt_toys_electronScale_ggZH_hinv, *histo_bdt_toys_electronScale_ZH_hinv[nSigModels];
-  TH2F* histo_bdt_toys_muonScale_VVV, *histo_bdt_toys_muonScale_WZ, *histo_bdt_toys_muonScale_ZZ, *histo_bdt_toys_muonScale_ggZH_hinv, *histo_bdt_toys_muonScale_ZH_hinv[nSigModels];
-  TH2F* histo_bdt_toys_METScale_VVV, *histo_bdt_toys_METScale_WZ, *histo_bdt_toys_METScale_ZZ, *histo_bdt_toys_METScale_ggZH_hinv, *histo_bdt_toys_METScale_ZH_hinv[nSigModels];
-  if (useBDT) { 
-    histo_bdt_toys_electronScale_VVV       = new TH2F("histo_bdt_toys_electronScale_VVV"      , "histo_bdt_toys_electronScale_VVV"       , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_VVV->Sumw2();
-    histo_bdt_toys_electronScale_WZ        = new TH2F("histo_bdt_toys_electronScale_WZ"       , "histo_bdt_toys_electronScale_WZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_WZ->Sumw2();
-    histo_bdt_toys_electronScale_ZZ        = new TH2F("histo_bdt_toys_electronScale_ZZ"       , "histo_bdt_toys_electronScale_ZZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZZ->Sumw2();
-    histo_bdt_toys_electronScale_ggZH_hinv = new TH2F("histo_bdt_toys_electronScale_ggZH_hinv", "histo_bdt_toys_electronScale_ggZH_hinv" , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ggZH_hinv->Sumw2();
-    histo_bdt_toys_muonScale_VVV           = new TH2F("histo_bdt_toys_muonScale_VVV"          , "histo_bdt_toys_muonScale_VVV"           , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_VVV->Sumw2();
-    histo_bdt_toys_muonScale_WZ            = new TH2F("histo_bdt_toys_muonScale_WZ"           , "histo_bdt_toys_muonScale_WZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_WZ->Sumw2();
-    histo_bdt_toys_muonScale_ZZ            = new TH2F("histo_bdt_toys_muonScale_ZZ"           , "histo_bdt_toys_muonScale_ZZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZZ->Sumw2();
-    histo_bdt_toys_muonScale_ggZH_hinv     = new TH2F("histo_bdt_toys_muonScale_ggZH_hinv"    , "histo_bdt_toys_muonScale_ggZH_hinv"     , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ggZH_hinv->Sumw2();
-    histo_bdt_toys_METScale_VVV            = new TH2F("histo_bdt_toys_METScale_VVV"           , "histo_bdt_toys_METScale_VVV"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_VVV->Sumw2();
-    histo_bdt_toys_METScale_WZ             = new TH2F("histo_bdt_toys_METScale_WZ"            , "histo_bdt_toys_METScale_WZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_WZ->Sumw2();
-    histo_bdt_toys_METScale_ZZ             = new TH2F("histo_bdt_toys_METScale_ZZ"            , "histo_bdt_toys_METScale_ZZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZZ->Sumw2();
-    histo_bdt_toys_METScale_ggZH_hinv      = new TH2F("histo_bdt_toys_METScale_ggZH_hinv"     , "histo_bdt_toys_METScale_ggZH_hinv"      , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ggZH_hinv->Sumw2();
-    for(int nModel=0; nModel<nSigModels; nModel++) { 
-      histo_bdt_toys_electronScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZH_hinv[nModel]->Sumw2();
-      histo_bdt_toys_muonScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZH_hinv[nModel]->Sumw2();
-      histo_bdt_toys_METScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZH_hinv[nModel]->Sumw2();
-    }
-    // Store a value from Gaussian distribution with mean=0, sigma=1
-    // These values will get multiplied by the individual nuisance sizes
-    for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
-      bdt_toy_scale[i_toy]=toy_machine.Gaus(0,1);
-    }
-  }
 
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
@@ -635,22 +624,6 @@ void zhAnalysis(
     histo_ZH_hinvNoW[nModel]  = (TH1D*) histoMVA->Clone(Form("histo_ZH_hinvNoW_%s",signalName_[nModel].Data())); 
   }
 
-  char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
-  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
-  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
-  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
-  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
-  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
-  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
-  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
-  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
-  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
-  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
-  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
-  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
-  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
-  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
-  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
 
   TH1D* histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nSigModels];  
   TH1D* histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nSigModels];
@@ -892,10 +865,6 @@ void zhAnalysis(
     histo_ZH_hinv_CMS_PUBoundingDown [nModel]               = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_puDown"	   , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
 
   }
-  // ABCD variables
-  double sumWeights=0, sumWeightsSquared=0, sumProductOfDiscriminants=0, sumVar1=0, sumVar2=0;
-  vector<double> var1_, var2_, weight_;
-  double N_A = 0; double N_B = 0; double N_C = 0; double N_D = 0;
 
   double bgdDecay[nSigModels][nSelTypes*4][histBins],weiDecay[nSigModels][nSelTypes*4][histBins];
   for(int nModel=0; nModel<nSigModels; nModel++) { for(unsigned int i=0; i<nSelTypes*4; i++) { for(int j=0; j<histBins; j++) {       
@@ -1027,6 +996,233 @@ void zhAnalysis(
       reader->AddVariable( "ptl1mptl2_over_ptll"               , &mva_ptl1mptl2_over_ptll);
     }
     reader->BookMVA("BDT", the_BDT_weights);
+  }
+  
+  const unsigned int num_bdt_toys=1000;
+  float bdt_toy_scale[num_bdt_toys];
+  TRandom3 toy_machine(randomToySeed); // Random seed is Dylan's birthday :-)
+  // Pointers for TH2 objects to store the toy BDT shapes
+  TH2F* histo_bdt_toys_electronScale_VVV, *histo_bdt_toys_electronScale_WZ, *histo_bdt_toys_electronScale_ZZ, *histo_bdt_toys_electronScale_ggZH_hinv, *histo_bdt_toys_electronScale_ZH_hinv[nSigModels];
+  TH2F* histo_bdt_toys_muonScale_VVV, *histo_bdt_toys_muonScale_WZ, *histo_bdt_toys_muonScale_ZZ, *histo_bdt_toys_muonScale_ggZH_hinv, *histo_bdt_toys_muonScale_ZH_hinv[nSigModels];
+  TH2F* histo_bdt_toys_METScale_VVV, *histo_bdt_toys_METScale_WZ, *histo_bdt_toys_METScale_ZZ, *histo_bdt_toys_METScale_ggZH_hinv, *histo_bdt_toys_METScale_ZH_hinv[nSigModels];
+  // Pointers for TH1 arrays to store the bin yields
+  TH1F *bdt_toy_binyields_electronScale_VVV[nBinMVA], *bdt_toy_binyields_electronScale_WZ[nBinMVA], *bdt_toy_binyields_electronScale_ZZ[nBinMVA], *bdt_toy_binyields_electronScale_ZH_hinv[nSigModels][nBinMVA], *bdt_toy_binyields_electronScale_ggZH_hinv[nBinMVA];
+  TH1F *bdt_toy_binyields_muonScale_VVV[nBinMVA], *bdt_toy_binyields_muonScale_WZ[nBinMVA], *bdt_toy_binyields_muonScale_ZZ[nBinMVA], *bdt_toy_binyields_muonScale_ZH_hinv[nSigModels][nBinMVA], *bdt_toy_binyields_muonScale_ggZH_hinv[nBinMVA];
+  TH1F *bdt_toy_binyields_METScale_VVV[nBinMVA], *bdt_toy_binyields_METScale_WZ[nBinMVA], *bdt_toy_binyields_METScale_ZZ[nBinMVA], *bdt_toy_binyields_METScale_ZH_hinv[nSigModels][nBinMVA], *bdt_toy_binyields_METScale_ggZH_hinv[nBinMVA];
+  // Pointers for TH1's to store the relative up/down systematics (this is what will be cached)
+  TH1F *bdt_syst_electronScaleUp_VVV, *bdt_syst_electronScaleUp_WZ, *bdt_syst_electronScaleUp_ZZ, *bdt_syst_electronScaleUp_ZH_hinv[nSigModels], *bdt_syst_electronScaleUp_ggZH_hinv;
+  TH1F *bdt_syst_muonScaleUp_VVV, *bdt_syst_muonScaleUp_WZ, *bdt_syst_muonScaleUp_ZZ, *bdt_syst_muonScaleUp_ZH_hinv[nSigModels], *bdt_syst_muonScaleUp_ggZH_hinv;
+  TH1F *bdt_syst_METScaleUp_VVV, *bdt_syst_METScaleUp_WZ, *bdt_syst_METScaleUp_ZZ, *bdt_syst_METScaleUp_ZH_hinv[nSigModels], *bdt_syst_METScaleUp_ggZH_hinv;
+  TH1F *bdt_syst_electronScaleDown_VVV, *bdt_syst_electronScaleDown_WZ, *bdt_syst_electronScaleDown_ZZ, *bdt_syst_electronScaleDown_ZH_hinv[nSigModels], *bdt_syst_electronScaleDown_ggZH_hinv;
+  TH1F *bdt_syst_muonScaleDown_VVV, *bdt_syst_muonScaleDown_WZ, *bdt_syst_muonScaleDown_ZZ, *bdt_syst_muonScaleDown_ZH_hinv[nSigModels], *bdt_syst_muonScaleDown_ggZH_hinv;
+  TH1F *bdt_syst_METScaleDown_VVV, *bdt_syst_METScaleDown_WZ, *bdt_syst_METScaleDown_ZZ, *bdt_syst_METScaleDown_ZH_hinv[nSigModels], *bdt_syst_METScaleDown_ggZH_hinv;
+    // Pointers for TH2's which hold the 2D BDT toy envelope maps
+  TH2F *bdt_toy_envelope_electronScale_VVV, *bdt_toy_envelope_electronScale_WZ, *bdt_toy_envelope_electronScale_ZZ, *bdt_toy_envelope_electronScale_ZH_hinv[nSigModels], *bdt_toy_envelope_electronScale_ggZH_hinv;
+  TH2F *bdt_toy_envelope_muonScale_VVV, *bdt_toy_envelope_muonScale_WZ, *bdt_toy_envelope_muonScale_ZZ, *bdt_toy_envelope_muonScale_ZH_hinv[nSigModels], *bdt_toy_envelope_muonScale_ggZH_hinv;
+  TH2F *bdt_toy_envelope_METScale_VVV, *bdt_toy_envelope_METScale_WZ, *bdt_toy_envelope_METScale_ZZ, *bdt_toy_envelope_METScale_ZH_hinv[nSigModels], *bdt_toy_envelope_METScale_ggZH_hinv;
+  TFile* cached_BDT_systematics;
+  if (useBDT) { 
+    char inputCachedBDTSysts[200]; // Filename for the cached bdt systematics, we will either read them from here or write fresh ones to here
+    sprintf(inputCachedBDTSysts,"MitZHAnalysis/plots%s/zll%shinv%s_%s_BDTsyst_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[plotModel].Data(), ECMsb.Data());
+    if(useCachedBDTSystematics) {
+      printf("Opening file with cached BDT systematics: \"%s\"\n", inputCachedBDTSysts);
+      cached_BDT_systematics = new TFile(inputCachedBDTSysts,"read"); assert(cached_BDT_systematics->IsOpen());
+      bdt_syst_electronScaleUp_VVV       = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_VVV"      );
+      bdt_syst_electronScaleUp_WZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_WZ"       );
+      bdt_syst_electronScaleUp_ZZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_ZZ"       );
+      bdt_syst_electronScaleUp_ggZH_hinv = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_ggZH_hinv");
+      bdt_syst_electronScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_muonScaleUp_VVV           = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_VVV"          );
+      bdt_syst_muonScaleUp_WZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_WZ"           );
+      bdt_syst_muonScaleUp_ZZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_ZZ"           );
+      bdt_syst_muonScaleUp_ggZH_hinv     = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_ggZH_hinv"    );
+      bdt_syst_muonScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_METScaleUp_VVV            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_VVV"           );
+      bdt_syst_METScaleUp_WZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_WZ"            );
+      bdt_syst_METScaleUp_ZZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_ZZ"            );
+      bdt_syst_METScaleUp_ggZH_hinv      = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_ggZH_hinv"     );
+      bdt_syst_METScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_electronScaleDown_VVV       = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_VVV"      );
+      bdt_syst_electronScaleDown_WZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_WZ"       );
+      bdt_syst_electronScaleDown_ZZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_ZZ"       );
+      bdt_syst_electronScaleDown_ggZH_hinv = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_ggZH_hinv");
+      bdt_syst_electronScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_muonScaleDown_VVV           = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_VVV"          );
+      bdt_syst_muonScaleDown_WZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_WZ"           );
+      bdt_syst_muonScaleDown_ZZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_ZZ"           );
+      bdt_syst_muonScaleDown_ggZH_hinv     = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_ggZH_hinv"    );
+      bdt_syst_muonScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_METScaleDown_VVV            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_VVV"           );
+      bdt_syst_METScaleDown_WZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_WZ"            );
+      bdt_syst_METScaleDown_ZZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_ZZ"            );
+      bdt_syst_METScaleDown_ggZH_hinv      = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_ggZH_hinv"     );
+      bdt_syst_METScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
+      bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
+      bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
+      bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
+      bdt_syst_electronScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
+      bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
+      bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
+      bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
+      bdt_syst_muonScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
+      bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
+      bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
+      bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
+      bdt_syst_METScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
+      bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
+      bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
+      bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
+      bdt_syst_electronScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
+      bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
+      bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
+      bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
+      bdt_syst_muonScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
+      bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
+      bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
+      bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
+      bdt_syst_METScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+      cached_BDT_systematics->Close();
+    } else { // If not using cached BDT systematics, construct all of the histos we are going to use to compute them
+      cached_BDT_systematics = new TFile(inputCachedBDTSysts,"recreate");
+      assert(cached_BDT_systematics->IsOpen());
+      bdt_toy_envelope_electronScale_VVV        = new TH2F("bdt_toy_envelope_electronScale_VVV"       , "bdt_toy_envelope_electronScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_electronScale_WZ         = new TH2F("bdt_toy_envelope_electronScale_WZ"        , "bdt_toy_envelope_electronScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_electronScale_ZZ         = new TH2F("bdt_toy_envelope_electronScale_ZZ"        , "bdt_toy_envelope_electronScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_electronScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_electronScale_ggZH_hinv" , "bdt_toy_envelope_electronScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_muonScale_VVV        = new TH2F("bdt_toy_envelope_muonScale_VVV"       , "bdt_toy_envelope_muonScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_muonScale_WZ         = new TH2F("bdt_toy_envelope_muonScale_WZ"        , "bdt_toy_envelope_muonScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_muonScale_ZZ         = new TH2F("bdt_toy_envelope_muonScale_ZZ"        , "bdt_toy_envelope_muonScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_muonScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_muonScale_ggZH_hinv" , "bdt_toy_envelope_muonScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_METScale_VVV        = new TH2F("bdt_toy_envelope_METScale_VVV"       , "bdt_toy_envelope_METScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_METScale_WZ         = new TH2F("bdt_toy_envelope_METScale_WZ"        , "bdt_toy_envelope_METScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_METScale_ZZ         = new TH2F("bdt_toy_envelope_METScale_ZZ"        , "bdt_toy_envelope_METScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+      bdt_toy_envelope_METScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_METScale_ggZH_hinv" , "bdt_toy_envelope_METScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+      histo_bdt_toys_electronScale_VVV       = new TH2F("histo_bdt_toys_electronScale_VVV"      , "histo_bdt_toys_electronScale_VVV"       , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_VVV->Sumw2();
+      histo_bdt_toys_electronScale_WZ        = new TH2F("histo_bdt_toys_electronScale_WZ"       , "histo_bdt_toys_electronScale_WZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_WZ->Sumw2();
+      histo_bdt_toys_electronScale_ZZ        = new TH2F("histo_bdt_toys_electronScale_ZZ"       , "histo_bdt_toys_electronScale_ZZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZZ->Sumw2();
+      histo_bdt_toys_electronScale_ggZH_hinv = new TH2F("histo_bdt_toys_electronScale_ggZH_hinv", "histo_bdt_toys_electronScale_ggZH_hinv" , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ggZH_hinv->Sumw2();
+      histo_bdt_toys_muonScale_VVV           = new TH2F("histo_bdt_toys_muonScale_VVV"          , "histo_bdt_toys_muonScale_VVV"           , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_VVV->Sumw2();
+      histo_bdt_toys_muonScale_WZ            = new TH2F("histo_bdt_toys_muonScale_WZ"           , "histo_bdt_toys_muonScale_WZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_WZ->Sumw2();
+      histo_bdt_toys_muonScale_ZZ            = new TH2F("histo_bdt_toys_muonScale_ZZ"           , "histo_bdt_toys_muonScale_ZZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZZ->Sumw2();
+      histo_bdt_toys_muonScale_ggZH_hinv     = new TH2F("histo_bdt_toys_muonScale_ggZH_hinv"    , "histo_bdt_toys_muonScale_ggZH_hinv"     , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ggZH_hinv->Sumw2();
+      histo_bdt_toys_METScale_VVV            = new TH2F("histo_bdt_toys_METScale_VVV"           , "histo_bdt_toys_METScale_VVV"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_VVV->Sumw2();
+      histo_bdt_toys_METScale_WZ             = new TH2F("histo_bdt_toys_METScale_WZ"            , "histo_bdt_toys_METScale_WZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_WZ->Sumw2();
+      histo_bdt_toys_METScale_ZZ             = new TH2F("histo_bdt_toys_METScale_ZZ"            , "histo_bdt_toys_METScale_ZZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZZ->Sumw2();
+      histo_bdt_toys_METScale_ggZH_hinv      = new TH2F("histo_bdt_toys_METScale_ggZH_hinv"     , "histo_bdt_toys_METScale_ggZH_hinv"      , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ggZH_hinv->Sumw2();
+      bdt_syst_electronScaleUp_VVV       = new TH1F("bdt_syst_electronScaleUp_VVV", "bdt_syst_electronScaleUp_VVV", nBinMVA, xbins);
+      bdt_syst_electronScaleUp_WZ        = new TH1F("bdt_syst_electronScaleUp_WZ", "bdt_syst_electronScaleUp_WZ", nBinMVA, xbins);
+      bdt_syst_electronScaleUp_ZZ        = new TH1F("bdt_syst_electronScaleUp_ZZ", "bdt_syst_electronScaleUp_ZZ", nBinMVA, xbins);
+      bdt_syst_electronScaleUp_ggZH_hinv = new TH1F("bdt_syst_electronScaleUp_ggZH_hinv", "bdt_syst_electronScaleUp_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_muonScaleUp_VVV           = new TH1F("bdt_syst_muonScaleUp_VVV", "bdt_syst_muonScaleUp_VVV", nBinMVA, xbins);
+      bdt_syst_muonScaleUp_WZ            = new TH1F("bdt_syst_muonScaleUp_WZ", "bdt_syst_muonScaleUp_WZ", nBinMVA, xbins);
+      bdt_syst_muonScaleUp_ZZ            = new TH1F("bdt_syst_muonScaleUp_ZZ", "bdt_syst_muonScaleUp_ZZ", nBinMVA, xbins);
+      bdt_syst_muonScaleUp_ggZH_hinv     = new TH1F("bdt_syst_muonScaleUp_ggZH_hinv", "bdt_syst_muonScaleUp_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_METScaleUp_VVV            = new TH1F("bdt_syst_METScaleUp_VVV", "bdt_syst_METScaleUp_VVV", nBinMVA, xbins);
+      bdt_syst_METScaleUp_WZ             = new TH1F("bdt_syst_METScaleUp_WZ", "bdt_syst_METScaleUp_WZ", nBinMVA, xbins);
+      bdt_syst_METScaleUp_ZZ             = new TH1F("bdt_syst_METScaleUp_ZZ", "bdt_syst_METScaleUp_ZZ", nBinMVA, xbins);
+      bdt_syst_METScaleUp_ggZH_hinv      = new TH1F("bdt_syst_METScaleUp_ggZH_hinv", "bdt_syst_METScaleUp_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_electronScaleDown_VVV       = new TH1F("bdt_syst_electronScaleDown_VVV", "bdt_syst_electronScaleDown_VVV", nBinMVA, xbins);
+      bdt_syst_electronScaleDown_WZ        = new TH1F("bdt_syst_electronScaleDown_WZ", "bdt_syst_electronScaleDown_WZ", nBinMVA, xbins);
+      bdt_syst_electronScaleDown_ZZ        = new TH1F("bdt_syst_electronScaleDown_ZZ", "bdt_syst_electronScaleDown_ZZ", nBinMVA, xbins);
+      bdt_syst_electronScaleDown_ggZH_hinv = new TH1F("bdt_syst_electronScaleDown_ggZH_hinv", "bdt_syst_electronScaleDown_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_muonScaleDown_VVV           = new TH1F("bdt_syst_muonScaleDown_VVV", "bdt_syst_muonScaleDown_VVV", nBinMVA, xbins);
+      bdt_syst_muonScaleDown_WZ            = new TH1F("bdt_syst_muonScaleDown_WZ", "bdt_syst_muonScaleDown_WZ", nBinMVA, xbins);
+      bdt_syst_muonScaleDown_ZZ            = new TH1F("bdt_syst_muonScaleDown_ZZ", "bdt_syst_muonScaleDown_ZZ", nBinMVA, xbins);
+      bdt_syst_muonScaleDown_ggZH_hinv     = new TH1F("bdt_syst_muonScaleDown_ggZH_hinv", "bdt_syst_muonScaleDown_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_METScaleDown_VVV            = new TH1F("bdt_syst_METScaleDown_VVV", "bdt_syst_METScaleDown_VVV", nBinMVA, xbins);
+      bdt_syst_METScaleDown_WZ             = new TH1F("bdt_syst_METScaleDown_WZ", "bdt_syst_METScaleDown_WZ", nBinMVA, xbins);
+      bdt_syst_METScaleDown_ZZ             = new TH1F("bdt_syst_METScaleDown_ZZ", "bdt_syst_METScaleDown_ZZ", nBinMVA, xbins);
+      bdt_syst_METScaleDown_ggZH_hinv      = new TH1F("bdt_syst_METScaleDown_ggZH_hinv", "bdt_syst_METScaleDown_ggZH_hinv", nBinMVA, xbins);
+      bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
+      bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
+      bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
+      bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
+      bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
+      bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
+      bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
+      bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
+      bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
+      bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
+      bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
+      bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
+      bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
+      bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
+      bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
+      bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
+      bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
+      bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
+      bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
+      bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
+      bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
+      bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
+      bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
+      bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
+      for(int nModel=0; nModel<nSigModels; nModel++) { 
+        bdt_toy_envelope_electronScale_ZH_hinv[nModel] = new TH2F(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+        bdt_toy_envelope_muonScale_ZH_hinv[nModel]     = new TH2F(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+        bdt_toy_envelope_METScale_ZH_hinv[nModel]      = new TH2F(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+        histo_bdt_toys_electronScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZH_hinv[nModel]->Sumw2();
+        histo_bdt_toys_muonScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZH_hinv[nModel]->Sumw2();
+        histo_bdt_toys_METScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZH_hinv[nModel]->Sumw2();
+        bdt_syst_electronScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_muonScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_METScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_electronScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_muonScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_METScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+        bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+        bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+        bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+        bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
+        bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
+        bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
+      }
+      for(int nb=1; nb<nBinMVA; nb++) {  
+        bdt_syst_electronScaleUp_VVV       ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleUp_WZ        ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleUp_ZZ        ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleUp_ggZH_hinv ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleUp_VVV           ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleUp_WZ            ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleUp_ZZ            ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleUp_ggZH_hinv     ->SetBinContent(nb,1.);
+        bdt_syst_METScaleUp_VVV            ->SetBinContent(nb,1.);
+        bdt_syst_METScaleUp_WZ             ->SetBinContent(nb,1.);
+        bdt_syst_METScaleUp_ZZ             ->SetBinContent(nb,1.);
+        bdt_syst_METScaleUp_ggZH_hinv      ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleDown_VVV       ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleDown_WZ        ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleDown_ZZ        ->SetBinContent(nb,1.);
+        bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleDown_VVV           ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleDown_WZ            ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleDown_ZZ            ->SetBinContent(nb,1.);
+        bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb,1.);
+        bdt_syst_METScaleDown_VVV            ->SetBinContent(nb,1.);
+        bdt_syst_METScaleDown_WZ             ->SetBinContent(nb,1.);
+        bdt_syst_METScaleDown_ZZ             ->SetBinContent(nb,1.);
+        bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb,1.);
+        for(int nModel=0; nModel<nSigModels; nModel++) {
+          bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+          bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+          bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+          bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+          bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+          bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+        }
+      }
+      // Store a value from Gaussian distribution with mean=0, sigma=1
+      // These values will get multiplied by the individual nuisance sizes
+      for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
+        bdt_toy_scale[i_toy]=toy_machine.Gaus(0,1);
+      }
+    }
   }
 
   unsigned int numberOfLeptons = 2;
@@ -1696,7 +1892,7 @@ void zhAnalysis(
 	double maxQCDscale = (TMath::Abs((double)eventMonteCarlo.r1f2)+TMath::Abs((double)eventMonteCarlo.r1f5)+TMath::Abs((double)eventMonteCarlo.r2f1)+
                               TMath::Abs((double)eventMonteCarlo.r2f2)+TMath::Abs((double)eventMonteCarlo.r5f1)+TMath::Abs((double)eventMonteCarlo.r5f5))/6.0;
         // Throw O(1000) toys for the BDT nuisance evaluations
-        if(useBDT and passAllCuts[SIGSEL]) {
+        if(useBDT && passAllCuts[SIGSEL] && !useCachedBDTSystematics) {
           double bdt_toy_value_muonScale, bdt_toy_value_electronScale, bdt_toy_value_METScale, MVAVar_toy_muonScale, MVAVar_toy_electronScale, MVAVar_toy_METScale;
           TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
                          lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
@@ -1721,8 +1917,15 @@ void zhAnalysis(
     	      MVAVar_toy_electronScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_toy_value_electronScale, xbins[nBinMVA]);
             }
             // BDT variation with the MET scale variation (from Nero)
-            bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() / MET.Pt() - 1.), 0);
-  	    MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), MVAVar_toy_METScale, xbins[nBinMVA]);
+            if(bdt_toy_scale[i_toy] >= 0) 
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() / MET.Pt() - 1.), 0);
+            else
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])  ->Pt() / MET.Pt() - 1.), 0);
+  	        MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
+            // debug
+            //if(passAllCuts[SIGSEL] && theCategory == 4 && typePair!=3) printf("ZZ event METscale toy %d changes BDT value / MVA var (%f, %f) => (%f, %f)\n", i_toy, bdt_value, MVAVar, bdt_toy_value_METScale, MVAVar_toy_METScale);
+
+
 
             if(theCategory == 3)      { histo_bdt_toys_muonScale_WZ       ->Fill(MVAVar_toy_muonScale, i_toy, totalWeight); histo_bdt_toys_electronScale_WZ       ->Fill(MVAVar_toy_electronScale, i_toy, totalWeight); histo_bdt_toys_METScale_WZ       ->Fill(MVAVar_toy_METScale, i_toy, totalWeight); }
             else if(theCategory == 4) { histo_bdt_toys_muonScale_ZZ       ->Fill(MVAVar_toy_muonScale, i_toy, totalWeight); histo_bdt_toys_electronScale_ZZ       ->Fill(MVAVar_toy_electronScale, i_toy, totalWeight); histo_bdt_toys_METScale_ZZ       ->Fill(MVAVar_toy_METScale, i_toy, totalWeight); }
@@ -1760,23 +1963,6 @@ void zhAnalysis(
         else if(theCategory == 2){
 	  if(passAllCuts[SIGSEL]) histo_Zjets   ->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[SIGSEL]) histo_ZjetsNoW->Fill(MVAVar,1.);
-	  // ABCD study
-          if( ( passAllCuts[SIGSEL] || passAllCuts[CR1SEL] || passAllCuts[CR2SEL] || passAllCuts[CR12SEL] ) && totalWeight!=0) {
-            double var1=ptFrac;
-            double var2=dPhiDiLepMET;
-            sumWeights+=totalWeight;
-            sumWeightsSquared+=totalWeight*totalWeight;
-            sumProductOfDiscriminants+=var1*var2*totalWeight;
-            sumVar1+=var1*totalWeight;
-            sumVar2+=var2*totalWeight;
-            var1_.push_back(totalWeight*var1);
-            var2_.push_back(totalWeight*var2);
-            weight_.push_back(totalWeight);
-            if(passAllCuts[SIGSEL]) N_A+=totalWeight;
-            if(passAllCuts[CR1SEL]) N_B+=totalWeight;
-            if(passAllCuts[CR2SEL]) N_C+=totalWeight;
-            if(passAllCuts[CR12SEL]) N_D+=totalWeight;
-          }
           if(makeMVAtrees) Zjets_mva_tree->Fill();
         }
         else if(theCategory == 3){
@@ -2320,6 +2506,119 @@ void zhAnalysis(
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystUp  ->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystDown->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
     } 
+
+    if(useBDT && !useCachedBDTSystematics) {
+      for(int nb=1; nb<=nBinMVA; nb++) {
+        for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
+          int nbin2d = histo_bdt_toys_electronScale_VVV->GetBin(nb, i_toy);
+          if(histo_VVV            ->GetBinContent(nb) != 0 ) bdt_toy_envelope_electronScale_VVV      ->Fill( xbins[nb-1], histo_bdt_toys_electronScale_VVV            ->GetBinContent(nbin2d) / histo_VVV            ->GetBinContent(nb));
+          if(histo_WZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_electronScale_WZ       ->Fill( xbins[nb-1], histo_bdt_toys_electronScale_WZ             ->GetBinContent(nbin2d) / histo_WZ             ->GetBinContent(nb));
+          if(histo_ZZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_electronScale_ZZ       ->Fill( xbins[nb-1], histo_bdt_toys_electronScale_ZZ             ->GetBinContent(nbin2d) / histo_ZZ             ->GetBinContent(nb));
+          if(histo_ZH_hinv[nModel]->GetBinContent(nb) != 0 ) bdt_toy_envelope_electronScale_ZH_hinv[nModel]  ->Fill( xbins[nb-1], histo_bdt_toys_electronScale_ZH_hinv[nModel]->GetBinContent(nbin2d) / histo_ZH_hinv[nModel]->GetBinContent(nb));
+          if(histo_ggZH_hinv      ->GetBinContent(nb) != 0 ) bdt_toy_envelope_electronScale_ggZH_hinv->Fill( xbins[nb-1], histo_bdt_toys_electronScale_ggZH_hinv      ->GetBinContent(nbin2d) / histo_ggZH_hinv      ->GetBinContent(nb));
+          if(histo_VVV            ->GetBinContent(nb) != 0 ) bdt_toy_envelope_muonScale_VVV      ->Fill( xbins[nb-1], histo_bdt_toys_muonScale_VVV            ->GetBinContent(nbin2d) / histo_VVV            ->GetBinContent(nb));
+          if(histo_WZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_muonScale_WZ       ->Fill( xbins[nb-1], histo_bdt_toys_muonScale_WZ             ->GetBinContent(nbin2d) / histo_WZ             ->GetBinContent(nb));
+          if(histo_ZZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_muonScale_ZZ       ->Fill( xbins[nb-1], histo_bdt_toys_muonScale_ZZ             ->GetBinContent(nbin2d) / histo_ZZ             ->GetBinContent(nb));
+          if(histo_ZH_hinv[nModel]->GetBinContent(nb) != 0 ) bdt_toy_envelope_muonScale_ZH_hinv[nModel]  ->Fill( xbins[nb-1], histo_bdt_toys_muonScale_ZH_hinv[nModel]->GetBinContent(nbin2d) / histo_ZH_hinv[nModel]->GetBinContent(nb));
+          if(histo_ggZH_hinv      ->GetBinContent(nb) != 0 ) bdt_toy_envelope_muonScale_ggZH_hinv->Fill( xbins[nb-1], histo_bdt_toys_muonScale_ggZH_hinv      ->GetBinContent(nbin2d) / histo_ggZH_hinv      ->GetBinContent(nb));
+          if(histo_VVV            ->GetBinContent(nb) != 0 ) bdt_toy_envelope_METScale_VVV      ->Fill( xbins[nb-1], histo_bdt_toys_METScale_VVV            ->GetBinContent(nbin2d) / histo_VVV            ->GetBinContent(nb));
+          if(histo_WZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_METScale_WZ       ->Fill( xbins[nb-1], histo_bdt_toys_METScale_WZ             ->GetBinContent(nbin2d) / histo_WZ             ->GetBinContent(nb));
+          if(histo_ZZ             ->GetBinContent(nb) != 0 ) bdt_toy_envelope_METScale_ZZ       ->Fill( xbins[nb-1], histo_bdt_toys_METScale_ZZ             ->GetBinContent(nbin2d) / histo_ZZ             ->GetBinContent(nb));
+          if(histo_ZH_hinv[nModel]->GetBinContent(nb) != 0 ) bdt_toy_envelope_METScale_ZH_hinv[nModel]  ->Fill( xbins[nb-1], histo_bdt_toys_METScale_ZH_hinv[nModel]->GetBinContent(nbin2d) / histo_ZH_hinv[nModel]->GetBinContent(nb));
+          if(histo_ggZH_hinv      ->GetBinContent(nb) != 0 ) bdt_toy_envelope_METScale_ggZH_hinv->Fill( xbins[nb-1], histo_bdt_toys_METScale_ggZH_hinv      ->GetBinContent(nbin2d) / histo_ggZH_hinv      ->GetBinContent(nb));
+        }
+        bdt_toy_binyields_electronScale_VVV[nb-1]             = (TH1F*) bdt_toy_envelope_electronScale_VVV            ->ProjectionY(Form("bdt_toy_binyields_electronScale_VVV_bin%d", nb)      , nb, nb);
+        bdt_toy_binyields_electronScale_WZ[nb-1]              = (TH1F*) bdt_toy_envelope_electronScale_WZ             ->ProjectionY(Form("bdt_toy_binyields_electronScale_WZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_electronScale_ZZ[nb-1]              = (TH1F*) bdt_toy_envelope_electronScale_ZZ             ->ProjectionY(Form("bdt_toy_binyields_electronScale_ZZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1] = (TH1F*) bdt_toy_envelope_electronScale_ZH_hinv[nModel]->ProjectionY(Form("bdt_toy_binyields_electronScale_ZH_hinv_%s_bin%d",signalName_[nModel].Data(),nb), nb, nb);
+        bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]       = (TH1F*) bdt_toy_envelope_electronScale_ggZH_hinv      ->ProjectionY(Form("bdt_toy_binyields_electronScale_ggZH_hinv_bin%d", nb), nb, nb);
+        bdt_toy_binyields_muonScale_VVV[nb-1]                 = (TH1F*) bdt_toy_envelope_muonScale_VVV                ->ProjectionY(Form("bdt_toy_binyields_muonScale_VVV_bin%d", nb)      , nb, nb);
+        bdt_toy_binyields_muonScale_WZ[nb-1]                  = (TH1F*) bdt_toy_envelope_muonScale_WZ                 ->ProjectionY(Form("bdt_toy_binyields_muonScale_WZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_muonScale_ZZ[nb-1]                  = (TH1F*) bdt_toy_envelope_muonScale_ZZ                 ->ProjectionY(Form("bdt_toy_binyields_muonScale_ZZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]     = (TH1F*) bdt_toy_envelope_muonScale_ZH_hinv[nModel]    ->ProjectionY(Form("bdt_toy_binyields_muonScale_ZH_hinv_%s_bin%d", signalName_[nModel].Data(),nb), nb, nb);
+        bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]           = (TH1F*) bdt_toy_envelope_muonScale_ggZH_hinv          ->ProjectionY(Form("bdt_toy_binyields_muonScale_ggZH_hinv_bin%d", nb), nb, nb);
+        bdt_toy_binyields_METScale_VVV[nb-1]                  = (TH1F*) bdt_toy_envelope_METScale_VVV                 ->ProjectionY(Form("bdt_toy_binyields_METScale_VVV_bin%d", nb)      , nb, nb);
+        bdt_toy_binyields_METScale_WZ[nb-1]                   = (TH1F*) bdt_toy_envelope_METScale_WZ                  ->ProjectionY(Form("bdt_toy_binyields_METScale_WZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_METScale_ZZ[nb-1]                   = (TH1F*) bdt_toy_envelope_METScale_ZZ                  ->ProjectionY(Form("bdt_toy_binyields_METScale_ZZ_bin%d", nb)       , nb, nb);
+        bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]      = (TH1F*) bdt_toy_envelope_METScale_ZH_hinv[nModel]     ->ProjectionY(Form("bdt_toy_binyields_METScale_ZH_hinv_%s_bin%d", signalName_[nModel].Data(),nb), nb, nb);
+        bdt_toy_binyields_METScale_ggZH_hinv[nb-1]            = (TH1F*) bdt_toy_envelope_METScale_ggZH_hinv           ->ProjectionY(Form("bdt_toy_binyields_METScale_ggZH_hinv_bin%d", nb), nb, nb);
+        
+        // Since not using cached results, finally calculate the bin-by-bin % systematics (up and down) for the BDT 
+        double toy_mean_electronScale, toy_mean_muonScale, toy_mean_METScale;
+        double toy_rms_electronScale, toy_rms_muonScale, toy_rms_METScale;
+        if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 ) { 
+          toy_mean_electronScale = bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetMean();
+          toy_mean_muonScale = bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]->GetMean();
+          toy_mean_METScale = bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]->GetMean();
+          toy_rms_electronScale = bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetRMS();
+          toy_rms_muonScale = bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]->GetRMS();
+          toy_rms_METScale = bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]->GetRMS();
+          bdt_syst_electronScaleUp_ZH_hinv[nModel]   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
+          bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
+          bdt_syst_muonScaleUp_ZH_hinv[nModel]       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
+          bdt_syst_muonScaleDown_ZH_hinv[nModel]     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
+          bdt_syst_METScaleUp_ZH_hinv[nModel]        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
+          bdt_syst_METScaleDown_ZH_hinv[nModel]      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+        }
+        if(histo_VVV->GetBinContent(nb) > 0 ) {
+          toy_mean_electronScale = bdt_toy_binyields_electronScale_VVV[nb-1]->GetMean();
+          toy_mean_muonScale = bdt_toy_binyields_muonScale_VVV[nb-1]->GetMean();
+          toy_mean_METScale = bdt_toy_binyields_METScale_VVV[nb-1]->GetMean();
+          toy_rms_electronScale = bdt_toy_binyields_electronScale_VVV[nb-1]->GetRMS();
+          toy_rms_muonScale = bdt_toy_binyields_muonScale_VVV[nb-1]->GetRMS();
+          toy_rms_METScale = bdt_toy_binyields_METScale_VVV[nb-1]->GetRMS();
+          bdt_syst_electronScaleUp_VVV   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
+          bdt_syst_electronScaleDown_VVV ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
+          bdt_syst_muonScaleUp_VVV       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
+          bdt_syst_muonScaleDown_VVV     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
+          bdt_syst_METScaleUp_VVV        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
+          bdt_syst_METScaleDown_VVV      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+        }
+        if(histo_WZ->GetBinContent(nb) > 0 ) {
+          toy_mean_electronScale = bdt_toy_binyields_electronScale_WZ[nb-1]->GetMean();
+          toy_mean_muonScale = bdt_toy_binyields_muonScale_WZ[nb-1]->GetMean();
+          toy_mean_METScale = bdt_toy_binyields_METScale_WZ[nb-1]->GetMean();
+          toy_rms_electronScale = bdt_toy_binyields_electronScale_WZ[nb-1]->GetRMS();
+          toy_rms_muonScale = bdt_toy_binyields_muonScale_WZ[nb-1]->GetRMS();
+          toy_rms_METScale = bdt_toy_binyields_METScale_WZ[nb-1]->GetRMS();
+          bdt_syst_electronScaleUp_WZ   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
+          bdt_syst_electronScaleDown_WZ ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
+          bdt_syst_muonScaleUp_WZ       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
+          bdt_syst_muonScaleDown_WZ     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
+          bdt_syst_METScaleUp_WZ        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
+          bdt_syst_METScaleDown_WZ      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+        }
+        if(histo_ZZ->GetBinContent(nb) > 0 ) {
+          toy_mean_electronScale = bdt_toy_binyields_electronScale_ZZ[nb-1]->GetMean();
+          toy_mean_muonScale = bdt_toy_binyields_muonScale_ZZ[nb-1]->GetMean();
+          toy_mean_METScale = bdt_toy_binyields_METScale_ZZ[nb-1]->GetMean();
+          toy_rms_electronScale = bdt_toy_binyields_electronScale_ZZ[nb-1]->GetRMS();
+          toy_rms_muonScale = bdt_toy_binyields_muonScale_ZZ[nb-1]->GetRMS();
+          toy_rms_METScale = bdt_toy_binyields_METScale_ZZ[nb-1]->GetRMS();
+          bdt_syst_electronScaleUp_ZZ   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
+          bdt_syst_electronScaleDown_ZZ ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
+          bdt_syst_muonScaleUp_ZZ       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
+          bdt_syst_muonScaleDown_ZZ     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
+          bdt_syst_METScaleUp_ZZ        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
+          bdt_syst_METScaleDown_ZZ      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+        }
+        if(histo_ggZH_hinv->GetBinContent(nb) > 0 ) {
+          toy_mean_electronScale = bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]->GetMean();
+          toy_mean_muonScale = bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]->GetMean();
+          toy_mean_METScale = bdt_toy_binyields_METScale_ggZH_hinv[nb-1]->GetMean();
+          toy_rms_electronScale = bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]->GetRMS();
+          toy_rms_muonScale = bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]->GetRMS();
+          toy_rms_METScale = bdt_toy_binyields_METScale_ggZH_hinv[nb-1]->GetRMS();
+          bdt_syst_electronScaleUp_ggZH_hinv   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
+          bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
+          bdt_syst_muonScaleUp_ggZH_hinv       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
+          bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
+          bdt_syst_METScaleUp_ggZH_hinv        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
+          bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+        }
+      }
+    }
+
     histo_Data             ->Write();
     histo_ZH_hinv[nModel]  ->Write();
     histo_Zjets            ->Write();
@@ -2403,36 +2702,112 @@ void zhAnalysis(
     histo_ZZ_CMS_EWKCorrDown	                    ->Write();
     histo_ZZ_CMS_ggCorrUp	                    ->Write();
     histo_ZZ_CMS_ggCorrDown	                    ->Write();
-    
     histo_Zjets_CMS_ZjetsSystUp	                    ->Write();
     histo_Zjets_CMS_ZjetsSystDown	            ->Write();
-
-    if (useBDT) { 
-    histo_bdt_toys_electronScale_VVV            ->Write();
-    histo_bdt_toys_electronScale_WZ             ->Write();
-    histo_bdt_toys_electronScale_ZZ             ->Write();
-    histo_bdt_toys_electronScale_ggZH_hinv      ->Write();
-    histo_bdt_toys_electronScale_ZH_hinv[nModel]->Write();
-    histo_bdt_toys_muonScale_VVV                ->Write();
-    histo_bdt_toys_muonScale_WZ                 ->Write();
-    histo_bdt_toys_muonScale_ZZ                 ->Write();
-    histo_bdt_toys_muonScale_ggZH_hinv          ->Write();
-    histo_bdt_toys_muonScale_ZH_hinv[nModel]    ->Write();
-    histo_bdt_toys_METScale_VVV                 ->Write();
-    histo_bdt_toys_METScale_WZ                  ->Write();
-    histo_bdt_toys_METScale_ZZ                  ->Write();
-    histo_bdt_toys_METScale_ggZH_hinv           ->Write();
-    histo_bdt_toys_METScale_ZH_hinv[nModel]     ->Write();
+    if(useBDT) {
+      bdt_syst_electronScaleUp_VVV       ->Write();
+      bdt_syst_electronScaleUp_WZ        ->Write();
+      bdt_syst_electronScaleUp_ZZ        ->Write();
+      bdt_syst_electronScaleUp_ggZH_hinv ->Write();
+      bdt_syst_electronScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_muonScaleUp_VVV           ->Write();
+      bdt_syst_muonScaleUp_WZ            ->Write();
+      bdt_syst_muonScaleUp_ZZ            ->Write();
+      bdt_syst_muonScaleUp_ggZH_hinv     ->Write();
+      bdt_syst_muonScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_METScaleUp_VVV            ->Write();
+      bdt_syst_METScaleUp_WZ             ->Write();
+      bdt_syst_METScaleUp_ZZ             ->Write();
+      bdt_syst_METScaleUp_ggZH_hinv      ->Write();
+      bdt_syst_METScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_electronScaleDown_VVV       ->Write();
+      bdt_syst_electronScaleDown_WZ        ->Write();
+      bdt_syst_electronScaleDown_ZZ        ->Write();
+      bdt_syst_electronScaleDown_ggZH_hinv ->Write();
+      bdt_syst_electronScaleDown_ZH_hinv[nModel] ->Write();
+      bdt_syst_muonScaleDown_VVV           ->Write();
+      bdt_syst_muonScaleDown_WZ            ->Write();
+      bdt_syst_muonScaleDown_ZZ            ->Write();
+      bdt_syst_muonScaleDown_ggZH_hinv     ->Write();
+      bdt_syst_muonScaleDown_ZH_hinv[nModel] ->Write();
+      bdt_syst_METScaleDown_VVV            ->Write();
+      bdt_syst_METScaleDown_WZ             ->Write();
+      bdt_syst_METScaleDown_ZZ             ->Write();
+      bdt_syst_METScaleDown_ggZH_hinv      ->Write();
+      bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();   
     }
-   
     outFileLimits->Close();
-  
+    if(useBDT && !useCachedBDTSystematics) { // Record the BDT shape systs in a separate file for the caching
+      cached_BDT_systematics->cd();
+      histo_bdt_toys_electronScale_VVV       ->Write();
+      histo_bdt_toys_electronScale_WZ        ->Write();
+      histo_bdt_toys_electronScale_ZZ        ->Write();
+      histo_bdt_toys_electronScale_ggZH_hinv ->Write();
+      histo_bdt_toys_electronScale_ZH_hinv[nModel]->Write();
+      histo_bdt_toys_muonScale_VVV           ->Write();
+      histo_bdt_toys_muonScale_WZ            ->Write();
+      histo_bdt_toys_muonScale_ZZ            ->Write();
+      histo_bdt_toys_muonScale_ggZH_hinv     ->Write();
+      histo_bdt_toys_muonScale_ZH_hinv[nModel]    ->Write();
+      histo_bdt_toys_METScale_VVV            ->Write();
+      histo_bdt_toys_METScale_WZ             ->Write();
+      histo_bdt_toys_METScale_ZZ             ->Write();
+      histo_bdt_toys_METScale_ggZH_hinv      ->Write();
+      histo_bdt_toys_METScale_ZH_hinv[nModel]     ->Write();
+      bdt_toy_envelope_electronScale_VVV->Write();
+      bdt_toy_envelope_electronScale_WZ->Write();
+      bdt_toy_envelope_electronScale_ZZ->Write();
+      bdt_toy_envelope_electronScale_ZH_hinv[nModel]->Write();
+      bdt_toy_envelope_electronScale_ggZH_hinv->Write();
+      bdt_toy_envelope_muonScale_VVV->Write();
+      bdt_toy_envelope_muonScale_WZ->Write();
+      bdt_toy_envelope_muonScale_ZZ->Write();
+      bdt_toy_envelope_muonScale_ZH_hinv[nModel]->Write();
+      bdt_toy_envelope_muonScale_ggZH_hinv->Write();
+      bdt_toy_envelope_METScale_VVV->Write();
+      bdt_toy_envelope_METScale_WZ->Write();
+      bdt_toy_envelope_METScale_ZZ->Write();
+      bdt_toy_envelope_METScale_ZH_hinv[nModel]->Write();
+      bdt_toy_envelope_METScale_ggZH_hinv->Write();
+      bdt_syst_electronScaleUp_VVV       ->Write();
+      bdt_syst_electronScaleUp_WZ        ->Write();
+      bdt_syst_electronScaleUp_ZZ        ->Write();
+      bdt_syst_electronScaleUp_ggZH_hinv ->Write();
+      bdt_syst_electronScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_muonScaleUp_VVV           ->Write();
+      bdt_syst_muonScaleUp_WZ            ->Write();
+      bdt_syst_muonScaleUp_ZZ            ->Write();
+      bdt_syst_muonScaleUp_ggZH_hinv     ->Write();
+      bdt_syst_muonScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_METScaleUp_VVV            ->Write();
+      bdt_syst_METScaleUp_WZ             ->Write();
+      bdt_syst_METScaleUp_ZZ             ->Write();
+      bdt_syst_METScaleUp_ggZH_hinv      ->Write();
+      bdt_syst_METScaleUp_ZH_hinv[nModel] ->Write();
+      bdt_syst_electronScaleDown_VVV       ->Write();
+      bdt_syst_electronScaleDown_WZ        ->Write();
+      bdt_syst_electronScaleDown_ZZ        ->Write();
+      bdt_syst_electronScaleDown_ggZH_hinv ->Write();
+      bdt_syst_electronScaleDown_ZH_hinv[nModel] ->Write();
+      bdt_syst_muonScaleDown_VVV           ->Write();
+      bdt_syst_muonScaleDown_WZ            ->Write();
+      bdt_syst_muonScaleDown_ZZ            ->Write();
+      bdt_syst_muonScaleDown_ggZH_hinv     ->Write();
+      bdt_syst_muonScaleDown_ZH_hinv[nModel] ->Write();
+      bdt_syst_METScaleDown_VVV            ->Write();
+      bdt_syst_METScaleDown_WZ             ->Write();
+      bdt_syst_METScaleDown_ZZ             ->Write();
+      bdt_syst_METScaleDown_ggZH_hinv      ->Write();
+      bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();
+      cached_BDT_systematics->Close();
+    }
     double lumiE = 1.030;
     double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
     double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
     double syst_btag = 1.02;
     double syst_WZl[2] = {1.010, 1.003};
     if(nJetsType > 0) syst_WZl[1] = 1.012;
+    
     
     for(int nb=1; nb<=nBinMVA; nb++){
       double nggZHEvt = histo_ggZH_hinv->GetBinContent(nb);
@@ -2548,156 +2923,37 @@ void zhAnalysis(
       double systBDTMETUp  [5] = {1.0,1.0,1.0,1.0,1.0};
       double systBDTMETDown[5] = {1.0,1.0,1.0,1.0,1.0};
       if(useBDT) { 
-        // Get projection of the BDT bin we are at
-        TH1F *bin_projection_bdt_toys_electronScale_ZH_hinv   = (TH1F*) histo_bdt_toys_electronScale_ZH_hinv[nModel]->ProjectionY("bin_projection_bdt_toys_electronScale_ZH_hinv"  , nb, nb);
-        TH1F *bin_projection_bdt_toys_electronScale_VVV       = (TH1F*) histo_bdt_toys_electronScale_VVV            ->ProjectionY("bin_projection_bdt_toys_electronScale_VVV"      , nb, nb);
-        TH1F *bin_projection_bdt_toys_electronScale_WZ        = (TH1F*) histo_bdt_toys_electronScale_WZ             ->ProjectionY("bin_projection_bdt_toys_electronScale_WZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_electronScale_ZZ        = (TH1F*) histo_bdt_toys_electronScale_ZZ             ->ProjectionY("bin_projection_bdt_toys_electronScale_ZZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_electronScale_ggZH_hinv = (TH1F*) histo_bdt_toys_electronScale_ggZH_hinv      ->ProjectionY("bin_projection_bdt_toys_electronScale_ggZH_hinv", nb, nb);
-        TH1F *bin_projection_bdt_toys_muonScale_ZH_hinv   = (TH1F*) histo_bdt_toys_muonScale_ZH_hinv[nModel]->ProjectionY("bin_projection_bdt_toys_muonScale_ZH_hinv"  , nb, nb);
-        TH1F *bin_projection_bdt_toys_muonScale_VVV       = (TH1F*) histo_bdt_toys_muonScale_VVV            ->ProjectionY("bin_projection_bdt_toys_muonScale_VVV"      , nb, nb);
-        TH1F *bin_projection_bdt_toys_muonScale_WZ        = (TH1F*) histo_bdt_toys_muonScale_WZ             ->ProjectionY("bin_projection_bdt_toys_muonScale_WZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_muonScale_ZZ        = (TH1F*) histo_bdt_toys_muonScale_ZZ             ->ProjectionY("bin_projection_bdt_toys_muonScale_ZZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_muonScale_ggZH_hinv = (TH1F*) histo_bdt_toys_muonScale_ggZH_hinv      ->ProjectionY("bin_projection_bdt_toys_muonScale_ggZH_hinv", nb, nb);
-        TH1F *bin_projection_bdt_toys_METScale_ZH_hinv   = (TH1F*) histo_bdt_toys_METScale_ZH_hinv[nModel]->ProjectionY("bin_projection_bdt_toys_METScale_ZH_hinv"  , nb, nb);
-        TH1F *bin_projection_bdt_toys_METScale_VVV       = (TH1F*) histo_bdt_toys_METScale_VVV            ->ProjectionY("bin_projection_bdt_toys_METScale_VVV"      , nb, nb);
-        TH1F *bin_projection_bdt_toys_METScale_WZ        = (TH1F*) histo_bdt_toys_METScale_WZ             ->ProjectionY("bin_projection_bdt_toys_METScale_WZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_METScale_ZZ        = (TH1F*) histo_bdt_toys_METScale_ZZ             ->ProjectionY("bin_projection_bdt_toys_METScale_ZZ"       , nb, nb);
-        TH1F *bin_projection_bdt_toys_METScale_ggZH_hinv = (TH1F*) histo_bdt_toys_METScale_ggZH_hinv      ->ProjectionY("bin_projection_bdt_toys_METScale_ggZH_hinv", nb, nb);
-        // Define TH1's with 50 bins between minimum and maximum bin yield
-        TH1F *binyield_bdt_toys_electronScale_ZH_hinv   = new TH1F("binyield_bdt_toys_electronScale_ZH_hinv"  , "binyield_bdt_toys_electronScale_ZH_hinv"  , 50, bin_projection_bdt_toys_electronScale_ZH_hinv->GetMinimum()  , bin_projection_bdt_toys_electronScale_ZH_hinv->GetMaximum());
-        TH1F *binyield_bdt_toys_electronScale_VVV       = new TH1F("binyield_bdt_toys_electronScale_VVV"      , "binyield_bdt_toys_electronScale_VVV"      , 50, bin_projection_bdt_toys_electronScale_VVV->GetMinimum()      , bin_projection_bdt_toys_electronScale_VVV->GetMaximum());
-        TH1F *binyield_bdt_toys_electronScale_WZ        = new TH1F("binyield_bdt_toys_electronScale_WZ"       , "binyield_bdt_toys_electronScale_WZ"       , 50, bin_projection_bdt_toys_electronScale_WZ->GetMinimum()       , bin_projection_bdt_toys_electronScale_WZ->GetMaximum());
-        TH1F *binyield_bdt_toys_electronScale_ZZ        = new TH1F("binyield_bdt_toys_electronScale_ZZ"       , "binyield_bdt_toys_electronScale_ZZ"       , 50, bin_projection_bdt_toys_electronScale_ZZ->GetMinimum()       , bin_projection_bdt_toys_electronScale_ZZ->GetMaximum());
-        TH1F *binyield_bdt_toys_electronScale_ggZH_hinv = new TH1F("binyield_bdt_toys_electronScale_ggZH_hinv", "binyield_bdt_toys_electronScale_ggZH_hinv", 50, bin_projection_bdt_toys_electronScale_ggZH_hinv->GetMinimum(), bin_projection_bdt_toys_electronScale_ggZH_hinv->GetMaximum());
-        TH1F *binyield_bdt_toys_muonScale_ZH_hinv   = new TH1F("binyield_bdt_toys_muonScale_ZH_hinv"  , "binyield_bdt_toys_muonScale_ZH_hinv"  , 50, bin_projection_bdt_toys_muonScale_ZH_hinv->GetMinimum()  , bin_projection_bdt_toys_muonScale_ZH_hinv->GetMaximum());
-        TH1F *binyield_bdt_toys_muonScale_VVV       = new TH1F("binyield_bdt_toys_muonScale_VVV"      , "binyield_bdt_toys_muonScale_VVV"      , 50, bin_projection_bdt_toys_muonScale_VVV->GetMinimum()      , bin_projection_bdt_toys_muonScale_VVV->GetMaximum());
-        TH1F *binyield_bdt_toys_muonScale_WZ        = new TH1F("binyield_bdt_toys_muonScale_WZ"       , "binyield_bdt_toys_muonScale_WZ"       , 50, bin_projection_bdt_toys_muonScale_WZ->GetMinimum()       , bin_projection_bdt_toys_muonScale_WZ->GetMaximum());
-        TH1F *binyield_bdt_toys_muonScale_ZZ        = new TH1F("binyield_bdt_toys_muonScale_ZZ"       , "binyield_bdt_toys_muonScale_ZZ"       , 50, bin_projection_bdt_toys_muonScale_ZZ->GetMinimum()       , bin_projection_bdt_toys_muonScale_ZZ->GetMaximum());
-        TH1F *binyield_bdt_toys_muonScale_ggZH_hinv = new TH1F("binyield_bdt_toys_muonScale_ggZH_hinv", "binyield_bdt_toys_muonScale_ggZH_hinv", 50, bin_projection_bdt_toys_muonScale_ggZH_hinv->GetMinimum(), bin_projection_bdt_toys_muonScale_ggZH_hinv->GetMaximum());
-        TH1F *binyield_bdt_toys_METScale_ZH_hinv   = new TH1F("binyield_bdt_toys_METScale_ZH_hinv"  , "binyield_bdt_toys_METScale_ZH_hinv"  , 50, bin_projection_bdt_toys_METScale_ZH_hinv->GetMinimum()  , bin_projection_bdt_toys_METScale_ZH_hinv->GetMaximum());
-        TH1F *binyield_bdt_toys_METScale_VVV       = new TH1F("binyield_bdt_toys_METScale_VVV"      , "binyield_bdt_toys_METScale_VVV"      , 50, bin_projection_bdt_toys_METScale_VVV->GetMinimum()      , bin_projection_bdt_toys_METScale_VVV->GetMaximum());
-        TH1F *binyield_bdt_toys_METScale_WZ        = new TH1F("binyield_bdt_toys_METScale_WZ"       , "binyield_bdt_toys_METScale_WZ"       , 50, bin_projection_bdt_toys_METScale_WZ->GetMinimum()       , bin_projection_bdt_toys_METScale_WZ->GetMaximum());
-        TH1F *binyield_bdt_toys_METScale_ZZ        = new TH1F("binyield_bdt_toys_METScale_ZZ"       , "binyield_bdt_toys_METScale_ZZ"       , 50, bin_projection_bdt_toys_METScale_ZZ->GetMinimum()       , bin_projection_bdt_toys_METScale_ZZ->GetMaximum());
-        TH1F *binyield_bdt_toys_METScale_ggZH_hinv = new TH1F("binyield_bdt_toys_METScale_ggZH_hinv", "binyield_bdt_toys_METScale_ggZH_hinv", 50, bin_projection_bdt_toys_METScale_ggZH_hinv->GetMinimum(), bin_projection_bdt_toys_METScale_ggZH_hinv->GetMaximum());
-        for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
-          // Fill the histogram for each process with the bin yield from the 1000 toys
-          binyield_bdt_toys_electronScale_ZH_hinv  ->Fill( bin_projection_bdt_toys_electronScale_ZH_hinv  ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_electronScale_VVV      ->Fill( bin_projection_bdt_toys_electronScale_VVV      ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_electronScale_WZ       ->Fill( bin_projection_bdt_toys_electronScale_WZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_electronScale_ZZ       ->Fill( bin_projection_bdt_toys_electronScale_ZZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_electronScale_ggZH_hinv->Fill( bin_projection_bdt_toys_electronScale_ggZH_hinv->GetBinContent(i_toy+1));
-          binyield_bdt_toys_muonScale_ZH_hinv  ->Fill( bin_projection_bdt_toys_muonScale_ZH_hinv  ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_muonScale_VVV      ->Fill( bin_projection_bdt_toys_muonScale_VVV      ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_muonScale_WZ       ->Fill( bin_projection_bdt_toys_muonScale_WZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_muonScale_ZZ       ->Fill( bin_projection_bdt_toys_muonScale_ZZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_muonScale_ggZH_hinv->Fill( bin_projection_bdt_toys_muonScale_ggZH_hinv->GetBinContent(i_toy+1));
-          binyield_bdt_toys_METScale_ZH_hinv  ->Fill( bin_projection_bdt_toys_METScale_ZH_hinv  ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_METScale_VVV      ->Fill( bin_projection_bdt_toys_METScale_VVV      ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_METScale_WZ       ->Fill( bin_projection_bdt_toys_METScale_WZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_METScale_ZZ       ->Fill( bin_projection_bdt_toys_METScale_ZZ       ->GetBinContent(i_toy+1));
-          binyield_bdt_toys_METScale_ggZH_hinv->Fill( bin_projection_bdt_toys_METScale_ggZH_hinv->GetBinContent(i_toy+1));
-        }
-        double rms_bdt_toys_electronScale_ZH_hinv   = binyield_bdt_toys_electronScale_ZH_hinv  ->GetRMS();
-        double rms_bdt_toys_electronScale_VVV       = binyield_bdt_toys_electronScale_VVV      ->GetRMS();
-        double rms_bdt_toys_electronScale_WZ        = binyield_bdt_toys_electronScale_WZ       ->GetRMS();
-        double rms_bdt_toys_electronScale_ZZ        = binyield_bdt_toys_electronScale_ZZ       ->GetRMS();
-        double rms_bdt_toys_electronScale_ggZH_hinv = binyield_bdt_toys_electronScale_ggZH_hinv->GetRMS();
-        double mean_bdt_toys_electronScale_ZH_hinv   = binyield_bdt_toys_electronScale_ZH_hinv  ->GetMean();
-        double mean_bdt_toys_electronScale_VVV       = binyield_bdt_toys_electronScale_VVV      ->GetMean();
-        double mean_bdt_toys_electronScale_WZ        = binyield_bdt_toys_electronScale_WZ       ->GetMean();
-        double mean_bdt_toys_electronScale_ZZ        = binyield_bdt_toys_electronScale_ZZ       ->GetMean();
-        double mean_bdt_toys_electronScale_ggZH_hinv = binyield_bdt_toys_electronScale_ggZH_hinv->GetMean();
-        double rms_bdt_toys_muonScale_ZH_hinv   = binyield_bdt_toys_muonScale_ZH_hinv  ->GetRMS();
-        double rms_bdt_toys_muonScale_VVV       = binyield_bdt_toys_muonScale_VVV      ->GetRMS();
-        double rms_bdt_toys_muonScale_WZ        = binyield_bdt_toys_muonScale_WZ       ->GetRMS();
-        double rms_bdt_toys_muonScale_ZZ        = binyield_bdt_toys_muonScale_ZZ       ->GetRMS();
-        double rms_bdt_toys_muonScale_ggZH_hinv = binyield_bdt_toys_muonScale_ggZH_hinv->GetRMS();
-        double mean_bdt_toys_muonScale_ZH_hinv   = binyield_bdt_toys_muonScale_ZH_hinv  ->GetMean();
-        double mean_bdt_toys_muonScale_VVV       = binyield_bdt_toys_muonScale_VVV      ->GetMean();
-        double mean_bdt_toys_muonScale_WZ        = binyield_bdt_toys_muonScale_WZ       ->GetMean();
-        double mean_bdt_toys_muonScale_ZZ        = binyield_bdt_toys_muonScale_ZZ       ->GetMean();
-        double mean_bdt_toys_muonScale_ggZH_hinv = binyield_bdt_toys_muonScale_ggZH_hinv->GetMean();
-        double rms_bdt_toys_METScale_ZH_hinv   = binyield_bdt_toys_METScale_ZH_hinv  ->GetRMS();
-        double rms_bdt_toys_METScale_VVV       = binyield_bdt_toys_METScale_VVV      ->GetRMS();
-        double rms_bdt_toys_METScale_WZ        = binyield_bdt_toys_METScale_WZ       ->GetRMS();
-        double rms_bdt_toys_METScale_ZZ        = binyield_bdt_toys_METScale_ZZ       ->GetRMS();
-        double rms_bdt_toys_METScale_ggZH_hinv = binyield_bdt_toys_METScale_ggZH_hinv->GetRMS();
-        double mean_bdt_toys_METScale_ZH_hinv   = binyield_bdt_toys_METScale_ZH_hinv  ->GetMean();
-        double mean_bdt_toys_METScale_VVV       = binyield_bdt_toys_METScale_VVV      ->GetMean();
-        double mean_bdt_toys_METScale_WZ        = binyield_bdt_toys_METScale_WZ       ->GetMean();
-        double mean_bdt_toys_METScale_ZZ        = binyield_bdt_toys_METScale_ZZ       ->GetMean();
-        double mean_bdt_toys_METScale_ggZH_hinv = binyield_bdt_toys_METScale_ggZH_hinv->GetMean();
-        if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 ) { 
-          systBDTElectronUp  [0] = (mean_bdt_toys_electronScale_ZH_hinv + rms_bdt_toys_electronScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-          systBDTElectronDown[0] = (mean_bdt_toys_electronScale_ZH_hinv - rms_bdt_toys_electronScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-          systBDTElectronUp  [0] = (mean_bdt_toys_muonScale_ZH_hinv + rms_bdt_toys_muonScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-          systBDTElectronDown[0] = (mean_bdt_toys_muonScale_ZH_hinv - rms_bdt_toys_muonScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-          systBDTElectronUp  [0] = (mean_bdt_toys_METScale_ZH_hinv + rms_bdt_toys_METScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-          systBDTElectronDown[0] = (mean_bdt_toys_METScale_ZH_hinv - rms_bdt_toys_METScale_ZH_hinv)/histo_ZH_hinv[nModel]->GetBinContent(nb);
-        }
-        if(histo_VVV->GetBinContent(nb) > 0 ) {
-          systBDTElectronUp  [1] = (mean_bdt_toys_electronScale_VVV + rms_bdt_toys_electronScale_VVV)/histo_VVV->GetBinContent(nb);
-          systBDTElectronDown[1] = (mean_bdt_toys_electronScale_VVV - rms_bdt_toys_electronScale_VVV)/histo_VVV->GetBinContent(nb);
-          systBDTElectronUp  [1] = (mean_bdt_toys_muonScale_VVV + rms_bdt_toys_muonScale_VVV)/histo_VVV->GetBinContent(nb);
-          systBDTElectronDown[1] = (mean_bdt_toys_muonScale_VVV - rms_bdt_toys_muonScale_VVV)/histo_VVV->GetBinContent(nb);
-          systBDTElectronUp  [1] = (mean_bdt_toys_METScale_VVV + rms_bdt_toys_METScale_VVV)/histo_VVV->GetBinContent(nb);
-          systBDTElectronDown[1] = (mean_bdt_toys_METScale_VVV - rms_bdt_toys_METScale_VVV)/histo_VVV->GetBinContent(nb);
-        }
-        if(histo_WZ->GetBinContent(nb) > 0 ) {
-          systBDTElectronUp  [2] = (mean_bdt_toys_electronScale_WZ + rms_bdt_toys_electronScale_WZ)/histo_WZ->GetBinContent(nb);
-          systBDTElectronDown[2] = (mean_bdt_toys_electronScale_WZ - rms_bdt_toys_electronScale_WZ)/histo_WZ->GetBinContent(nb);
-          systBDTElectronUp  [2] = (mean_bdt_toys_muonScale_WZ + rms_bdt_toys_muonScale_WZ)/histo_WZ->GetBinContent(nb);
-          systBDTElectronDown[2] = (mean_bdt_toys_muonScale_WZ - rms_bdt_toys_muonScale_WZ)/histo_WZ->GetBinContent(nb);
-          systBDTElectronUp  [2] = (mean_bdt_toys_METScale_WZ + rms_bdt_toys_METScale_WZ)/histo_WZ->GetBinContent(nb);
-          systBDTElectronDown[2] = (mean_bdt_toys_METScale_WZ - rms_bdt_toys_METScale_WZ)/histo_WZ->GetBinContent(nb);
-        }
-        if(histo_ZZ->GetBinContent(nb) > 0 ) {
-          systBDTElectronUp  [3] = (mean_bdt_toys_electronScale_ZZ + rms_bdt_toys_electronScale_ZZ)/histo_ZZ->GetBinContent(nb);
-          systBDTElectronDown[3] = (mean_bdt_toys_electronScale_ZZ - rms_bdt_toys_electronScale_ZZ)/histo_ZZ->GetBinContent(nb);
-          systBDTElectronUp  [3] = (mean_bdt_toys_muonScale_ZZ + rms_bdt_toys_muonScale_ZZ)/histo_ZZ->GetBinContent(nb);
-          systBDTElectronDown[3] = (mean_bdt_toys_muonScale_ZZ - rms_bdt_toys_muonScale_ZZ)/histo_ZZ->GetBinContent(nb);
-          systBDTElectronUp  [3] = (mean_bdt_toys_METScale_ZZ + rms_bdt_toys_METScale_ZZ)/histo_ZZ->GetBinContent(nb);
-          systBDTElectronDown[3] = (mean_bdt_toys_METScale_ZZ - rms_bdt_toys_METScale_ZZ)/histo_ZZ->GetBinContent(nb);
-        }
-        if(histo_ggZH_hinv->GetBinContent(nb) > 0 ) {
-          systBDTElectronUp  [4] = (mean_bdt_toys_electronScale_ggZH_hinv + rms_bdt_toys_electronScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-          systBDTElectronDown[4] = (mean_bdt_toys_electronScale_ggZH_hinv - rms_bdt_toys_electronScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-          systBDTElectronUp  [4] = (mean_bdt_toys_muonScale_ggZH_hinv + rms_bdt_toys_muonScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-          systBDTElectronDown[4] = (mean_bdt_toys_muonScale_ggZH_hinv - rms_bdt_toys_muonScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-          systBDTElectronUp  [4] = (mean_bdt_toys_METScale_ggZH_hinv + rms_bdt_toys_METScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-          systBDTElectronDown[4] = (mean_bdt_toys_METScale_ggZH_hinv - rms_bdt_toys_METScale_ggZH_hinv)/histo_ggZH_hinv->GetBinContent(nb);
-        }
-        delete bin_projection_bdt_toys_electronScale_ZH_hinv  ;
-        delete bin_projection_bdt_toys_electronScale_VVV      ;
-        delete bin_projection_bdt_toys_electronScale_WZ       ;
-        delete bin_projection_bdt_toys_electronScale_ZZ       ;
-        delete bin_projection_bdt_toys_electronScale_ggZH_hinv;
-        delete bin_projection_bdt_toys_muonScale_ZH_hinv  ;
-        delete bin_projection_bdt_toys_muonScale_VVV      ;
-        delete bin_projection_bdt_toys_muonScale_WZ       ;
-        delete bin_projection_bdt_toys_muonScale_ZZ       ;
-        delete bin_projection_bdt_toys_muonScale_ggZH_hinv;
-        delete bin_projection_bdt_toys_METScale_ZH_hinv  ;
-        delete bin_projection_bdt_toys_METScale_VVV      ;
-        delete bin_projection_bdt_toys_METScale_WZ       ;
-        delete bin_projection_bdt_toys_METScale_ZZ       ;
-        delete bin_projection_bdt_toys_METScale_ggZH_hinv;
-        delete binyield_bdt_toys_electronScale_ZH_hinv  ;
-        delete binyield_bdt_toys_electronScale_VVV      ;
-        delete binyield_bdt_toys_electronScale_WZ       ;
-        delete binyield_bdt_toys_electronScale_ZZ       ;
-        delete binyield_bdt_toys_electronScale_ggZH_hinv;
-        delete binyield_bdt_toys_muonScale_ZH_hinv  ;
-        delete binyield_bdt_toys_muonScale_VVV      ;
-        delete binyield_bdt_toys_muonScale_WZ       ;
-        delete binyield_bdt_toys_muonScale_ZZ       ;
-        delete binyield_bdt_toys_muonScale_ggZH_hinv;
-        delete binyield_bdt_toys_METScale_ZH_hinv   ;
-        delete binyield_bdt_toys_METScale_VVV       ;
-        delete binyield_bdt_toys_METScale_WZ        ;
-        delete binyield_bdt_toys_METScale_ZZ        ;
-        delete binyield_bdt_toys_METScale_ggZH_hinv ;
+        systBDTElectronUp  [0] = bdt_syst_electronScaleUp_ZH_hinv[nModel]   ->GetBinContent(nb);
+        systBDTElectronDown[0] = bdt_syst_electronScaleDown_ZH_hinv[nModel] ->GetBinContent(nb);
+        systBDTMuonUp  [0]     = bdt_syst_muonScaleUp_ZH_hinv[nModel]       ->GetBinContent(nb);
+        systBDTMuonDown[0]     = bdt_syst_muonScaleDown_ZH_hinv[nModel]     ->GetBinContent(nb);
+        systBDTMETUp  [0]      = bdt_syst_METScaleUp_ZH_hinv[nModel]        ->GetBinContent(nb);
+        systBDTMETDown[0]      = bdt_syst_METScaleDown_ZH_hinv[nModel]      ->GetBinContent(nb);
+        systBDTElectronUp  [1] = bdt_syst_electronScaleUp_VVV   ->GetBinContent(nb);
+        systBDTElectronDown[1] = bdt_syst_electronScaleDown_VVV ->GetBinContent(nb);
+        systBDTMuonUp  [1]     = bdt_syst_muonScaleUp_VVV       ->GetBinContent(nb);
+        systBDTMuonDown[1]     = bdt_syst_muonScaleDown_VVV     ->GetBinContent(nb);
+        systBDTMETUp  [1]      = bdt_syst_METScaleUp_VVV        ->GetBinContent(nb);
+        systBDTMETDown[1]      = bdt_syst_METScaleDown_VVV      ->GetBinContent(nb);
+        systBDTElectronUp  [2] = bdt_syst_electronScaleUp_WZ   ->GetBinContent(nb);
+        systBDTElectronDown[2] = bdt_syst_electronScaleDown_WZ ->GetBinContent(nb);
+        systBDTMuonUp  [2]     = bdt_syst_muonScaleUp_WZ       ->GetBinContent(nb);
+        systBDTMuonDown[2]     = bdt_syst_muonScaleDown_WZ     ->GetBinContent(nb);
+        systBDTMETUp  [2]      = bdt_syst_METScaleUp_WZ        ->GetBinContent(nb);
+        systBDTMETDown[2]      = bdt_syst_METScaleDown_WZ      ->GetBinContent(nb);
+        systBDTElectronUp  [3] = bdt_syst_electronScaleUp_ZZ   ->GetBinContent(nb);
+        systBDTElectronDown[3] = bdt_syst_electronScaleDown_ZZ ->GetBinContent(nb);
+        systBDTMuonUp  [3]     = bdt_syst_muonScaleUp_ZZ       ->GetBinContent(nb);
+        systBDTMuonDown[3]     = bdt_syst_muonScaleDown_ZZ     ->GetBinContent(nb);
+        systBDTMETUp  [3]      = bdt_syst_METScaleUp_ZZ        ->GetBinContent(nb);
+        systBDTMETDown[3]      = bdt_syst_METScaleDown_ZZ      ->GetBinContent(nb);
+        systBDTElectronUp  [4] = bdt_syst_electronScaleUp_ggZH_hinv   ->GetBinContent(nb);
+        systBDTElectronDown[4] = bdt_syst_electronScaleDown_ggZH_hinv ->GetBinContent(nb);
+        systBDTMuonUp  [4]     = bdt_syst_muonScaleUp_ggZH_hinv       ->GetBinContent(nb);
+        systBDTMuonDown[4]     = bdt_syst_muonScaleDown_ggZH_hinv     ->GetBinContent(nb);
+        systBDTMETUp  [4]      = bdt_syst_METScaleUp_ggZH_hinv        ->GetBinContent(nb);
+        systBDTMETDown[4]      = bdt_syst_METScaleDown_ggZH_hinv      ->GetBinContent(nb);
+        
       }
    
       double systPUUp  [5] = {1.0,1.0,1.0,1.0,1.0};
@@ -2836,37 +3092,4 @@ void zhAnalysis(
 
   } // end loop over models
   
-  bool doABCDstudy=false;  
-  if(doABCDstudy) { // Output result of ABCD study for DY 
-    // Calculate <x>, <y>, <xy>
-    double meanVar1=sumVar1/sumWeights, meanVar2=sumVar2/sumWeights, meanProductOfDiscriminants=sumProductOfDiscriminants/(sumWeights*sumWeights);
-    // Find the sample covariance from these quantities -- last factor is correction to make it the sample covariance.
-    double sampleCovarianceOfDiscriminants = (meanProductOfDiscriminants - meanVar1*meanVar2) / (1. - sumWeightsSquared / (sumWeights*sumWeights));
-    // Calculate sigma x, sigma y
-    double sumSquareDiffVar1=0, sumSquareDiffVar2=0;
-    double nABCD = (double) weight_.size();
-    assert(var1_.size()==var2_.size() && var2_.size()==weight_.size());
-    for(int i=0; i < nABCD; i++) {
-      sumSquareDiffVar1 += weight_[i] * pow(var1_[i] - meanVar1, 2);
-      sumSquareDiffVar2 += weight_[i] * pow(var2_[i] - meanVar2, 2);
-    }
-    double sigmaVar1 = sqrt( sumSquareDiffVar1 / (sumWeights - sumWeightsSquared/sumWeights) );
-    double sigmaVar2 = sqrt( sumSquareDiffVar2 / (sumWeights - sumWeightsSquared/sumWeights) );
-    double correlationOfDiscriminants = sampleCovarianceOfDiscriminants / (sigmaVar1 * sigmaVar2);
-    printf("meanVar1 = %f\n", meanVar1);
-    printf("meanVar2 = %f\n", meanVar2);
-    printf("meanProductOfDiscriminants = %f\n", meanProductOfDiscriminants);
-    printf("sampleCovarianceOfDiscriminants = %f\n", sampleCovarianceOfDiscriminants);
-    printf("sigmaVar1 = %f\n", sigmaVar1);
-    printf("sigmaVar2 = %f\n", sigmaVar2);
-    printf("number of events (without weights) = %d\n", (int)nABCD);
-    //printf("= %f\n", );
-    printf("Correlation coefficient between var1 and var2 = %f\n", correlationOfDiscriminants);
-    printf("N_A                       = %f\n", N_A);
-    printf("N_B                       = %f\n", N_B);
-    printf("N_C                       = %f\n", N_C);
-    printf("N_D                       = %f\n", N_D);
-    printf("N_B*N_C/N_D - N_A         = %f\n", (N_B*N_C/N_D)-N_A);
-    printf("(N_B*N_C/N_D - N_A) / N_A = %f\n", ((N_B*N_C/N_D)-N_A)/N_A);
-  }
 }

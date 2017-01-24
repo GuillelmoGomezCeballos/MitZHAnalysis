@@ -1561,14 +1561,14 @@ void zhAnalysis(
 
       //if(totalWeight == 0) continue;
 
-      // DY
-      if(theCategory == 2 && zzBoson.size() >= 1) {
-        double myptz = ((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->Pt();
-        Int_t binpt = fhDVjetsNum->GetXaxis()->FindBin(myptz);
-	if     (binpt <= 0) binpt = 1;
-	else if(binpt > fhDVjetsNum->GetNbinsX()) binpt = fhDVjetsNum->GetNbinsX();
-        totalWeight = totalWeight * fhDVjetsNum->GetBinContent(binpt)/fhDVjetsDen->GetBinContent(binpt) ;
-      }
+      // DY (not valid for NLO MC)
+      //if(theCategory == 2 && zzBoson.size() >= 1) {
+      //  double myptz = ((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->Pt();
+      //  Int_t binpt = fhDVjetsNum->GetXaxis()->FindBin(myptz);
+      //  if     (binpt <= 0) binpt = 1;
+      //  else if(binpt > fhDVjetsNum->GetNbinsX()) binpt = fhDVjetsNum->GetNbinsX();
+      //  totalWeight = totalWeight * fhDVjetsNum->GetBinContent(binpt)/fhDVjetsDen->GetBinContent(binpt) ;
+      //}
 
       // ZZ
       double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();

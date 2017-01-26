@@ -1613,10 +1613,12 @@ void zhAnalysis(
      }
       
       // begin event weighting
-      vector<int>zzBoson;
+      vector<int>wBoson;
+      vector<int>zBoson;
       vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zzBoson.push_back(ngen0);
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
         if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
 	   ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
         // begin neutrinos
@@ -1758,8 +1760,8 @@ void zhAnalysis(
       //if(totalWeight == 0) continue;
 
       // DY (not valid for NLO MC)
-      //if(theCategory == 2 && zzBoson.size() >= 1) {
-      //  double myptz = ((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->Pt();
+      //if(theCategory == 2 && zBoson.size() >= 1) {
+      //  double myptz = ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt();
       //  Int_t binpt = fhDVjetsNum->GetXaxis()->FindBin(myptz);
       //  if     (binpt <= 0) binpt = 1;
       //  else if(binpt > fhDVjetsNum->GetNbinsX()) binpt = fhDVjetsNum->GetNbinsX();
@@ -1773,17 +1775,28 @@ void zhAnalysis(
 	theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
 
         //float GENdPhiZZ = 5;
-	//if(zzBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[1]])));
+	//if(zBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[1]])));
 	//theZZCorr[1] = kfactor_qqZZ_qcd_dPhi(GENdPhiZZ);
         float GENmZZ = 0.0;
-	if(zzBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).M();
+	if(zBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).M();
 	theZZCorr[1] = kfactor_qqZZ_qcd_M(GENmZZ);
         //float GENptZZ = 0.0;
-	//if(zzBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).Pt();
+	//if(zBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).Pt();
 	//theZZCorr[1] = kfactor_qqZZ_qcd_M(GENptZZ);
 
         totalWeight = totalWeight * (theZZCorr[0]*theZZCorr[1]);
       }
+
+      // WZ
+      if(theCategory == 3 && wBoson.size() >= 1 && zBoson.size() >= 1) {
+        float GENmWZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(wBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) ).M();
+
+        totalWeight = totalWeight * weightEWKWZCorr(GENmWZ);
+        //printf("Possible to perform WZ EWK correction: %d %d\n",(int)wBoson.size(),(int)zBoson.size());
+      }
+      //else if(theCategory == 3) {
+      //  printf("No possible to perform WZ EWK correction: %d %d\n",(int)wBoson.size(),(int)zBoson.size());
+      //}
       // end event weighting
       //totalWeight = 1;
 
@@ -1969,7 +1982,7 @@ void zhAnalysis(
 	  if(passAllCuts[SIGSEL]) {
 	     histo_WZ              ->Fill(MVAVar,totalWeight);
 	     histo_WZNoW           ->Fill(MVAVar,1.);
-	     histo_WZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*1.10);
+	     histo_WZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*1.02);
 	     histo_WZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
 	     histo_WZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
 	     histo_WZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
@@ -3035,13 +3048,14 @@ void zhAnalysis(
       if(histo_ggZH_hinv->GetBinContent(nb) > 0)
       newcardShape << Form("QCDscale_ggVH		                 lnN    -     -     -     -     -     -   %7.5f\n",1.0+qcdScaleTotal[1]);  
       newcardShape << Form("QCDscale_VVV		                 lnN    -     -   %7.5f   -     -     -     -  \n",systQCDScale[1]);		
-      newcardShape << Form("QCDscale_VV		                   lnN    -     -     -   %7.5f       %7.5f    -      -  \n",systQCDScale[2],systQCDScale[3]);		
+      newcardShape << Form("QCDscale_WZ		                   lnN    -     -     -   %7.5f      -    -      -  \n",systQCDScale[2]);
+      newcardShape << Form("QCDscale_ZZ		                   lnN    -     -     -   -      %7.5f    -      -  \n",systQCDScale[3]);
 
       if(useVVFromData && nb != 1){
       if(useZZWZEWKUnc){
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[1]-1.0)*(syst_EWKCorrUp[1]-1.0)));		
+      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.02*0.02+(syst_EWKCorrUp[1]-1.0)*(syst_EWKCorrUp[1]-1.0)));		
       } else {
       newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
       newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		

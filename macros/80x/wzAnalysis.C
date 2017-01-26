@@ -71,6 +71,7 @@ void wzAnalysis(
   if(isMINIAOD) triggerSuffix = "";
   if      (period==1){
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x_37ifb.root";
+
   if(isMINIAOD) {
     infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data())); infilecatv.push_back(0);
     infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data())); infilecatv.push_back(0);
@@ -984,9 +985,13 @@ void wzAnalysis(
       }
 
       // begin event weighting
+      vector<int>wBoson;
+      vector<int>zBoson;
       vector<bool> isGenDupl;
       int numberQuarks[2] = {0,0};
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
         if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[0]++;
         else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) numberQuarks[1]++;
         isGenDupl.push_back(0);
@@ -1104,6 +1109,18 @@ void wzAnalysis(
       if(infilecatv[ifile] == 0) mcWeight = 1.0;
       double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*addSpecialWeight;
       if(totalWeight == 0) continue;
+
+      // WZ
+      if(theCategory == 3 && wBoson.size() >= 1 && zBoson.size() >= 1) {
+        float GENmWZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(wBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) ).M();
+
+        totalWeight = totalWeight * weightEWKWZCorr(GENmWZ);
+        //printf("Possible to perform WZ EWK correction: %d %d\n",(int)wBoson.size(),(int)zBoson.size());
+      }
+      //else if(theCategory == 3) {
+      //  printf("No possible to perform WZ EWK correction: %d %d\n",(int)wBoson.size(),(int)zBoson.size());
+      //}
+
       // end event weighting
       if((infilecatv[ifile] != 0 || theCategory == 0) && passAllCuts[0]) sumEventsProcess[ifile] += totalWeight;
 
@@ -1795,7 +1812,9 @@ void wzAnalysis(
     newcardShape << Form("CMS_eff_b_bjet2016                     lnN	    -	  %7.5f   -	-     -    -	-  \n",1.07);
     newcardShape << Form("pdf_qqbar                              lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01),TMath::Max(systPDF[3],1.01),TMath::Max(systPDF[4],1.01));
     newcardShape << Form("QCDscale_VVV		                 lnN    -     %7.5f   -     -	  -    -    -  \n",systQCDScale[1]); 	   
-    newcardShape << Form("QCDscale_VV		                 lnN  %7.5f     -   %7.5f %7.5f   -    -    -  \n",systQCDScale[0],systQCDScale[2],systQCDScale[3]); 	   
+    newcardShape << Form("QCDscale_Zg		                 lnN  %7.5f     -     -     -     -    -    -  \n",systQCDScale[0]); 	   
+    newcardShape << Form("QCDscale_WZ		                 lnN    -       -   %7.5f   -     -    -    -  \n",systQCDScale[2]); 	   
+    newcardShape << Form("QCDscale_ZZ		                 lnN    -       -     -   %7.5f   -    -    -  \n",systQCDScale[3]); 	   
     newcardShape << Form("QCDscale_ggH		                 lnN    -       -     -     -     -    -  %7.5f\n",systQCDScale[4]); 	   
     newcardShape << Form("CMS_wz3l_FakeMSyst_%4s                 lnN    -       -     -	    -   %7.5f  -    -  \n",ECMsb.Data(),1.30);  	
     newcardShape << Form("CMS_wz3l_FakeESyst_%4s                 lnN    -       -     -	    -     -  %7.5f  -  \n",ECMsb.Data(),1.30);  	

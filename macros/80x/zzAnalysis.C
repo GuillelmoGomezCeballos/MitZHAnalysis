@@ -828,10 +828,12 @@ void zzAnalysis(
       }
 
       // begin event weighting
-      vector<int>zzBoson;
+      vector<int>wBoson;
+      vector<int>zBoson;
       vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zzBoson.push_back(ngen0);
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
+        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
         if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
 	   ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
         // begin neutrinos
@@ -949,13 +951,13 @@ void zzAnalysis(
 	theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
 
         //float GENdPhiZZ = 5;
-	//if(zzBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zzBoson[1]])));
+	//if(zBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[1]])));
 	//theZZCorr[1] = kfactor_qqZZ_qcd_dPhi(GENdPhiZZ);
         float GENmZZ = 0.0;
-	if(zzBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).M();
+	if(zBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).M();
 	theZZCorr[1] = kfactor_qqZZ_qcd_M(GENmZZ);
         //float GENptZZ = 0.0;
-	//if(zzBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zzBoson[1])) ) ).Pt();
+	//if(zBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).Pt();
 	//theZZCorr[1] = kfactor_qqZZ_qcd_M(GENptZZ);
 
         totalWeight = totalWeight * (theZZCorr[0]*theZZCorr[1]);
@@ -1523,8 +1525,9 @@ void zzAnalysis(
       newcardShape << Form("%s                                     lnN  1.000 %7.5f %7.5f %7.5f   -\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2]);
       newcardShape << Form("CMS_trigger2016                        lnN  1.000 %7.5f %7.5f %7.5f   -\n",1.01,1.01,1.01);
       newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  1.000 %7.5f %7.5f %7.5f   -\n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01));
-      newcardShape << Form("QCDscale_VVV                           lnN    -     -   %7.5f   -     -\n",systQCDScale[1]);		
-      newcardShape << Form("QCDscale_VV		                   lnN    -   %7.5f   -   %7.5f   -\n",systQCDScale[0],systQCDScale[2]);		
+      newcardShape << Form("QCDscale_VVV                           lnN    -     -   %7.5f   -     -\n",systQCDScale[1]);
+      newcardShape << Form("QCDscale_ZZ		                   lnN    -   %7.5f   -     -     -\n",systQCDScale[0]);
+      newcardShape << Form("QCDscale_ggH		           lnN    -     -     -   %7.5f   -\n",systQCDScale[2]);
 
       newcardShape << Form("CMS_pu2016                             lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systPUUp[0] ,systPUDown[0] ,systPUUp[1] ,systPUDown[1] ,systPUUp[2] ,systPUDown[2] );
       newcardShape << Form("CMS_scale_met                          lnN  1.000 %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2]);
@@ -1532,7 +1535,7 @@ void zzAnalysis(
 
       if(nb != 1){
       if(useZZWZEWKUnc){
-      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -   %7.5f   -     -     -\n",1.+sqrt(0.1*0.1+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
+      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -   %7.5f   -     -     -\n",1.+sqrt(0.02*0.02+(syst_EWKCorrUp[0]-1.0)*(syst_EWKCorrUp[0]-1.0)));		
       newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
       } else {
       newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	

@@ -220,7 +220,7 @@ void zzAnalysis(
       reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
       reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
       reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
-      reader->AddVariable( "ptl1mptl2_over_ptll"               , &mva_ptl1mptl2_over_ptll);
+      reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
     } else if(MVAVarType==4) {
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
@@ -231,7 +231,7 @@ void zzAnalysis(
       reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
       reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
       reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
-      reader->AddVariable( "ptl1mptl2_over_ptll"               , &mva_ptl1mptl2_over_ptll);
+      reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
     }
     reader->BookMVA("BDT", the_BDT_weights);
   }

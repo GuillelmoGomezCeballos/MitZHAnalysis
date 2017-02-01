@@ -27,16 +27,18 @@
 
 // 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
 
-bool isMINIAOD = true;
-int whichSkim = 4;
-bool useZjetsTemplate = false;
-bool usePureMC = true; 
-bool useEMFromData = true;
-bool useVVFromData = true;
-bool useZZWZEWKUnc = true;
-const bool useDYPT = true;
-bool useCachedBDTSystematics=false;
-double mcPrescale = 1.;
+bool       isMINIAOD               = true;
+int        whichSkim               = 4;
+bool       useZjetsTemplate        = false;
+bool       usePureMC               = true; 
+bool       useEMFromData           = true;
+bool       useVVFromData           = true;
+bool       useZZWZEWKUnc           = true;
+const bool useDYPT                 = true;
+double     mcPrescale              = 1.;
+bool       makeMVAtrees            = false;
+bool       useBDT                  = false;
+bool       useCachedBDTSystematics = false;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -56,8 +58,6 @@ void zhAnalysis(
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
-  bool makeMVAtrees=false;
-  bool useBDT=false;
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
@@ -931,17 +931,17 @@ void zhAnalysis(
            mva_ptl2,
            mva_ptl1mptl2_over_ptll,
            mva_response,
-           mva_weight,
-           aux_PDFscale[102],
-           aux_PUscale,
-           aux_QCDscale_r1f2,
-           aux_QCDscale_r1f5,
-           aux_QCDscale_r2f1,
-           aux_QCDscale_r2f2,
-           aux_QCDscale_r5f1,
-           aux_QCDscale_r5f5,
-           aux_MET_JESup,
-           aux_MET_JESdown;
+           mva_weight;//,
+           //aux_PDFscale[102],
+           //aux_PUscale,
+           //aux_QCDscale_r1f2,
+           //aux_QCDscale_r1f5,
+           //aux_QCDscale_r2f1,
+           //aux_QCDscale_r2f2,
+           //aux_QCDscale_r5f1,
+           //aux_QCDscale_r5f5,
+           //aux_MET_JESup,
+           //aux_MET_JESdown;
   UChar_t  mva_njets,
            mva_ntaus,
            aux_njets_JESup,
@@ -977,18 +977,18 @@ void zhAnalysis(
     data_mva_tree->Branch( "mva_3lveto"              , &mva_3lveto               , "mva_3lveto/O"            ); 
     data_mva_tree->Branch( "mva_btag_veto"           , &mva_btag_veto            , "mva_btag_veto/O"         ); 
     Zjets_mva_tree = (TTree*) data_mva_tree->CloneTree(); Zjets_mva_tree  ->SetName("bkg_mva_tree_Zjets" ); Zjets_mva_tree  ->SetTitle( "MVA input tree with Drell-Yan background events" );
-    Zjets_mva_tree->Branch( "aux_PDFscale"            , &aux_PDFscale);
-    Zjets_mva_tree->Branch( "aux_PUscale"             , &aux_PUscale              , "aux_PUscale/F"           );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r1f2"       , &aux_QCDscale_r1f2        , "aux_QCDscale_r1f2/F"     );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r1f5"       , &aux_QCDscale_r1f5        , "aux_QCDscale_r1f5/F"     );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r2f1"       , &aux_QCDscale_r2f1        , "aux_QCDscale_r2f1/F"     );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r2f2"       , &aux_QCDscale_r2f2        , "aux_QCDscale_r2f2/F"     );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r5f1"       , &aux_QCDscale_r5f1        , "aux_QCDscale_r5f1/F"     );
-    Zjets_mva_tree->Branch( "aux_QCDscale_r5f5"       , &aux_QCDscale_r5f5        , "aux_QCDscale_r5f5/F"     );
-    Zjets_mva_tree->Branch( "aux_njets_JESup"         , &aux_njets_JESup          , "aux_njets_JESup/b"       ); 
-    Zjets_mva_tree->Branch( "aux_njets_JESdown"       , &aux_njets_JESdown        , "aux_njets_JESdown/b"     ); 
-    Zjets_mva_tree->Branch( "aux_MET_JESup"           , &aux_MET_JESup            , "aux_MET_JESup/F"         );
-    Zjets_mva_tree->Branch( "aux_MET_JESdown"         , &aux_MET_JESdown          , "aux_MET_JESdown/F"       );
+    //Zjets_mva_tree->Branch( "aux_PDFscale"            , &aux_PDFscale);
+    //Zjets_mva_tree->Branch( "aux_PUscale"             , &aux_PUscale              , "aux_PUscale/F"           );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r1f2"       , &aux_QCDscale_r1f2        , "aux_QCDscale_r1f2/F"     );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r1f5"       , &aux_QCDscale_r1f5        , "aux_QCDscale_r1f5/F"     );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r2f1"       , &aux_QCDscale_r2f1        , "aux_QCDscale_r2f1/F"     );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r2f2"       , &aux_QCDscale_r2f2        , "aux_QCDscale_r2f2/F"     );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r5f1"       , &aux_QCDscale_r5f1        , "aux_QCDscale_r5f1/F"     );
+    //Zjets_mva_tree->Branch( "aux_QCDscale_r5f5"       , &aux_QCDscale_r5f5        , "aux_QCDscale_r5f5/F"     );
+    //Zjets_mva_tree->Branch( "aux_njets_JESup"         , &aux_njets_JESup          , "aux_njets_JESup/b"       ); 
+    //Zjets_mva_tree->Branch( "aux_njets_JESdown"       , &aux_njets_JESdown        , "aux_njets_JESdown/b"     ); 
+    //Zjets_mva_tree->Branch( "aux_MET_JESup"           , &aux_MET_JESup            , "aux_MET_JESup/F"         );
+    //Zjets_mva_tree->Branch( "aux_MET_JESdown"         , &aux_MET_JESdown          , "aux_MET_JESdown/F"       );
     EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree     ->SetName("bkg_mva_tree_EM" );    EM_mva_tree     ->SetTitle( "MVA input tree with WW/top background events" );
     WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree     ->SetName("bkg_mva_tree_WZ" );    WZ_mva_tree     ->SetTitle( "MVA input tree with WZ background events"     );
     ZZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); ZZ_mva_tree     ->SetName("bkg_mva_tree_ZZ" );    ZZ_mva_tree     ->SetTitle( "MVA input tree with ZZ background events"     );
@@ -2180,7 +2180,21 @@ void zhAnalysis(
     }
     the_input_file->Close();
   } // end of chain
-  if(makeMVAtrees) mva_trees->Close();
+
+
+  if(makeMVAtrees) {
+    mva_trees->cd();
+    data_mva_tree ->Write();
+    Zjets_mva_tree->Write();
+    EM_mva_tree   ->Write();
+    WZ_mva_tree   ->Write();
+    ZZ_mva_tree   ->Write();
+    VVV_mva_tree  ->Write();
+    for(int nModel=0; nModel<nSigModels; nModel++) {
+      signal_mva_trees[nModel]->Write();
+    }
+    mva_trees->Close();
+  }
 
   // "-1" to remove the Higgs contribution
   double sumEvents = 0;

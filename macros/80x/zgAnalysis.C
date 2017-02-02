@@ -331,7 +331,7 @@ void zgAnalysis(
       if(passFilter[2] == kFALSE) continue;
 
       double theDataPrescale = 1.0;
-      if(infilecatv[ifile] == 0) {
+      if(infilecatv[ifile] != 999) {
         for (int nt = 0; nt <(int)numtokens; nt++) {
           if((*eventTrigger.triggerFired)[nt] == 0) continue;
           if     (nsel == 0 || nsel == 3){

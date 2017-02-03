@@ -35,7 +35,7 @@ bool       useEMFromData           = true;
 bool       useVVFromData           = true;
 bool       useZZWZEWKUnc           = true;
 const bool useDYPT                 = true;
-double     mcPrescale              = 100.;
+double     mcPrescale              = 1.;
 bool       makeMVAtrees            = false;
 bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
@@ -67,7 +67,7 @@ void zhAnalysis(
   // File instances on T3 hadoop
   TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
   TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
-  TString filesPathDMMC = "/mnt/hadoop/scratch/dhsu/gui_skims/dm_sigmals/";
+  TString filesPathDMMC = "/mnt/hadoop/scratch/dhsu/gui_skims/dm_signals/";
   Double_t lumi = 36.8;
   TString processTag = "";
 

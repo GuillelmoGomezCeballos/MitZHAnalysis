@@ -35,7 +35,7 @@ bool       useEMFromData           = true;
 bool       useVVFromData           = true;
 bool       useZZWZEWKUnc           = true;
 const bool useDYPT                 = true;
-double     mcPrescale              = 1.;
+double     mcPrescale              = 100.;
 bool       makeMVAtrees            = false;
 bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
@@ -60,9 +60,14 @@ void zhAnalysis(
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
   if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
-  TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
-  TString filesPathDMMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
+  // File instances on EOS
+  //TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  //TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  //TString filesPathDMMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
+  // File instances on T3 hadoop
+  TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
+  TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
+  TString filesPathDMMC = "/mnt/hadoop/scratch/dhsu/gui_skims/dm_sigmals/";
   Double_t lumi = 36.8;
   TString processTag = "";
 

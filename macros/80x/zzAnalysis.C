@@ -43,8 +43,12 @@ void zzAnalysis(
   bool useBDT=false;
 
   Int_t period = 1;
-  TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  // File instances on EOS
+  //TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  //TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  // File instances on T3 hadoop
+  TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
+  TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
   Double_t lumi = 36.8;
   bool verbose = true;
 

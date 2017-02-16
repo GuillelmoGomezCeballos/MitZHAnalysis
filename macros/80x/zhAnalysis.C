@@ -37,7 +37,7 @@ bool       useZZWZEWKUnc           = true;
 const bool useDYPT                 = true;
 double     mcPrescale              = 1.;
 bool       makeMVAtrees            = false;
-bool       useBDT                  = true;
+bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
 const unsigned int    num_bdt_toys = 1000;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
@@ -531,7 +531,7 @@ void zhAnalysis(
   //const int MVAVarType = 0; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
   //const int MVAVarType = 0; const int nBinMVA = 14; Double_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
   //const int MVAVarType = 1; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
+  const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
   //const int MVAVarType = 1; const int nBinMVA = 11; Double_t xbins[nBinMVA+1] = {0, 50, 100, 160, 240, 320, 400, 480, 560, 640, 800, 1200}; TString addChan = "1";
   //const int MVAVarType = 1; const int nBinMVA = 21; Double_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1200}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
@@ -539,7 +539,7 @@ void zhAnalysis(
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
   //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, -0.2, -0.1, 0, 0.05, 0.075, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.2}; TString addChan = "3";
   //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.575, 0.6}; TString addChan = "3";
-  const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,

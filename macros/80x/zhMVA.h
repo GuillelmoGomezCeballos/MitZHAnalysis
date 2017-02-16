@@ -114,7 +114,8 @@ double mvaNuisances(
     printf("(pt, eta, phi, E) lepton1 (%f, %f, %f, %f) lepton2 (%f, %f, %f, %f)\n", lepton1.Pt(), lepton1.Eta(), lepton1.Phi(), lepton1.E(), lepton2.Pt(), lepton2.Eta(), lepton2.Phi(), lepton2.E());
     printf("(pt, eta, phi, E) d_lepton1 (%f, %f, %f, %f) d_lepton2 (%f, %f, %f, %f)\n", d_lepton1.Pt(), d_lepton1.Eta(), d_lepton1.Phi(), d_lepton1.E(), d_lepton2.Pt(), d_lepton2.Eta(), d_lepton2.Phi(), d_lepton2.E());
   }
-  return reader->EvaluateMVA("BDT");
+  //return reader->EvaluateMVA("BDT");
+  return (reader->EvaluateMulticlass("BDT"))[0];
 }
 
 double getMVAVar(
@@ -146,7 +147,7 @@ double getMVAVar(
       }
     } else if(MVAVarType == 3) {
       if(MET<100.) MVAVar = -0.5;
-      else         MVAVar = bdt_value;
+      else         MVAVar = TMath::Min(bdt_value,xmax-0.001);
     } else if(MVAVarType == 4) {
       if(MET < 100 || bdt_value < -0.4) MVAVar = 80.;
       else {

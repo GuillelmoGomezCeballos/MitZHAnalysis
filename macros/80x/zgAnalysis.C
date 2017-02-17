@@ -45,7 +45,7 @@ void zgAnalysis(
 
   TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/";
   TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
-  Double_t lumi = 36.8;
+  Double_t lumi = 35.9;
 
   double denFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   double numFRDAM[5][5] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -102,8 +102,8 @@ void zgAnalysis(
 
   if(infilenamev.size() != infilecatv.size()) {assert(0); return;}
 
-  Float_t fMVACut[4][4];
-  InitializeJetIdCuts(fMVACut);
+  //Float_t fMVACut[4][4];
+  //InitializeJetIdCuts(fMVACut);
 
   LeptonScaleLookup trigLookup(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
 
@@ -424,7 +424,7 @@ void zgAnalysis(
       double dPhiJetDiLep = -1.0;
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
-        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
+        //bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
         //if(passId == false) continue;        
 
         Bool_t isPhoton = kFALSE;

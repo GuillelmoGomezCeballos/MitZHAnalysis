@@ -19,6 +19,7 @@
 #include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
+#include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
 
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
@@ -35,6 +36,7 @@ double mcPrescale = 1.0;
 bool usePureMC = false;
 bool isWZhinv = true;
 bool useZZWZEWKUnc = true;
+const double bTagCuts[1] = {0.9535}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
 
 double overallZgSF[1] = {0.8};
 
@@ -57,12 +59,14 @@ void wzAnalysis(
   Int_t period = 1;
 
   // File instances on EOS
-  //TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  //TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  TString filesPathMC2 = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
   // File instances on T3 hadoop
-  TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
-  TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
-  Double_t lumi = 36.8;
+  //TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
+  //TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
+  //TString filesPathMC2  = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
+  Double_t lumi = 35.9;
 
   //*******************************************************
   //Input Files
@@ -92,7 +96,7 @@ void wzAnalysis(
   infilenamev.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV.root",filesPathMC.Data()));					      infilecatv.push_back(1);
   infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));        infilecatv.push_back(1);
   infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC.Data()));					      infilecatv.push_back(1);
+  infilenamev.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC2.Data()));					      infilecatv.push_back(1);
   infilenamev.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));    infilecatv.push_back(1);
   infilenamev.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));infilecatv.push_back(1);
   infilenamev.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(1);
@@ -151,8 +155,30 @@ void wzAnalysis(
   //infilenamev.push_back(Form("%sWZJJ_EWK_13TeV-madgraph-pythia8.root",filesPathMC.Data()));	       infilecatv.push_back(5);
   //infilenamev.push_back(Form("%sWZJJ_QCD_13TeV-madgraph-pythia8.root",filesPathMC.Data()));	       infilecatv.push_back(5);
 
-  Float_t fMVACut[4][4];
-  InitializeJetIdCuts(fMVACut);
+  double denBTagging[5][5][3],jetEpsBtagTIGHT[5][5][3];
+  double numBTaggingTIGHT[5][5][3];
+  for(int i0=0; i0<5; i0++) {
+    for(int i1=0; i1<5; i1++) {
+      for(int i2=0; i2<3; i2++) {
+        denBTagging[i0][i1][i2] = 0.0;
+        numBTaggingTIGHT[i0][i1][i2] = 0.0;
+	if     (i2==BTagEntry::FLAV_B)    jetEpsBtagTIGHT[i0][i1][i2] = jetEpsBtagBTIGHT[i0][i1];
+	else if(i2==BTagEntry::FLAV_C)    jetEpsBtagTIGHT[i0][i1][i2] = jetEpsBtagCTIGHT[i0][i1];
+	else if(i2==BTagEntry::FLAV_UDSG) jetEpsBtagTIGHT[i0][i1][i2] = jetEpsBtagLTIGHT[i0][i1];
+      }
+    }
+  }
+
+  //Float_t fMVACut[4][4];
+  //InitializeJetIdCuts(fMVACut);
+  
+  BTagCalibration2 *btagCalib = new BTagCalibration2("csvv2","MitAnalysisRunII/data/80x/CSVv2_Moriond17_B_H.csv");
+  BTagCalibration2Reader btagReaderBCTIGHT(btagCalib,BTagEntry::OP_TIGHT,"comb","central");
+  BTagCalibration2Reader btagReaderLTIGHT(btagCalib,BTagEntry::OP_TIGHT,"incl","central");
+  BTagCalibration2Reader btagReaderBCTIGHTUP(btagCalib,BTagEntry::OP_TIGHT,"comb","up");
+  BTagCalibration2Reader btagReaderLTIGHTUP(btagCalib,BTagEntry::OP_TIGHT,"incl","up");
+  BTagCalibration2Reader btagReaderBCTIGHTDOWN(btagCalib,BTagEntry::OP_TIGHT,"comb","down");
+  BTagCalibration2Reader btagReaderLTIGHTDOWN(btagCalib,BTagEntry::OP_TIGHT,"incl","down");
 
   TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
   TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPU);    fhDPU    ->SetDirectory(0);
@@ -496,6 +522,17 @@ void wzAnalysis(
   TH1D* histo_Higgs_CMS_MVAJESBoundingUp   	= new TH1D( Form("histo_Higgs_CMS_scale_jesUp")  , Form("histo_Higgs_CMS_scale_jesUp")  , nBinMVA, xbins); histo_Higgs_CMS_MVAJESBoundingUp  ->Sumw2();
   TH1D* histo_Higgs_CMS_MVAJESBoundingDown 	= new TH1D( Form("histo_Higgs_CMS_scale_jesDown"), Form("histo_Higgs_CMS_scale_jesDown"), nBinMVA, xbins); histo_Higgs_CMS_MVAJESBoundingDown->Sumw2();
 
+  TH1D* histo_Zg_CMS_MVABTAGBoundingUp          = new TH1D( Form("histo_Zg_CMS_eff_b_2016Up")  , Form("histo_Zg_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_Zg_CMS_MVABTAGBoundingUp  ->Sumw2();
+  TH1D* histo_Zg_CMS_MVABTAGBoundingDown        = new TH1D( Form("histo_Zg_CMS_eff_b_2016Down"), Form("histo_Zg_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_Zg_CMS_MVABTAGBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVABTAGBoundingUp   	= new TH1D( Form("histo_VVV_CMS_eff_b_2016Up")  , Form("histo_VVV_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVABTAGBoundingDown 	= new TH1D( Form("histo_VVV_CMS_eff_b_2016Down"), Form("histo_VVV_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_MVABTAGBoundingUp    	= new TH1D( Form("histo_WZ_CMS_eff_b_2016Up")  , Form("histo_WZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_MVABTAGBoundingDown  	= new TH1D( Form("histo_WZ_CMS_eff_b_2016Down"), Form("histo_WZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_MVABTAGBoundingUp    	= new TH1D( Form("histo_ZZ_CMS_eff_b_2016Up")  , Form("histo_ZZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVABTAGBoundingDown  	= new TH1D( Form("histo_ZZ_CMS_eff_b_2016Down"), Form("histo_ZZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingDown->Sumw2();
+  TH1D* histo_Higgs_CMS_MVABTAGBoundingUp   	= new TH1D( Form("histo_Higgs_CMS_eff_b_2016Up")  , Form("histo_Higgs_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_Higgs_CMS_MVABTAGBoundingUp  ->Sumw2();
+  TH1D* histo_Higgs_CMS_MVABTAGBoundingDown 	= new TH1D( Form("histo_Higgs_CMS_eff_b_2016Down"), Form("histo_Higgs_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_Higgs_CMS_MVABTAGBoundingDown->Sumw2();
+
   TH1D* histo_Zg_CMS_BDTMuonScaleBoundingUp           = new TH1D( Form("histo_Zg_CMS_bdt_muonUp")  , Form("histo_Zg_CMS_scale_jesUp")  , nBinMVA, xbins); histo_Zg_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
   TH1D* histo_Zg_CMS_BDTMuonScaleBoundingDown         = new TH1D( Form("histo_Zg_CMS_bdt_muonDown"), Form("histo_Zg_CMS_scale_jesDown"), nBinMVA, xbins); histo_Zg_CMS_BDTMuonScaleBoundingDown->Sumw2();
   TH1D* histo_VVV_CMS_BDTMuonScaleBoundingUp   	= new TH1D( Form("histo_VVV_CMS_bdt_muonUp")  , Form("histo_VVV_CMS_scale_jesUp")  , nBinMVA, xbins); histo_VVV_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
@@ -796,15 +833,22 @@ void wzAnalysis(
       theFakeMETDown.SetPx(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Px()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Px());
       theFakeMETDown.SetPy(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Py()+((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Py());
 
+      vector<int> idB,idC;
+      for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
+        if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idB.push_back(ngen0);
+        else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idC.push_back(ngen0);
+      }
+
       vector<int> idJet,idJetUp,idJetDown; double btagjet[2] = {0., 0.};
+      double total_bjet_probTIGHT[2] = {1,1};double total_bjet_probTIGHTUP[2] = {1,1};double total_bjet_probTIGHTDOWN[2] = {1,1};
       bool isBtag = kFALSE;
       double bDiscrMax = 0.0;
       double dPhiJetMET = -1.0;
       double dPhiJetDiLep = -1.0;
       double theHT = 0;
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
-        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
+        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 20) continue;
+        //bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
         //if(passId == false) continue;        
 
         Bool_t isLepton = kFALSE;
@@ -816,6 +860,63 @@ void wzAnalysis(
         if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
           if(isWZhinv==false) dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
 	  else                dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(theFakeMET));
+        }
+
+	if(infilecatv[ifile] != 0){
+          BTagEntry::JetFlavor jetFlavor = BTagEntry::FLAV_UDSG;
+	  for(unsigned int ng=0; ng<idB.size(); ng++) {
+	    if (((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idB[ng]])) < 0.4) {jetFlavor = BTagEntry::FLAV_B; break;}
+	  }
+	  if(jetFlavor == BTagEntry::FLAV_UDSG){
+	    for(unsigned int ng=0; ng<idC.size(); ng++) {
+	      if (((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idC[ng]])) < 0.4) {jetFlavor = BTagEntry::FLAV_C; break;}
+	    }
+          }
+
+          int nJPt = 0;
+	  if     (((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 30) nJPt = 0;
+	  else if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 40) nJPt = 1;
+	  else if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 60) nJPt = 2;
+	  else if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 80) nJPt = 3;
+          else                                                       nJPt = 4;
+          int nJEta = 0;
+	  if     (TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 0.5) nJEta = 0;
+	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 1.0) nJEta = 1;
+	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 1.5) nJEta = 2;
+	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 2.0) nJEta = 3;
+          else                                                                     nJEta = 4;
+          denBTagging[nJPt][nJEta][jetFlavor]++;
+          if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingTIGHT[nJPt][nJEta][jetFlavor]++;
+
+          double bjet_SFTIGHT = 1;
+	  if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFTIGHT = btagReaderLTIGHT.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+	  else                                  bjet_SFTIGHT = btagReaderBCTIGHT.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+          if(bjet_SFTIGHT == 0) bjet_SFTIGHT = 1;
+          double bjet_SFTIGHTUP = 1;
+	  if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFTIGHTUP = btagReaderLTIGHTUP.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+	  else                                  bjet_SFTIGHTUP = btagReaderBCTIGHTUP.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+          if(bjet_SFTIGHTUP == 0) bjet_SFTIGHTUP = 1;
+          double bjet_SFTIGHTDOWN = 1;
+	  if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFTIGHTDOWN = btagReaderLTIGHTDOWN.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+	  else                                  bjet_SFTIGHTDOWN = btagReaderBCTIGHTDOWN.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
+          if(bjet_SFTIGHTDOWN == 0) bjet_SFTIGHTDOWN = 1;
+
+	  if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]){
+	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
+	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHT;
+	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
+	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTUP;
+	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
+	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTDOWN;
+	  } else {
+	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
+	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHT);
+	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
+	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTUP);
+	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
+	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTDOWN);
+	  }
+
         }
 
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20 && 
@@ -838,7 +939,7 @@ void wzAnalysis(
       passFilter[ 7] = minMassZ > minMass && minMassZ < maxMass && type3l != 4;
       passFilter[ 8] = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt() > 20;
       passFilter[ 9] = mass3l > 100;
-      passFilter[10] = true; if(applyBtagging) passFilter[10] = bDiscrMax < 0.935;
+      passFilter[10] = true; if(applyBtagging) passFilter[10] = bDiscrMax < bTagCuts[0];
       passFilter[11] = true;
       if(passFilter[7]==kTRUE && (tagZ[0] == tagZ[1] || tagZ[0] == tagZ[2] || tagZ[1] == tagZ[2])) {printf("ZPROBLEM!\n");assert(0);return;}
 
@@ -1114,6 +1215,13 @@ void wzAnalysis(
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infilecatv[ifile] == 0) mcWeight = 1.0;
       double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*addSpecialWeight;
+
+      // Btag scale factor
+      totalWeight = totalWeight * total_bjet_probTIGHT[1]/total_bjet_probTIGHT[0];
+
+      double btagCorr[2] = {(total_bjet_probTIGHTUP[1]  /total_bjet_probTIGHTUP[0]  )/(total_bjet_probTIGHT[1]/total_bjet_probTIGHT[0]),
+                            (total_bjet_probTIGHTDOWN[1]/total_bjet_probTIGHTDOWN[0])/(total_bjet_probTIGHT[1]/total_bjet_probTIGHT[0])};
+
       if(totalWeight == 0) continue;
 
       // WZ
@@ -1254,6 +1362,8 @@ void wzAnalysis(
              histo_Zg_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight/systTotLep[1]);
              histo_Zg_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_Zg_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             histo_Zg_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
+             histo_Zg_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
 	     if(useBDT) {
                histo_Zg_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
                histo_Zg_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
@@ -1289,6 +1399,8 @@ void wzAnalysis(
              histo_WZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight/systTotLep[1]);
              histo_WZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_WZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             histo_WZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
+             histo_WZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
 	     if(useBDT) {
                histo_WZ_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
                histo_WZ_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
@@ -1324,6 +1436,8 @@ void wzAnalysis(
              histo_ZZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight/systTotLep[1]);
              histo_ZZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             histo_ZZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
+             histo_ZZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
 	     if(useBDT) {
                histo_ZZ_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
                histo_ZZ_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
@@ -1359,6 +1473,8 @@ void wzAnalysis(
              histo_VVV_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight/systTotLep[1]);
              histo_VVV_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_VVV_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             histo_VVV_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
+             histo_VVV_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
           }
           if(passSystCuts[JESUP])  histo_VVV_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1386,6 +1502,8 @@ void wzAnalysis(
              histo_Higgs_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight/systTotLep[1]);
              histo_Higgs_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_Higgs_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
+             histo_Higgs_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
+             histo_Higgs_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
 	     if(useBDT) {
                histo_Higgs_CMS_BDTMuonScaleBoundingUp      ->Fill(MVAVar_muonScaleUp      , totalWeight);
                histo_Higgs_CMS_BDTMuonScaleBoundingDown    ->Fill(MVAVar_muonScaleDown    , totalWeight);
@@ -1627,6 +1745,17 @@ void wzAnalysis(
   histo_ZZ_CMS_MVAJESBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVAJESBoundingDown ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   histo_Higgs_CMS_MVAJESBoundingUp	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs  ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAJESBoundingUp    ->GetBinContent(i)/histo_Higgs  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   histo_Higgs_CMS_MVAJESBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs  ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVAJESBoundingDown  ->GetBinContent(i)/histo_Higgs  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  printf("uncertainties BTAG\n");
+  histo_Zg_CMS_MVABTAGBoundingUp          ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Zg	     ->GetBinContent(i)>0)printf("%5.1f ",histo_Zg_CMS_MVABTAGBoundingUp      ->GetBinContent(i)/histo_Zg      ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_Zg_CMS_MVABTAGBoundingDown        ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Zg	     ->GetBinContent(i)>0)printf("%5.1f ",histo_Zg_CMS_MVABTAGBoundingDown   ->GetBinContent(i)/histo_Zg   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_VVV_CMS_MVABTAGBoundingUp	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVABTAGBoundingUp    ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_VVV_CMS_MVABTAGBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_VVV  ->GetBinContent(i)>0)printf("%5.1f ",histo_VVV_CMS_MVABTAGBoundingDown  ->GetBinContent(i)/histo_VVV  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_WZ_CMS_MVABTAGBoundingUp          ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_WZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_WZ_CMS_MVABTAGBoundingUp   ->GetBinContent(i)/histo_WZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_WZ_CMS_MVABTAGBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_WZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_WZ_CMS_MVABTAGBoundingDown ->GetBinContent(i)/histo_WZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_ZZ_CMS_MVABTAGBoundingUp          ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVABTAGBoundingUp   ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_ZZ_CMS_MVABTAGBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_ZZ    ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_MVABTAGBoundingDown ->GetBinContent(i)/histo_ZZ   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_Higgs_CMS_MVABTAGBoundingUp	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs  ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVABTAGBoundingUp    ->GetBinContent(i)/histo_Higgs  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+  histo_Higgs_CMS_MVABTAGBoundingDown	  ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs  ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_MVABTAGBoundingDown  ->GetBinContent(i)/histo_Higgs  ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   printf("uncertainties PU\n");
   histo_Zg_CMS_PUBoundingUp               ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Zg        ->GetBinContent(i)>0)printf("%5.1f ",histo_Zg_CMS_PUBoundingUp      ->GetBinContent(i)/histo_Zg      ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   histo_Zg_CMS_PUBoundingDown             ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Zg        ->GetBinContent(i)>0)printf("%5.1f ",histo_Zg_CMS_PUBoundingDown   ->GetBinContent(i)/histo_Zg   ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
@@ -1720,8 +1849,9 @@ void wzAnalysis(
     else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAMETBoundingDown    ->GetBinContent(nb) > 0) systMet[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAMETBoundingDown->GetBinContent(nb);
     if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAMETBoundingUp   ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs_CMS_MVAMETBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
     else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAMETBoundingDown ->GetBinContent(nb) > 0) systMet[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVAMETBoundingDown->GetBinContent(nb);
-    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet] > 1.04) systMet[nmet] = 1.04;
-    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet] < 0.96) systMet[nmet] = 0.96;
+    for(int i=0; i<5; i++) if(systMet[i] == 1) systMet[i] = 0.998;
+    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet]   > 1.10) systMet[nmet]   = 1.10;
+    for(int nmet=0; nmet<5; nmet++) if(systMet[nmet]   < 0.90) systMet[nmet]   = 0.90;
 
     double systJes[5] = {1.0,1.0,1.0,1.0,1.0};
     if     (histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVAJESBoundingUp      ->GetBinContent(nb) > 0) systJes[0] = histo_Zg_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Zg->GetBinContent(nb);
@@ -1734,6 +1864,22 @@ void wzAnalysis(
     else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVAJESBoundingDown    ->GetBinContent(nb) > 0) systJes[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVAJESBoundingDown->GetBinContent(nb);
     if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingUp   ->GetBinContent(nb) > 0) systJes[4] = histo_Higgs_CMS_MVAJESBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
     else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVAJESBoundingDown ->GetBinContent(nb) > 0) systJes[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVAJESBoundingDown->GetBinContent(nb);
+    for(int njes=0; njes<5; njes++) if(systJes[njes]   > 1.10) systJes[njes]   = 1.10;
+    for(int njes=0; njes<5; njes++) if(systJes[njes]   < 0.90) systJes[njes]   = 0.90;
+
+    double systBtag[5] = {1.0,1.0,1.0,1.0,1.0};
+    if     (histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVABTAGBoundingUp      ->GetBinContent(nb) > 0) systBtag[0] = histo_Zg_CMS_MVABTAGBoundingUp->GetBinContent(nb)/histo_Zg->GetBinContent(nb);
+    else if(histo_Zg->GetBinContent(nb)   > 0 && histo_Zg_CMS_MVABTAGBoundingDown    ->GetBinContent(nb) > 0) systBtag[0] = histo_Zg->GetBinContent(nb)/histo_Zg_CMS_MVABTAGBoundingDown->GetBinContent(nb);
+    if     (histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVABTAGBoundingUp     ->GetBinContent(nb) > 0) systBtag[1] = histo_VVV_CMS_MVABTAGBoundingUp->GetBinContent(nb)/histo_VVV->GetBinContent(nb);
+    else if(histo_VVV->GetBinContent(nb)  > 0 && histo_VVV_CMS_MVABTAGBoundingDown   ->GetBinContent(nb) > 0) systBtag[1] = histo_VVV->GetBinContent(nb)/histo_VVV_CMS_MVABTAGBoundingDown->GetBinContent(nb);
+    if     (histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVABTAGBoundingUp	     ->GetBinContent(nb) > 0) systBtag[2] = histo_WZ_CMS_MVABTAGBoundingUp->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
+    else if(histo_WZ->GetBinContent(nb)   > 0 && histo_WZ_CMS_MVABTAGBoundingDown    ->GetBinContent(nb) > 0) systBtag[2] = histo_WZ->GetBinContent(nb)/histo_WZ_CMS_MVABTAGBoundingDown->GetBinContent(nb);
+    if     (histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVABTAGBoundingUp	     ->GetBinContent(nb) > 0) systBtag[3] = histo_ZZ_CMS_MVABTAGBoundingUp->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
+    else if(histo_ZZ->GetBinContent(nb)   > 0 && histo_ZZ_CMS_MVABTAGBoundingDown    ->GetBinContent(nb) > 0) systBtag[3] = histo_ZZ->GetBinContent(nb)/histo_ZZ_CMS_MVABTAGBoundingDown->GetBinContent(nb);
+    if     (histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVABTAGBoundingUp   ->GetBinContent(nb) > 0) systBtag[4] = histo_Higgs_CMS_MVABTAGBoundingUp->GetBinContent(nb)/histo_Higgs->GetBinContent(nb);
+    else if(histo_Higgs->GetBinContent(nb)> 0 && histo_Higgs_CMS_MVABTAGBoundingDown ->GetBinContent(nb) > 0) systBtag[4] = histo_Higgs->GetBinContent(nb)/histo_Higgs_CMS_MVABTAGBoundingDown->GetBinContent(nb);
+    for(int nbtag=0; nbtag<5; nbtag++) if(systBtag[nbtag]   > 1.10) systBtag[nbtag]   = 1.10;
+    for(int nbtag=0; nbtag<5; nbtag++) if(systBtag[nbtag]   < 0.90) systBtag[nbtag]   = 0.90;
 
     double systBDTMuonUp  [5] = {1.0,1.0,1.0,1.0,1.0};
     double systBDTMuonDown[5] = {1.0,1.0,1.0,1.0,1.0};
@@ -1814,8 +1960,7 @@ void wzAnalysis(
     newcardShape << Form("CMS_scale_met                          lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systMet[0],systMet[1],systMet[2],systMet[3],systMet[4]);
     newcardShape << Form("CMS_scale_j                            lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systJes[0],systJes[1],systJes[2],systJes[3],systJes[4]);
     newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",1.01,1.01,1.01,1.01,1.01);
-    newcardShape << Form("CMS_eff_b_mistag2016                   lnN  %7.5f	-   %7.5f %7.5f   -    -  %7.5f\n",1.02,1.02,1.02,1.02);
-    newcardShape << Form("CMS_eff_b_bjet2016                     lnN	    -	  %7.5f   -	-     -    -	-  \n",1.07);
+    newcardShape << Form("CMS_eff_b_2016                         lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",systBtag[0],systBtag[1],systBtag[2],systBtag[3],systBtag[4]);
     newcardShape << Form("pdf_qqbar                              lnN  %7.5f   %7.5f %7.5f %7.5f   -    -  %7.5f\n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01),TMath::Max(systPDF[3],1.01),TMath::Max(systPDF[4],1.01));
     newcardShape << Form("QCDscale_VVV		                 lnN    -     %7.5f   -     -	  -    -    -  \n",systQCDScale[1]); 	   
     newcardShape << Form("QCDscale_Zg		                 lnN  %7.5f     -     -     -     -    -    -  \n",systQCDScale[0]); 	   

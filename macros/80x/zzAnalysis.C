@@ -44,12 +44,13 @@ void zzAnalysis(
 
   Int_t period = 1;
   // File instances on EOS
-  //TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  //TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  TString filesPathDA  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  TString filesPathMC  = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  TString filesPathMC2 = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
   // File instances on T3 hadoop
-  TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
-  TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
-  Double_t lumi = 36.8;
+  //TString filesPathDA   = "/mnt/hadoop/scratch/dhsu/gui_skims/data/met_";
+  //TString filesPathMC   = "/mnt/hadoop/scratch/dhsu/gui_skims/mc/met_";
+  Double_t lumi = 35.9;
   bool verbose = true;
 
   //*******************************************************
@@ -81,7 +82,7 @@ void zzAnalysis(
   infileName_.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV.root",filesPathMC.Data()));					      infileCategory_.push_back(1);
   infileName_.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));        infileCategory_.push_back(1);
   infileName_.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));            infileCategory_.push_back(1);
-  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC.Data()));                                            infileCategory_.push_back(1);
+  infileName_.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC2.Data()));                                           infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));    infileCategory_.push_back(1);
   infileName_.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));infileCategory_.push_back(1);
   infileName_.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));		      infileCategory_.push_back(1);
@@ -131,8 +132,8 @@ void zzAnalysis(
 
   if(infileName_.size() != infileCategory_.size()) {assert(0); return;}
 
-  Float_t fMVACut[4][4];
-  InitializeJetIdCuts(fMVACut);
+  //Float_t fMVACut[4][4];
+  //InitializeJetIdCuts(fMVACut);
  
   TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
   TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPU);    fhDPU    ->SetDirectory(0);
@@ -705,7 +706,7 @@ void zzAnalysis(
       double dPhiJetDiLep = -1.0;
       for(int nj=0; nj<eventJets.p4->GetEntriesFast(); nj++){
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 10) continue;
-        bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
+        //bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
         //if(passId == false) continue;        
 
         Bool_t isLepton = kFALSE;

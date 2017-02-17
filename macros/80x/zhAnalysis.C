@@ -40,6 +40,7 @@ double     mcPrescale              = 1.;
 bool       makeMVAtrees            = false;
 bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
+const unsigned int    num_bdt_toys = 1000;
 enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
 TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
@@ -561,7 +562,9 @@ void zhAnalysis(
   //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 15; Double_t xbins[nBinMVA+1] =  {-2, -1, 0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.4}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, -0.2, -0.1, 0, 0.05, 0.075, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.2}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.575, 0.6}; TString addChan = "3";
+  //const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //                                                                                         2125,2150,2175,2200,2250,2350,
@@ -1078,7 +1081,6 @@ void zhAnalysis(
     reader->BookMVA("BDT", the_BDT_weights);
   }
   
-  const unsigned int num_bdt_toys=1000;
   float bdt_toy_scale[num_bdt_toys];
   TRandom3 toy_machine(randomToySeed); // Random seed is Dylan's birthday :-)
   // Pointers for TH2 objects to store the toy BDT shapes
@@ -1655,6 +1657,7 @@ void zhAnalysis(
       bool passNjets = idJet.size() <= nJetsType;
 
       double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
+      double bdtMIN = xbins[2]; //boundary after the drell yan bin [-1, ?]
       
       bool passMETTight  = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metTIGHT;
 
@@ -1720,11 +1723,12 @@ void zhAnalysis(
                       jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
         bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
      }
+     bool passBDT = bdt_value>bdtMIN;
      if(MVAVarType==3) {
        passAllCuts[WZSEL]  = passZMassLarge && passNjets && passMET && passBtagVeto  && !pass3rdLVeto;
        passAllCuts[PRESEL] = passZMassLarge && passNjets && passMET && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET;
-       passAllCuts[SIGSEL] = (passAllCuts[PRESEL] && bdt_value>0 && passMETTight) || (passZMass && passNjets && passMT && passMET && !passMETTight && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto);
-       passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && bdt_value>0 && passMETTight;
+       passAllCuts[SIGSEL] = (passAllCuts[PRESEL] && passBDT && passMETTight) || (passZMass && passNjets && passMT && passMET && !passMETTight && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto);
+       passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && passBDT && passMETTight;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
      //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
@@ -1749,10 +1753,10 @@ void zhAnalysis(
      };
      if(MVAVarType==3) {
          // (Cuts in common between DY bin and signal region) && ((Exclusive BDT signal region cuts || Exclusive DY bin cuts))  
-         passSystCuts[0] = (idJetUp.size()   <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && bdt_value>=0) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
-         passSystCuts[1] = (idJetDown.size() <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && bdt_value>=0) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
-         passSystCuts[2] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metTIGHT && bdt_value>=0) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
-         passSystCuts[3] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metTIGHT && bdt_value>=0) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[0] = (idJetUp.size()   <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && passBDT) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[1] = (idJetDown.size() <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && passBDT) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[2] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metTIGHT && passBDT) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[3] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metTIGHT && passBDT) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
      }
       
       // begin event weighting
@@ -2054,7 +2058,7 @@ void zhAnalysis(
 	double maxQCDscale = (TMath::Abs((double)eventMonteCarlo.r1f2)+TMath::Abs((double)eventMonteCarlo.r1f5)+TMath::Abs((double)eventMonteCarlo.r2f1)+
                               TMath::Abs((double)eventMonteCarlo.r2f2)+TMath::Abs((double)eventMonteCarlo.r5f1)+TMath::Abs((double)eventMonteCarlo.r5f5))/6.0;
         // Throw O(1000) toys for the BDT nuisance evaluations
-        if(useBDT && passAllCuts[SIGSEL] && !useCachedBDTSystematics) {
+        if(useBDT && passAllCuts[SIGSEL] && !useCachedBDTSystematics && theCategory >= 3) {
           double bdt_toy_value_muonScale, bdt_toy_value_electronScale, bdt_toy_value_METScale, MVAVar_toy_muonScale, MVAVar_toy_electronScale, MVAVar_toy_METScale;
           TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
                          lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),

@@ -521,34 +521,6 @@ void zhAnalysis(
   //TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
   delete fMuIsoSF;
 
-  // Dilepton trigger efficiencies
-  TFile *fEffDilepTrigs = TFile::Open(Form("MitAnalysisRunII/data/80x/dilepton_trigger_efficiencies_80x.root")); 
-  TH2D *fhDEffDimuonSoup_pt0     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_0"));
-  TH2D *fhDEffDimuonSoup_pt1     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_1"));
-  TH2D *fhDEffDimuonSoup_pt2     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_2"));
-  TH2D *fhDEffDimuonSoup_pt3     = (TH2D*)(fEffDilepTrigs->Get("h_dimuon_eff_3"));
-  TH2D *fhDEffDielectronSoup_pt0 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_0"));
-  TH2D *fhDEffDielectronSoup_pt1 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_1"));
-  TH2D *fhDEffDielectronSoup_pt2 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_2"));
-  TH2D *fhDEffDielectronSoup_pt3 = (TH2D*)(fEffDilepTrigs->Get("h_dielectron_eff_3"));
-  assert(fhDEffDimuonSoup_pt0    );  
-  assert(fhDEffDimuonSoup_pt1    ); 
-  assert(fhDEffDimuonSoup_pt2    ); 
-  assert(fhDEffDimuonSoup_pt3    ); 
-  assert(fhDEffDielectronSoup_pt0); 
-  assert(fhDEffDielectronSoup_pt1); 
-  assert(fhDEffDielectronSoup_pt2); 
-  assert(fhDEffDielectronSoup_pt3); 
-  fhDEffDimuonSoup_pt0     ->SetDirectory(0); 
-  fhDEffDimuonSoup_pt1     ->SetDirectory(0); 
-  fhDEffDimuonSoup_pt2     ->SetDirectory(0); 
-  fhDEffDimuonSoup_pt3     ->SetDirectory(0); 
-  fhDEffDielectronSoup_pt0 ->SetDirectory(0); 
-  fhDEffDielectronSoup_pt1 ->SetDirectory(0); 
-  fhDEffDielectronSoup_pt2 ->SetDirectory(0); 
-  fhDEffDielectronSoup_pt3 ->SetDirectory(0); 
-  delete fEffDilepTrigs;
-
   TString ECMsb  = "13TeV2016";
   
   // MVA variable types:
@@ -1804,21 +1776,6 @@ void zhAnalysis(
 
       // trigger efficiency
       double trigEff = 1.0;
-      //if(infilecatv[ifile] != 0) { 
-      //  if(typePair==1) {
-      //    int nbin = fhDEffDimuonSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDimuonSoup_pt0->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDimuonSoup_pt1->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDimuonSoup_pt2->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDimuonSoup_pt3->GetBinContent(nbin);
-      //  } else if(typePair==2) {
-      //    int nbin = fhDEffDielectronSoup_pt0->FindBin( TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta()) , TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()) );
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDielectronSoup_pt0->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <  40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDielectronSoup_pt1->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <  40) trigEff=fhDEffDielectronSoup_pt2->GetBinContent(nbin);
-      //    if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() >= 40 && ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() >= 40) trigEff=fhDEffDielectronSoup_pt3->GetBinContent(nbin);
-      //  }
-      //}
       //if(infilecatv[ifile] != 0) {
       //  trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
       //  						  ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),

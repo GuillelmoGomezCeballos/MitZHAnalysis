@@ -1523,7 +1523,7 @@ void wzAnalysis(
   histo[5][allPlots-1][6]->Add(histo_Higgs);  
 
   double theWZSF = 1.0;
-  if(0) {
+  if(1) {
     theWZSF = (histo_Data->GetSumOfWeights()-(histo_FakeM->GetSumOfWeights()+histo_FakeE->GetSumOfWeights()+
                histo_Zg->GetSumOfWeights()+histo_ZZ->GetSumOfWeights()+histo_VVV->GetSumOfWeights()))/histo_WZ->GetSumOfWeights(); 
     printf("SF: %f\n",theWZSF); histo[5][allPlots-1][3]->Scale(theWZSF);

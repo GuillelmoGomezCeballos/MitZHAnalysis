@@ -3255,19 +3255,19 @@ void zhAnalysis(
 
       newcardShape << Form("CMS_zllhinv_EMNorm2016_%s_%s               lnU	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),2.0);      
   
-      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d    lnN    %7.5f -      -	 -    -    -	 -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb)  );
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d    lnN    %7.5f -      -	 -    -    -	 -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb),0.999));
   
-      if(histo_Zjets->GetBinContent(nb)           > 0) newcardShape << Form("CMS_zllhinv%s_MVAZjetsStatBounding2016_%s_Bin%d  lnN	-  %7.5f   -	-    -    -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb)    );
+      if(histo_Zjets->GetBinContent(nb)           > 0) newcardShape << Form("CMS_zllhinv%s_MVAZjetsStatBounding2016_%s_Bin%d  lnN	-  %7.5f   -	-    -    -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_Zjets->GetBinError(nb)    /histo_Zjets->GetBinContent(nb),0.999));
   
-      if(histo_VVV->GetBinContent(nb)             > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding2016_%s_Bin%d    lnN	-   -  %7.5f   -    -	 -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV->GetBinError(nb)	   /histo_VVV->GetBinContent(nb)      );
+      if(histo_VVV->GetBinContent(nb)             > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding2016_%s_Bin%d    lnN	-   -  %7.5f   -    -	 -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_VVV->GetBinError(nb)	   /histo_VVV->GetBinContent(nb),0.999));
   
-      if(histo_WZ->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAWZStatBounding2016_%s_Bin%d     lnN      -  -     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_WZ->GetBinError(nb)	/histo_WZ->GetBinContent(nb)	   );
+      if(histo_WZ->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAWZStatBounding2016_%s_Bin%d     lnN      -  -     -  %7.5f  -    -     -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_WZ->GetBinError(nb)	/histo_WZ->GetBinContent(nb),0.999));
   
-      if(histo_ZZ->GetBinContent(nb)	          > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding2016_%s_Bin%d     lnN	  -  -     -	-  %7.5f  -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ->GetBinError(nb)	    /histo_ZZ->GetBinContent(nb)       );
+      if(histo_ZZ->GetBinContent(nb)	          > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding2016_%s_Bin%d     lnN	  -  -     -	-  %7.5f  -	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_ZZ->GetBinError(nb)	    /histo_ZZ->GetBinContent(nb),0.999));
   
-      if(histo_EM->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding2016_%s_Bin%d     lnN	  -  -     -	-    -  %7.5f	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_EM->GetBinError(nb)	    /histo_EM->GetBinContent(nb)       );
+      if(histo_EM->GetBinContent(nb)              > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding2016_%s_Bin%d     lnN	  -  -     -	-    -  %7.5f	-  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_EM->GetBinError(nb)	    /histo_EM->GetBinContent(nb),0.999));
   
-      if(histo_ggZH_hinv->GetBinContent(nb)       > 0) newcardShape << Form("CMS_zllhinv%s_MVAggZHStatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb));
+      if(histo_ggZH_hinv->GetBinContent(nb)       > 0) newcardShape << Form("CMS_zllhinv%s_MVAggZHStatBounding2016_%s_Bin%d   lnN      -    -     -    -    -    -   %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_ggZH_hinv->GetBinError(nb)/histo_ggZH_hinv->GetBinContent(nb),0.999));
     }
 
   } // end loop over models

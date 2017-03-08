@@ -1544,10 +1544,10 @@ void zzAnalysis(
       newcardShape << Form("CMS_BDT_scale_MET                 lnN	- %7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   -  \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2]);	    
       }
 
-      if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb));
-      if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb));  
-      if(histo_Higgs->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAHiggsStatBounding2016_%s_Bin%d   lnN     1.000   -	  -   %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Higgs->GetBinError(nb)/histo_Higgs->GetBinContent(nb));
-      if(histo_Fake ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding2016_%s_Bin%d      lnN     1.000   -	  -	-  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+histo_Fake ->GetBinError(nb)/histo_Fake ->GetBinContent(nb));
+      if(histo_ZZ   ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZZStatBounding2016_%s_Bin%d      lnN     1.000 %7.5f   -	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_ZZ   ->GetBinError(nb)/histo_ZZ   ->GetBinContent(nb),0.999));
+      if(histo_VVV  ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAVVVStatBounding2016_%s_Bin%d     lnN     1.000   -	%7.5f	-    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_VVV  ->GetBinError(nb)/histo_VVV  ->GetBinContent(nb),0.999));  
+      if(histo_Higgs->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAHiggsStatBounding2016_%s_Bin%d   lnN     1.000   -	  -   %7.5f  -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_Higgs->GetBinError(nb)/histo_Higgs->GetBinContent(nb),0.999));
+      if(histo_Fake ->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAEMStatBounding2016_%s_Bin%d      lnN     1.000   -	  -	-  %7.5f\n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_Fake ->GetBinError(nb)/histo_Fake ->GetBinContent(nb),0.999));
     }
   }
 

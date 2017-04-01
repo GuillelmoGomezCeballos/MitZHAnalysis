@@ -1750,7 +1750,7 @@ void wzAnalysis(
   histo_Higgs_CMS_PUBoundingDown          ->Write(); for(int i=1; i<=histo_Zg->GetNbinsX(); i++) {if(histo_Higgs ->GetBinContent(i)>0)printf("%5.1f ",histo_Higgs_CMS_PUBoundingDown ->GetBinContent(i)/histo_Higgs->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
   outFileLimits->Close();
 
-  double lumiE = 1.026;
+  double lumiE = 1.025;
   double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
   double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
 

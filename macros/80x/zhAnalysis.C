@@ -2945,7 +2945,7 @@ void zhAnalysis(
       bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();
       cached_BDT_systematics->Close();
     }
-    double lumiE = 1.026;
+    double lumiE = 1.025;
     double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
     double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
     double syst_btag = 1.02;

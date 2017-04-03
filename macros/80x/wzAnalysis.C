@@ -867,8 +867,8 @@ void wzAnalysis(
 	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 1.5) nJEta = 2;
 	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 2.0) nJEta = 3;
           else                                                                     nJEta = 4;
-          denBTagging[nJPt][nJEta][jetFlavor]++;
-          if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingTIGHT[nJPt][nJEta][jetFlavor]++;
+          denBTagging[nJEta][nJPt][jetFlavor]++;
+          if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingTIGHT[nJEta][nJPt][jetFlavor]++;
 
           double bjet_SFTIGHT = 1;
 	  if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFTIGHT = btagReaderLTIGHT.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
@@ -884,19 +884,19 @@ void wzAnalysis(
           if(bjet_SFTIGHTDOWN == 0) bjet_SFTIGHTDOWN = 1;
 
 	  if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]){
-	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
-	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHT;
-	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
-	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTUP;
-	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor];
-	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTDOWN;
+	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor];
+	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHT;
+	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor];
+	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHTUP;
+	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor];
+	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHTDOWN;
 	  } else {
-	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
-	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHT);
-	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
-	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTUP);
-	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor]);
-	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * (1.0 - jetEpsBtagTIGHT[nJPt][nJEta][jetFlavor] * bjet_SFTIGHTDOWN);
+	    total_bjet_probTIGHT[0] = total_bjet_probTIGHT[0] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor]);
+	    total_bjet_probTIGHT[1] = total_bjet_probTIGHT[1] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHT);
+	    total_bjet_probTIGHTUP[0] = total_bjet_probTIGHTUP[0] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor]);
+	    total_bjet_probTIGHTUP[1] = total_bjet_probTIGHTUP[1] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHTUP);
+	    total_bjet_probTIGHTDOWN[0] = total_bjet_probTIGHTDOWN[0] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor]);
+	    total_bjet_probTIGHTDOWN[1] = total_bjet_probTIGHTDOWN[1] * (1.0 - jetEpsBtagTIGHT[nJEta][nJPt][jetFlavor] * bjet_SFTIGHTDOWN);
 	  }
 
         }

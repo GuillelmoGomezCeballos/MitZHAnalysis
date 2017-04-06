@@ -1154,6 +1154,37 @@ void zhAnalysis(
       bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
       bdt_syst_METScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
       cached_BDT_systematics->Close();
+      bdt_toy_envelope_electronScale_VVV       = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_VVV"      );
+      bdt_toy_envelope_electronScale_WZ        = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_WZ"       );
+      bdt_toy_envelope_electronScale_ZZ        = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_ZZ"       );
+      bdt_toy_envelope_electronScale_ggZH_hinv = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_ggZH_hinv");
+      bdt_toy_envelope_electronScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_toy_envelope_muonScale_VVV           = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_VVV"          );
+      bdt_toy_envelope_muonScale_WZ            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_WZ"           );
+      bdt_toy_envelope_muonScale_ZZ            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_ZZ"           );
+      bdt_toy_envelope_muonScale_ggZH_hinv     = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_ggZH_hinv"    );
+      bdt_toy_envelope_muonScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_toy_envelope_METScale_VVV            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_VVV"           );
+      bdt_toy_envelope_METScale_WZ             = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_WZ"            );
+      bdt_toy_envelope_METScale_ZZ             = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_ZZ"            );
+      bdt_toy_envelope_METScale_ggZH_hinv      = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_ggZH_hinv"     );
+      bdt_toy_envelope_METScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+      bdt_toy_envelope_electronScale_VVV       ->SetDirectory(0);
+      bdt_toy_envelope_electronScale_WZ        ->SetDirectory(0);
+      bdt_toy_envelope_electronScale_ZZ        ->SetDirectory(0);
+      bdt_toy_envelope_electronScale_ggZH_hinv ->SetDirectory(0);
+      bdt_toy_envelope_electronScale_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_toy_envelope_muonScale_VVV           ->SetDirectory(0);
+      bdt_toy_envelope_muonScale_WZ            ->SetDirectory(0);
+      bdt_toy_envelope_muonScale_ZZ            ->SetDirectory(0);
+      bdt_toy_envelope_muonScale_ggZH_hinv     ->SetDirectory(0);
+      bdt_toy_envelope_muonScale_ZH_hinv[plotModel] ->SetDirectory(0);
+      bdt_toy_envelope_METScale_VVV            ->SetDirectory(0);
+      bdt_toy_envelope_METScale_WZ             ->SetDirectory(0);
+      bdt_toy_envelope_METScale_ZZ             ->SetDirectory(0);
+      bdt_toy_envelope_METScale_ggZH_hinv      ->SetDirectory(0);
+      bdt_toy_envelope_METScale_ZH_hinv[plotModel] ->SetDirectory(0);
+      cached_BDT_systematics->Close();
     } else { // If not using cached BDT systematics, construct all of the histos we are going to use to compute them
       cached_BDT_systematics = new TFile(inputCachedBDTSysts,"recreate");
       assert(cached_BDT_systematics->IsOpen());
@@ -2643,7 +2674,7 @@ void zhAnalysis(
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystDown->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
     } 
 
-    if(useBDT && !useCachedBDTSystematics) {
+    if(useBDT) {
       for(int nb=1; nb<=nBinMVA; nb++) {
         for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
           int nbin2d = histo_bdt_toys_electronScale_VVV->GetBin(nb, i_toy);
@@ -2678,79 +2709,79 @@ void zhAnalysis(
         bdt_toy_binyields_METScale_ZZ[nb-1]                   = (TH1F*) bdt_toy_envelope_METScale_ZZ                  ->ProjectionY(Form("bdt_toy_binyields_METScale_ZZ_bin%d", nb)       , nb, nb);
         bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]      = (TH1F*) bdt_toy_envelope_METScale_ZH_hinv[nModel]     ->ProjectionY(Form("bdt_toy_binyields_METScale_ZH_hinv_%s_bin%d", signalName_[nModel].Data(),nb), nb, nb);
         bdt_toy_binyields_METScale_ggZH_hinv[nb-1]            = (TH1F*) bdt_toy_envelope_METScale_ggZH_hinv           ->ProjectionY(Form("bdt_toy_binyields_METScale_ggZH_hinv_bin%d", nb), nb, nb);
-        
+        bdt_toy_binyields_electronScale_VVV[nb-1]             ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_electronScale_WZ[nb-1]              ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_electronScale_ZZ[nb-1]              ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1] ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]       ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_muonScale_VVV[nb-1]                 ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_muonScale_WZ[nb-1]                  ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_muonScale_ZZ[nb-1]                  ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]     ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]           ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_METScale_VVV[nb-1]                  ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_METScale_WZ[nb-1]                   ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_METScale_ZZ[nb-1]                   ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]      ->GetXaxis()->SetRangeUser(0.8,1.199);
+        bdt_toy_binyields_METScale_ggZH_hinv[nb-1]            ->GetXaxis()->SetRangeUser(0.8,1.199);
+ 
         // Since not using cached results, finally calculate the bin-by-bin % systematics (up and down) for the BDT 
-        double toy_mean_electronScale, toy_mean_muonScale, toy_mean_METScale;
-        double toy_rms_electronScale, toy_rms_muonScale, toy_rms_METScale;
+        double quantileProbs[3]={0.159,0.5,0.841};
+        double theQuantilesElectron[3], theQuantilesMuon[3], theQuantilesMET[3];
         if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 ) { 
-          toy_mean_electronScale = bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetMean();
-          toy_mean_muonScale = bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]->GetMean();
-          toy_mean_METScale = bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]->GetMean();
-          toy_rms_electronScale = bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetRMS();
-          toy_rms_muonScale = bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]->GetRMS();
-          toy_rms_METScale = bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]->GetRMS();
-          bdt_syst_electronScaleUp_ZH_hinv[nModel]   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
-          bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
-          bdt_syst_muonScaleUp_ZH_hinv[nModel]       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
-          bdt_syst_muonScaleDown_ZH_hinv[nModel]     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
-          bdt_syst_METScaleUp_ZH_hinv[nModel]        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
-          bdt_syst_METScaleDown_ZH_hinv[nModel]      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+          bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);
+          bdt_toy_binyields_muonScale_ZH_hinv[nModel][nb-1]    ->GetQuantiles(3, theQuantilesMuon    , quantileProbs);
+          bdt_toy_binyields_METScale_ZH_hinv[nModel][nb-1]     ->GetQuantiles(3, theQuantilesMET     , quantileProbs);
+          bdt_syst_electronScaleUp_ZH_hinv[nModel]   ->SetBinContent(nb, theQuantilesElectron[2]);
+          bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb, theQuantilesElectron[0]);
+          bdt_syst_muonScaleUp_ZH_hinv[nModel]       ->SetBinContent(nb, theQuantilesMuon[2]);
+          bdt_syst_muonScaleDown_ZH_hinv[nModel]     ->SetBinContent(nb, theQuantilesMuon[0]);
+          bdt_syst_METScaleUp_ZH_hinv[nModel]        ->SetBinContent(nb, theQuantilesMET[2]);
+          bdt_syst_METScaleDown_ZH_hinv[nModel]      ->SetBinContent(nb, theQuantilesMET[0]);
         }
         if(histo_VVV->GetBinContent(nb) > 0 ) {
-          toy_mean_electronScale = bdt_toy_binyields_electronScale_VVV[nb-1]->GetMean();
-          toy_mean_muonScale = bdt_toy_binyields_muonScale_VVV[nb-1]->GetMean();
-          toy_mean_METScale = bdt_toy_binyields_METScale_VVV[nb-1]->GetMean();
-          toy_rms_electronScale = bdt_toy_binyields_electronScale_VVV[nb-1]->GetRMS();
-          toy_rms_muonScale = bdt_toy_binyields_muonScale_VVV[nb-1]->GetRMS();
-          toy_rms_METScale = bdt_toy_binyields_METScale_VVV[nb-1]->GetRMS();
-          bdt_syst_electronScaleUp_VVV   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
-          bdt_syst_electronScaleDown_VVV ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
-          bdt_syst_muonScaleUp_VVV       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
-          bdt_syst_muonScaleDown_VVV     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
-          bdt_syst_METScaleUp_VVV        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
-          bdt_syst_METScaleDown_VVV      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+          bdt_toy_binyields_electronScale_VVV[nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);
+          bdt_toy_binyields_muonScale_VVV[nb-1]    ->GetQuantiles(3, theQuantilesMuon    , quantileProbs);
+          bdt_toy_binyields_METScale_VVV[nb-1]     ->GetQuantiles(3, theQuantilesMET     , quantileProbs);
+          bdt_syst_electronScaleUp_VVV   ->SetBinContent(nb, theQuantilesElectron[2]);
+          bdt_syst_electronScaleDown_VVV ->SetBinContent(nb, theQuantilesElectron[0]);
+          bdt_syst_muonScaleUp_VVV       ->SetBinContent(nb, theQuantilesMuon[2]);
+          bdt_syst_muonScaleDown_VVV     ->SetBinContent(nb, theQuantilesMuon[0]);
+          bdt_syst_METScaleUp_VVV        ->SetBinContent(nb, theQuantilesMET[2]);
+          bdt_syst_METScaleDown_VVV      ->SetBinContent(nb, theQuantilesMET[0]);
         }
         if(histo_WZ->GetBinContent(nb) > 0 ) {
-          toy_mean_electronScale = bdt_toy_binyields_electronScale_WZ[nb-1]->GetMean();
-          toy_mean_muonScale = bdt_toy_binyields_muonScale_WZ[nb-1]->GetMean();
-          toy_mean_METScale = bdt_toy_binyields_METScale_WZ[nb-1]->GetMean();
-          toy_rms_electronScale = bdt_toy_binyields_electronScale_WZ[nb-1]->GetRMS();
-          toy_rms_muonScale = bdt_toy_binyields_muonScale_WZ[nb-1]->GetRMS();
-          toy_rms_METScale = bdt_toy_binyields_METScale_WZ[nb-1]->GetRMS();
-          bdt_syst_electronScaleUp_WZ   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
-          bdt_syst_electronScaleDown_WZ ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
-          bdt_syst_muonScaleUp_WZ       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
-          bdt_syst_muonScaleDown_WZ     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
-          bdt_syst_METScaleUp_WZ        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
-          bdt_syst_METScaleDown_WZ      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+          bdt_toy_binyields_electronScale_WZ[nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);
+          bdt_toy_binyields_muonScale_WZ[nb-1]    ->GetQuantiles(3, theQuantilesMuon    , quantileProbs);
+          bdt_toy_binyields_METScale_WZ[nb-1]     ->GetQuantiles(3, theQuantilesMET     , quantileProbs);
+          bdt_syst_electronScaleUp_WZ   ->SetBinContent(nb, theQuantilesElectron[2]);
+          bdt_syst_electronScaleDown_WZ ->SetBinContent(nb, theQuantilesElectron[0]);
+          bdt_syst_muonScaleUp_WZ       ->SetBinContent(nb, theQuantilesMuon[2]);
+          bdt_syst_muonScaleDown_WZ     ->SetBinContent(nb, theQuantilesMuon[0]);
+          bdt_syst_METScaleUp_WZ        ->SetBinContent(nb, theQuantilesMET[2]);
+          bdt_syst_METScaleDown_WZ      ->SetBinContent(nb, theQuantilesMET[0]);
         }
         if(histo_ZZ->GetBinContent(nb) > 0 ) {
-          toy_mean_electronScale = bdt_toy_binyields_electronScale_ZZ[nb-1]->GetMean();
-          toy_mean_muonScale = bdt_toy_binyields_muonScale_ZZ[nb-1]->GetMean();
-          toy_mean_METScale = bdt_toy_binyields_METScale_ZZ[nb-1]->GetMean();
-          toy_rms_electronScale = bdt_toy_binyields_electronScale_ZZ[nb-1]->GetRMS();
-          toy_rms_muonScale = bdt_toy_binyields_muonScale_ZZ[nb-1]->GetRMS();
-          toy_rms_METScale = bdt_toy_binyields_METScale_ZZ[nb-1]->GetRMS();
-          bdt_syst_electronScaleUp_ZZ   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
-          bdt_syst_electronScaleDown_ZZ ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
-          bdt_syst_muonScaleUp_ZZ       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
-          bdt_syst_muonScaleDown_ZZ     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
-          bdt_syst_METScaleUp_ZZ        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
-          bdt_syst_METScaleDown_ZZ      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+          bdt_toy_binyields_electronScale_ZZ[nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);
+          bdt_toy_binyields_muonScale_ZZ[nb-1]    ->GetQuantiles(3, theQuantilesMuon    , quantileProbs);
+          bdt_toy_binyields_METScale_ZZ[nb-1]     ->GetQuantiles(3, theQuantilesMET     , quantileProbs);
+          bdt_syst_electronScaleUp_ZZ   ->SetBinContent(nb, theQuantilesElectron[2]);
+          bdt_syst_electronScaleDown_ZZ ->SetBinContent(nb, theQuantilesElectron[0]);
+          bdt_syst_muonScaleUp_ZZ       ->SetBinContent(nb, theQuantilesMuon[2]);
+          bdt_syst_muonScaleDown_ZZ     ->SetBinContent(nb, theQuantilesMuon[0]);
+          bdt_syst_METScaleUp_ZZ        ->SetBinContent(nb, theQuantilesMET[2]);
+          bdt_syst_METScaleDown_ZZ      ->SetBinContent(nb, theQuantilesMET[0]);
         }
         if(histo_ggZH_hinv->GetBinContent(nb) > 0 ) {
-          toy_mean_electronScale = bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]->GetMean();
-          toy_mean_muonScale = bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]->GetMean();
-          toy_mean_METScale = bdt_toy_binyields_METScale_ggZH_hinv[nb-1]->GetMean();
-          toy_rms_electronScale = bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]->GetRMS();
-          toy_rms_muonScale = bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]->GetRMS();
-          toy_rms_METScale = bdt_toy_binyields_METScale_ggZH_hinv[nb-1]->GetRMS();
-          bdt_syst_electronScaleUp_ggZH_hinv   ->SetBinContent(nb, 1. + 0.5 * (toy_mean_electronScale - 1. + toy_rms_electronScale));
-          bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_electronScale + toy_rms_electronScale));
-          bdt_syst_muonScaleUp_ggZH_hinv       ->SetBinContent(nb, 1. + 0.5 * (toy_mean_muonScale - 1. + toy_rms_muonScale));
-          bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_muonScale + toy_rms_muonScale));
-          bdt_syst_METScaleUp_ggZH_hinv        ->SetBinContent(nb, 1. + 0.5 * (toy_mean_METScale - 1. + toy_rms_METScale));
-          bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb, 1. - 0.5 * (1. - toy_mean_METScale + toy_rms_METScale));
+          bdt_toy_binyields_electronScale_ggZH_hinv[nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);
+          bdt_toy_binyields_muonScale_ggZH_hinv[nb-1]    ->GetQuantiles(3, theQuantilesMuon    , quantileProbs);
+          bdt_toy_binyields_METScale_ggZH_hinv[nb-1]     ->GetQuantiles(3, theQuantilesMET     , quantileProbs);
+          bdt_syst_electronScaleUp_ggZH_hinv   ->SetBinContent(nb, theQuantilesElectron[2]);
+          bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb, theQuantilesElectron[0]);
+          bdt_syst_muonScaleUp_ggZH_hinv       ->SetBinContent(nb, theQuantilesMuon[2]);
+          bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb, theQuantilesMuon[0]);
+          bdt_syst_METScaleUp_ggZH_hinv        ->SetBinContent(nb, theQuantilesMET[2]);
+          bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb, theQuantilesMET[0]);
         }
       }
     }

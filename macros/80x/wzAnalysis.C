@@ -1028,7 +1028,7 @@ void wzAnalysis(
       // Do the BDT nuisance evaluations
       double bdt_muonScaleDown=-1, bdt_muonScaleUp=-1, bdt_electronScaleDown=-1, bdt_electronScaleUp=-1, bdt_METScaleDown=-1, bdt_METScaleUp=-1, bdt_jetScaleDown=-1, bdt_jetScaleUp=-1;
       double MVAVar_muonScaleDown=-9999, MVAVar_muonScaleUp=-9999, MVAVar_electronScaleDown=-9999, MVAVar_electronScaleUp=-9999, MVAVar_METScaleDown=-9999, MVAVar_METScaleUp=-9999, MVAVar_jetScaleDown=-9999, MVAVar_jetScaleUp=-9999;
-      if(useBDT && passAllCuts[WZSEL]) {
+      /*if(useBDT && passAllCuts[WZSEL]) {
         TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]]),
                        lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]),
                        MET     = theFakeMET,
@@ -1071,7 +1071,7 @@ void wzAnalysis(
         MET = theFakeMETDown;
         bdt_METScaleDown = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, 0, 0);
 	MVAVar_METScaleDown = getMVAVar(MVAVarType, passAllCuts[WZSEL], typePair, MET.Pt(), 0, dilepZ.M(), bdt_METScaleUp, xbins[nBinMVA]);
-      }
+      }*/
 
       // begin event weighting
       vector<int>wBoson;
@@ -1950,11 +1950,11 @@ void wzAnalysis(
     newcardShape << Form("QCDscale_ggH		                 lnN    -       -     -     -     -    -  %7.5f\n",systQCDScale[4]); 	   
     newcardShape << Form("CMS_wz3l_FakeMSyst_%4s                 lnN    -       -     -	    -   %7.5f  -    -  \n",ECMsb.Data(),1.30);  	
     newcardShape << Form("CMS_wz3l_FakeESyst_%4s                 lnN    -       -     -	    -     -  %7.5f  -  \n",ECMsb.Data(),1.30);  	
-    if(MVAVarType == 3 || MVAVarType==4) {
-    newcardShape << Form("CMS_BDT_scale_m                        lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTMuonUp[0], systBDTMuonDown[0], systBDTMuonUp[1], systBDTMuonDown[1], systBDTMuonUp[2], systBDTMuonDown[2], systBDTMuonUp[3], systBDTMuonDown[3], systBDTMuonUp[4], systBDTMuonDown[4]);	    
-    newcardShape << Form("CMS_BDT_scale_e                        lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTElectronUp[0], systBDTElectronDown[0], systBDTElectronUp[1], systBDTElectronDown[1], systBDTElectronUp[2], systBDTElectronDown[2], systBDTElectronUp[3], systBDTElectronDown[3], systBDTElectronUp[4], systBDTElectronDown[4]);	    
-    newcardShape << Form("CMS_BDT_scale_MET                      lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2], systBDTMETUp[3], systBDTMETDown[3], systBDTMETUp[4], systBDTMETDown[4]);	    
-    }
+    //if(MVAVarType == 3 || MVAVarType==4) {
+    //newcardShape << Form("CMS_BDT_scale_m                        lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTMuonUp[0], systBDTMuonDown[0], systBDTMuonUp[1], systBDTMuonDown[1], systBDTMuonUp[2], systBDTMuonDown[2], systBDTMuonUp[3], systBDTMuonDown[3], systBDTMuonUp[4], systBDTMuonDown[4]);	    
+    //newcardShape << Form("CMS_BDT_scale_e                        lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTElectronUp[0], systBDTElectronDown[0], systBDTElectronUp[1], systBDTElectronDown[1], systBDTElectronUp[2], systBDTElectronDown[2], systBDTElectronUp[3], systBDTElectronDown[3], systBDTElectronUp[4], systBDTElectronDown[4]);	    
+    //newcardShape << Form("CMS_BDT_scale_MET                      lnN	%7.5f/%7.5f  %7.5f/%7.5f   %7.5f/%7.5f   %7.5f/%7.5f - -  %7.5f/%7.5f   \n", systBDTMETUp[0], systBDTMETDown[0], systBDTMETUp[1], systBDTMETDown[1], systBDTMETUp[2], systBDTMETDown[2], systBDTMETUp[3], systBDTMETDown[3], systBDTMETUp[4], systBDTMETDown[4]);	    
+    //}
     if(histo_Zg->GetBinContent(nb)        > 0) newcardShape << Form("CMS_wz3l%s_MVAZgStatBounding_%s_Bin%d	  lnN    %7.5f   -    -    -	-    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_Zg    ->GetBinError(nb)/histo_Zg    ->GetBinContent(nb),0.999));
     if(histo_VVV->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_wz3l%s_MVAVVVStatBounding_%s_Bin%d       lnN      -  %7.5f   -    -	-    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_VVV   ->GetBinError(nb)/histo_VVV   ->GetBinContent(nb),0.999));
     if(histo_WZ->GetBinContent(nb)	  > 0) newcardShape << Form("CMS_wz3l%s_MVAWZStatBounding_%s_Bin%d	  lnN      -     -  %7.5f  -	-    -    -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_WZ    ->GetBinError(nb)/histo_WZ    ->GetBinContent(nb),0.999));

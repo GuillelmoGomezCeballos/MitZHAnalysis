@@ -46,7 +46,6 @@ TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAG
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
-unsigned int randomToySeed=3393; // dylan's birthday :)
 const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
 
 void zhAnalysis(
@@ -59,6 +58,10 @@ void zhAnalysis(
  string subdirectory="",
  bool isMIT = false
  ){
+  std::time_t t = std::time(0);
+  unsigned long int time_now = static_cast<unsigned long int>(time(NULL));
+  unsigned int randomToySeed=(time_now-731178000); // random seed based on Dylan's age in seconds
+
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());

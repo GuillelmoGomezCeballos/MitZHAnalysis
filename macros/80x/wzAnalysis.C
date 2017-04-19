@@ -56,6 +56,7 @@ void wzAnalysis(
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
 
   bool printMCEventList=false;
+  bool printDAEventList=true;
   bool useBDT=false;
   Int_t period = 1;
 
@@ -585,12 +586,19 @@ void wzAnalysis(
   TH1D* histo_Higgs_CMS_PUBoundingUp           	= new TH1D( Form("histo_Higgs_CMS_puUp")  , Form("histo_Higgs_CMS_puUp")  , nBinMVA, xbins); histo_Higgs_CMS_PUBoundingUp  ->Sumw2();
   TH1D* histo_Higgs_CMS_PUBoundingDown         	= new TH1D( Form("histo_Higgs_CMS_puDown"), Form("histo_Higgs_CMS_puDown"), nBinMVA, xbins); histo_Higgs_CMS_PUBoundingDown->Sumw2();
 
-  char outputEventList[200];
-  sprintf(outputEventList,"MitZHAnalysis/datacards%s/eventlist_wz_MC.csv",subdirectory.c_str());
-  ofstream eventList;
+  char outputEventMCList[200];
+  sprintf(outputEventMCList,"MitZHAnalysis/datacards%s/eventlist_wz_MC.txt",subdirectory.c_str());
+  ofstream eventMCList;
   if(printMCEventList) {
-    eventList.open(outputEventList);
-    eventList << "eventNumber,njets,realMET,fakeMET,balance,dPhiZMET,ZpT,dPhiJetMET,pdgl1,pdgl2,pdgl3\n";
+    eventMCList.open(outputEventMCList);
+    eventMCList << "eventNumber,njets,realMET,fakeMET,balance,dPhiZMET,ZpT,dPhiJetMET,pdgl1,pdgl2,pdgl3\n";
+  }
+  char outputEventDAList[200];
+  sprintf(outputEventDAList,"MitZHAnalysis/datacards%s/eventlist_wz_DA.csv",subdirectory.c_str());
+  ofstream eventDAList;
+  if(printDAEventList) {
+    eventDAList.open(outputEventDAList);
+    eventDAList << "runNumber,lumiSection,eventNumber,realMET,fakeMET\n";
   }
 
   unsigned int numberOfLeptons = 3;
@@ -993,8 +1001,7 @@ void wzAnalysis(
       bool passDPhiJetMET = useZHcuts ? (dPhiJetMET == -1 || dPhiJetMET >= 0.5) : (true);
 
       if(isWZhinv) passAllCuts[WZSEL] = passAllCuts[WZSEL] && passNjets && passFakeMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL;
-      if(printMCEventList && infilecatv[ifile] == 3 && theFakeMET.Pt() > 100 && passAllCuts[WZSEL])
-        eventList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theFakeMET.Pt(), ptFrac, dPhiDiLepMET, dilepZ.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]]);
+
       double deltaPhiLeptonMet = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtLN = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiLeptonMet)));
 
@@ -1214,6 +1221,12 @@ void wzAnalysis(
       if((infilecatv[ifile] != 0 || theCategory == 0) && passAllCuts[0]) sumEventsProcess[ifile] += totalWeight;
 
       if(passAllCuts[0] && infilecatv[ifile] == 0) totalFakeDataCount[type3l][nFakeCount]++;
+
+      if(printMCEventList && infilecatv[ifile] == 3 && theFakeMET.Pt() > 100 && passAllCuts[WZSEL])
+        eventMCList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theFakeMET.Pt(), ptFrac, dPhiDiLepMET, dilepZ.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]]);
+      if(printDAEventList && theCategory == 0 && theFakeMET.Pt() > 100 && passAllCuts[WZSEL])
+        eventDAList << Form("%d %d %lld %f %f\n", eventEvent.runNum, eventEvent.lumiNum, eventEvent.eventNum, 
+	 ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theFakeMET.Pt());
 
       for(unsigned int i=0; i<nSelTypes; i++) {
         if(passAllCuts[i]) {
@@ -1511,7 +1524,8 @@ void wzAnalysis(
     the_input_file->Close();
   } // end of chain
 
-  if(printMCEventList) eventList.close();
+  if(printMCEventList) eventMCList.close();
+  if(printDAEventList) eventDAList.close();
   histo[5][allPlots-1][0]->Add(histo_Data);
   histo[5][allPlots-1][1]->Add(histo_FakeM);
   histo[5][allPlots-1][1]->Add(histo_FakeE);

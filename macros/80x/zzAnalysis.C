@@ -40,7 +40,8 @@ void zzAnalysis(
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
-  bool printMCEventList=true;
+  bool printMCEventList=false;
+  bool printDAEventList=true;
   bool useBDT=false;
 
   Int_t period = 1;
@@ -438,12 +439,19 @@ void zzAnalysis(
   TH1D* histo_ZZ_CMS_ggCorrUp                   = new TH1D( Form("histo_ZZ_ggCorrUp")  , Form("histo_ZZ_ggCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_ggCorrUp  ->Sumw2();
   TH1D* histo_ZZ_CMS_ggCorrDown                 = new TH1D( Form("histo_ZZ_ggCorrDown"), Form("histo_ZZ_ggCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_ggCorrDown->Sumw2();
   
-  char outputEventList[200];
-  sprintf(outputEventList,"MitZHAnalysis/datacards%s/eventlist_zz_MC.csv",subdirectory.c_str());
-  ofstream eventList;
+  char outputEventMCList[200];
+  sprintf(outputEventMCList,"MitZHAnalysis/datacards%s/eventlist_zz_MC.txt",subdirectory.c_str());
+  ofstream eventMCList;
   if(printMCEventList) {
-    eventList.open(outputEventList);
-    eventList << "eventNumber,njets,realMET,fakeMET,balance,dPhiZMET,ZpT,dPhiJetMET,pdgl1,pdgl2,pdgl3,pdgl4\n";
+    eventMCList.open(outputEventMCList);
+    eventMCList << "eventNumber,njets,realMET,fakeMET,balance,dPhiZMET,ZpT,dPhiJetMET,pdgl1,pdgl2,pdgl3,pdgl4\n";
+  }
+  char outputEventDAList[200];
+  sprintf(outputEventDAList,"MitZHAnalysis/datacards%s/eventlist_zz_DA.txt",subdirectory.c_str());
+  ofstream eventDAList;
+  if(printDAEventList) {
+    eventDAList.open(outputEventDAList);
+    eventDAList << "runNumber,lumiSection,eventNumber,realMET,fakeMET\n";
   }
 
   unsigned int numberOfLeptons = 4;
@@ -742,8 +750,6 @@ void zzAnalysis(
       bool passPTLL       = dilepZll.Pt() > 60;
       bool passDPhiJetMET = useZHcuts ? (dPhiJetMET == -1 || dPhiJetMET >= 0.5) : (true);
       bool passZZhinvSel = {passZZSel && passNjets && passMET && passPTFrac && passDPhiZMET && passPTLL && passDPhiJetMET && passDelphiLL};
-      if(printMCEventList && infileName_[ifile].Contains("GluGlu") == kFALSE && infileCategory_[ifile] == 4 && theZZllnnMET.Pt() > 100 && passZZhinvSel)
-        eventList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theZZllnnMET.Pt(), ptFrac, dPhiDiLepMET, dilepZll.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[3]]]);
       
       // Evaluate nominal BDT value
       double bdt_value=-1;
@@ -940,6 +946,12 @@ void zzAnalysis(
 
       // end event weighting
       if((infileCategory_[ifile] != 0 || theCategory == 0) && passZZSel) sumEventsProcess[ifile] += totalWeight;
+
+      if(printMCEventList && infileName_[ifile].Contains("GluGlu") == kFALSE && infileCategory_[ifile] == 4 && theZZllnnMET.Pt() > 100 && passZZhinvSel)
+        eventMCList << Form("%lld,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\n", eventEvent.eventNum, (int)idJet.size(), ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theZZllnnMET.Pt(), ptFrac, dPhiDiLepMET, dilepZll.Pt(), dPhiJetMET, (int)(*eventLeptons.pdgId)[idLep[tagZ[0]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[1]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[2]]], (int)(*eventLeptons.pdgId)[idLep[tagZ[3]]]);
+      if(printDAEventList && theCategory == 0 && theZZllnnMET.Pt() > 100 && passZZhinvSel)
+        eventDAList << Form("%d %d %lld %f %f\n", eventEvent.runNum, eventEvent.lumiNum, eventEvent.eventNum, 
+	 ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), theZZllnnMET.Pt());
 
       for(unsigned int i=0; i<nSelTypes; i++) {
         if(passAllCuts[i]) {
@@ -1166,7 +1178,8 @@ void zzAnalysis(
     the_input_file->Close();
   } // end of chain
 
-  if(printMCEventList) eventList.close();
+  if(printMCEventList) eventMCList.close();
+  if(printDAEventList) eventDAList.close();
   printf("QCD Corr: ZZ(%f:%f/%f/%f/%f/%f/%f) VVV(%f:%f/%f/%f/%f/%f/%f) Higgs(%f:%f/%f/%f/%f/%f/%f)\n",
     histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_ZZ_CMS_QCDScaleBounding[5]->GetSumOfWeights(),
     histo_VVV->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_VVV_CMS_QCDScaleBounding[5]->GetSumOfWeights(),

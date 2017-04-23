@@ -1440,6 +1440,9 @@ void zhAnalysis(
 
       vector<int> idLep; vector<int> idTight; vector<int> idSoft; unsigned int goodIsTight = 0;
       for(int nlep=0; nlep<eventLeptons.p4->GetEntriesFast(); nlep++) {
+
+        if(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt() <= 10) continue;
+
         //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepBaseline )== BareLeptons::LepBaseline ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
         //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepVeto	  )== BareLeptons::LepVeto     ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
         //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake	  )== BareLeptons::LepFake     ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
@@ -1509,6 +1512,8 @@ void zhAnalysis(
         if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() < 20) continue;
         //bool passId = passJetId(fMVACut, (float)(*eventJets.puId)[nj], ((TLorentzVector*)(*eventJets.p4)[nj])->Pt(), TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()));
         //if(passId == false) continue;
+
+       if(((int)(*eventJets.selBits)[nj] & BareJets::JetLoose)!= BareJets::JetLoose) continue;
 
         Bool_t isLepton = kFALSE;
         for(unsigned int nl=0; nl<idLep.size(); nl++){
@@ -1602,7 +1607,8 @@ void zhAnalysis(
         if(isElMu == false &&
            ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFinding	 ) == BareTaus::TauDecayModeFinding &&
            ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFindingNewDMs) == BareTaus::TauDecayModeFindingNewDMs &&
-           (double)(*eventTaus.iso)[ntau] < 5.0){
+           ((int)(*eventTaus.selBits)[ntau] & BareTaus::byVLooseIsolationMVArun2v1DBnewDMwLT) == BareTaus::byVLooseIsolationMVArun2v1DBnewDMwLT){
+           //(double)(*eventTaus.iso)[ntau] < 5.0){
           numberGoodTaus++;
         }
       }

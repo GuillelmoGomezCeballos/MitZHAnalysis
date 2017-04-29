@@ -16,6 +16,7 @@
 #include "NeroProducer/Core/interface/BareJets.hpp"
 #include "NeroProducer/Core/interface/BareLeptons.hpp"
 #include "NeroProducer/Core/interface/BareTaus.hpp"
+#include "NeroProducer/Core/interface/BarePhotons.hpp"
 #include "NeroProducer/Core/interface/BareMet.hpp"
 #include "NeroProducer/Core/interface/BareTrigger.hpp"
 #include "NeroProducer/Core/interface/BareVertex.hpp"
@@ -41,8 +42,8 @@ bool       makeMVAtrees            = false;
 bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
 const unsigned int    num_bdt_toys = 1000;
-enum selType                     {ZSEL=0,  SIGSEL,   WWSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
-TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "WWSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
+enum selType                     {ZSEL=0,  SIGSEL,   ZHGSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
+TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "ZHGSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 const TString typeLepSel = "medium";
@@ -621,7 +622,7 @@ void zhAnalysis(
     else if(thePlot ==  6) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot ==  7) {nBinPlot = 100; xminPlot =50.0; xmaxPlot = 250.0;}
     else if(thePlot ==  8) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot == 10) {nBinPlot =  40; xminPlot = 0.0; xmaxPlot =  40.0;}
+    else if(thePlot == 10) {nBinPlot =  50; xminPlot = 0.0; xmaxPlot =  2.5;}
     else if(thePlot == 11) {nBinPlot =  40; xminPlot =-0.5; xmaxPlot =  39.5;}
     else if(thePlot == 12) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot == 13) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
@@ -1355,6 +1356,10 @@ void zhAnalysis(
     eventTaus.SetExtend();
     eventTaus.setBranchAddresses(the_input_tree);
 
+    BarePhotons eventPhotons;
+    eventPhotons.SetExtend();
+    eventPhotons.setBranchAddresses(the_input_tree);
+
     BareMet eventMet;
     eventMet.SetExtend();
     eventMet.setBranchAddresses(the_input_tree);
@@ -1490,21 +1495,41 @@ void zhAnalysis(
       double minPMET = TMath::Min(((TLorentzVector*)(*eventMet.p4)[0])->Pt(),(double)eventMet.trackMet->Pt());
       if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
 
-      TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
-      TLorentzVector dilepMET(dilep + (*((TLorentzVector*)(*eventMet.p4)[0]))); 
-
       vector<int> idB,idC;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
         if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idB.push_back(ngen0);
         else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idC.push_back(ngen0);
       }
 
-      vector<int> idJet,idJetUp,idJetDown,idBJet;
+      vector<int> idPho;
+      for(int npho=0; npho<eventPhotons.p4->GetEntriesFast(); npho++) {
+        if(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[npho])->Eta()) >= 2.5) continue;
+	if(((TLorentzVector*)(*eventPhotons.p4)[npho])->Pt() <= 30) continue;
+	//if((double)(*eventPhotons.r9)[npho] <= 0.9) continue;
+	//if((double)(*eventPhotons.sieie)[npho] >= 0.011) continue;
+        bool isRecoLepton = false;
+	for(unsigned int nl=0; nl<idLep.size(); nl++){
+          if(((TLorentzVector*)(*eventPhotons.p4)[npho])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3)
+	    {isRecoLepton = true; break;}
+        }
+	if(isRecoLepton == true) continue;
+        if(((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoTight)== BarePhotons::PhoTight &&
+	   ((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoElectronVeto)== BarePhotons::PhoElectronVeto){idPho.push_back(npho);}
+      }
+
+      TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
+      TLorentzVector dilepMET(dilep + (*((TLorentzVector*)(*eventMet.p4)[0]))); 
+      TLorentzVector dilepg(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
+      if(idPho.size() >= 1){
+        dilepg = dilepg + ( *(TLorentzVector*)(eventPhotons.p4->At(idPho[0])));
+      }
+
+      vector<int> idJet,idJetUp,idJetDown,idBJet,idJetNoPh;
       double total_bjet_probMEDIUM[2] = {1,1};double total_bjet_probMEDIUMUP[2] = {1,1};double total_bjet_probMEDIUMDOWN[2] = {1,1};
       bool isBtag = kFALSE;
       double sumPtJets = 0.0;
       double bDiscrMax = 0.0;
-      double dPhiJetMET = -1.0;
+      double dPhiJetMET = -1.0; double dPhiJetNoPhMET = -1.0;
       double mTJetMET = -1;
       double dPhiJetDiLep = -1.0;
       TLorentzVector dilepJet = dilep;
@@ -1520,11 +1545,6 @@ void zhAnalysis(
           if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.4) isLepton = kTRUE;
 	}
 	if(isLepton == kTRUE) continue;
-
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-          mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-        }
 
 	if(infilecatv[ifile] != 0){
           BTagEntry::JetFlavor jetFlavor = BTagEntry::FLAV_UDSG;
@@ -1583,6 +1603,21 @@ void zhAnalysis(
 
         }
 
+        Bool_t isPhoton = kFALSE;
+        for(unsigned int np=0; np<idPho.size(); np++){
+          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventPhotons.p4)[idPho[np]])) < 0.3) isPhoton = kTRUE;
+	}
+	if(isPhoton == kFALSE && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 30) idJetNoPh.push_back(nj);
+
+        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
+          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+          mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+        }
+
+        if(dPhiJetNoPhMET   == -1 && isPhoton == kFALSE  && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
+          dPhiJetNoPhMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+        }
+
 	if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) {
            sumPtJets = sumPtJets + ((TLorentzVector*)(*eventJets.p4)[nj])->Pt();
 	   if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
@@ -1627,7 +1662,6 @@ void zhAnalysis(
       int typePair = 0;
       if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13) typePair = 1;
       else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11) typePair = 2;
-      
 
       // Calculate a lot of physics quantities used for the rectangular selection
 
@@ -1635,6 +1669,9 @@ void zhAnalysis(
       double ptFrac = TMath::Abs(dilep.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilep.Pt(); // TMath::Abs(dilepJet.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepJet.Pt();
       double deltaPhiDileptonMet = TMath::Abs(dilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
       double mtW = TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiDileptonMet)));
+
+      double dPhiDiLepGMET = TMath::Abs(dilepg.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
+      double ptFracG = TMath::Abs(dilepg.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepg.Pt();
 
       double caloMinusPFMETRel = TMath::Abs( (double)eventMet.CaloMet->Pt() - ((TLorentzVector*)(*eventMet.p4)[0])->Pt() ) / ((TLorentzVector*)(*eventMet.p4)[0])->Pt();
       
@@ -1649,6 +1686,7 @@ void zhAnalysis(
       
       bool passZMass = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets = idJet.size() <= nJetsType;
+      bool passNjetsG = idJetNoPh.size() <= 1;
 
       double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
       double bdtMIN = xbins[2]; //boundary after the drell yan bin [-1, ?]
@@ -1661,6 +1699,9 @@ void zhAnalysis(
       bool passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
       bool passMT = mtW > mtMIN || !passMETTight;
       if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100;
+
+      bool passPTFracG    = ptFracG < 0.5;
+      bool passDPhiZGMET  = dPhiDiLepGMET > 2.6;
 
       bool passPTFrac    = ptFrac < 0.4;
       bool passDPhiZMET  = dPhiDiLepMET > 2.6;
@@ -1675,7 +1716,8 @@ void zhAnalysis(
       bool passZMassLarge = TMath::Abs(dilep.M()-91.1876) < 30.0;
       bool passZMassSB    = (dilep.M() > 110.0 && dilep.M() < 200.0);
 
-      bool passDPhiJetMET = dPhiJetMET == -1 || dPhiJetMET >= 0.5;
+      bool passDPhiJetMET     = dPhiJetMET     == -1 || dPhiJetMET     >= 0.5;
+      bool passDPhiJetNoPhMET = dPhiJetNoPhMET == -1 || dPhiJetNoPhMET >= 0.5;
       bool passTauVeto    = numberGoodTaus == 0;
 
       bool passNMinusOne[11] = {
@@ -1696,7 +1738,7 @@ void zhAnalysis(
       bool passAllCuts[nSelTypes] = {                   
             		   passZMass && passNjets										  &&  pass3rdLVeto						   ,	 // ZSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // SIGSEL
-        passZMassLarge && !passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWSEL
+      idPho.size() >= 1 && passZMass && passNjetsG &&     passMETTight && passPTFracG&& passDPhiZGMET&&  passBtagVeto && passPTLL &&  pass3rdLVeto &&             passDPhiJetNoPhMET && passTauVeto,	 // ZHGSEL
         passZMassSB    && !passZMass && passNjets && passMET    				     && !passBtagVeto		  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // WWLOOSESEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,	 // BTAGSEL
         		   passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,							 // WZSEL
@@ -1978,7 +2020,7 @@ void zhAnalysis(
 	    else if(thePlot ==  7 && passNMinusOne[7])       {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
 	    else if(thePlot ==  8 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),199.999);}
 	    else if(thePlot ==  9 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),199.999);}
-	    else if(thePlot == 10 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min((double)eventEvent.rho,39.999);}
+	    else if(thePlot == 10 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Eta()),2.499);}
 	    else if(thePlot == 11 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
 	    else if(thePlot == 12 && passNMinusOne[9])       {makePlot = true;theVar = dPhiJetMET;}
 	    else if(thePlot == 13 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = dPhiLepMETMin;}
@@ -2403,7 +2445,7 @@ void zhAnalysis(
   double systEM[2] = {1.0, 1.0};
   if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
   else  			      systEM[0] = 2.;
-  if(useEMFromData == true){
+  if(useEMFromData == true && histo_Data->GetSumOfWeights() > 0.0){
     EMbkg = bgdDecay[0][TIGHTSEL][2]+bgdDecay[0][TIGHTSEL][3]+bgdDecay[0][TIGHTSEL][4]+bgdDecay[0][TIGHTSEL][5];
     double EMNormFact[4] = {((bgdDecay[0][TIGHTSEL][0]-EMbkg)*NemFact[0])/bgdDecay[0][TIGHTSEL+nSelTypes*(1)][1],
                             ((bgdDecay[0][TIGHTSEL][0]-EMbkg)*NemFact[1])/bgdDecay[0][TIGHTSEL+nSelTypes*(2)][1],
@@ -2448,7 +2490,7 @@ void zhAnalysis(
   }
 
   // computing DY scale factor using the first bin
-  if((MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4) && histo_Zjets->GetSumOfWeights() > 0.0){
+  if((MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4) && histo_Zjets->GetSumOfWeights() > 0.0 && histo_Data->GetSumOfWeights() > 0.0){
     printf("-----------------------------------------------------------------------------------------------------------\n");
     printf("Computing the Drell-Yan data/MC scale factor using the first shape bin\n\n");
     int theBin = 2;

@@ -330,7 +330,8 @@ void zgAnalysis(
 	    {isRecoLepton = true; break;}
         }
 	if(isRecoLepton == true) continue;
-        if(((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoTight)== BarePhotons::PhoTight){idPho.push_back(npho);}
+        if(((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoTight)        == BarePhotons::PhoTight &&
+	   ((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoElectronVeto) == BarePhotons::PhoElectronVeto){idPho.push_back(npho);}
       }
       if     (nsel == 0 && idPho.size() >= 1 &&
          ((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Pt() > 20) passFilter[2] = kTRUE;

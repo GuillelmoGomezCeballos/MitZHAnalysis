@@ -41,7 +41,7 @@ void zgAnalysis(
  Int_t typeSel = 3,
  TString typeLepSel = "medium",
  bool usingAllTriggers = false,
- bool isMIT = false
+ bool isMIT = true
  ){
 
   TString filesPathDA = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/";

@@ -1034,7 +1034,7 @@ void zhgAnalysis(
       // begin event weighting
       vector<int>wBoson;
       vector<int>zBoson;
-      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;
+      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;vector<int> idGenPho;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
         if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
         if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
@@ -1053,6 +1053,12 @@ void zhgAnalysis(
             		   ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::DirectPromptTauDecayProductFinalState) == BareMonteCarlo::DirectPromptTauDecayProductFinalState;
         isGoodFlags = isGoodFlags && (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 11 || TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 13);
         if(isGoodFlags == false) isGenDupl[ngen0] = 1;
+
+	// begin photons	
+	bool isGoodPhFlags = ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::PromptFinalState) == BareMonteCarlo::PromptFinalState ||
+            		     ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::DirectPromptTauDecayProductFinalState) == BareMonteCarlo::DirectPromptTauDecayProductFinalState;
+        isGoodPhFlags = isGoodPhFlags && (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 22);
+        if(isGoodPhFlags == true) idGenPho.push_back(ngen0);
       }
       if(isBosonFound==false) bosonPtMin = 0;
       int numberGoodGenLep[3] = {0,0,0};
@@ -1148,16 +1154,18 @@ void zhgAnalysis(
       double btagCorr[2] = {(total_bjet_probMEDIUMUP[1]  /total_bjet_probMEDIUMUP[0]  )/(total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0]),
                             (total_bjet_probMEDIUMDOWN[1]/total_bjet_probMEDIUMDOWN[0])/(total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0])};
 
-      //if(totalWeight == 0) continue;
+      if(theCategory == 2 && idPho.size() > 0 && idGenPho.size() > 0 && infilenamev[ifile].Contains("ZGTo2LG") == kFALSE){
+        bool isGenPhoton = false;
+        for(unsigned int ngen=0; ngen<idGenPho.size(); ngen++) {
+          if(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idGenPho[ngen]])) < 0.1) {
+	    isGenPhoton = true;
+	    break;
+	  }
+	}
+	if(isGenPhoton == true) totalWeight = 0;
+      }
 
-      // DY (not valid for NLO MC)
-      //if(theCategory == 2 && zBoson.size() >= 1) {
-      //  double myptz = ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt();
-      //  Int_t binpt = fhDVjetsNum->GetXaxis()->FindBin(myptz);
-      //  if     (binpt <= 0) binpt = 1;
-      //  else if(binpt > fhDVjetsNum->GetNbinsX()) binpt = fhDVjetsNum->GetNbinsX();
-      //  totalWeight = totalWeight * fhDVjetsNum->GetBinContent(binpt)/fhDVjetsDen->GetBinContent(binpt) ;
-      //}
+      if(totalWeight == 0) continue;
 
       // ZZ
       double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();

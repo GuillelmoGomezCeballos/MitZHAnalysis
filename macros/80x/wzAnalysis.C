@@ -49,7 +49,7 @@ void wzAnalysis(
  TString type3rdLepSel = "default",
  string the_BDT_weights="",
  string subdirectory="",
- bool isMIT =false
+ bool isMIT =true
  ){
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());

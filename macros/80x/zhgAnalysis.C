@@ -45,7 +45,7 @@ const TString typeLepSel = "medium";
 const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
 
 void zhgAnalysis(
- unsigned int nJetsType = 2,
+ unsigned int nJetsType = 1,
  Int_t typeSel = 3,
  Int_t plotModel = 0,
  bool isMIT = true

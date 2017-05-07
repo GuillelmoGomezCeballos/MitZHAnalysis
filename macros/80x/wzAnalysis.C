@@ -314,24 +314,24 @@ void wzAnalysis(
   if(useBDT) {
     reader=new TMVA::Reader();
     if(MVAVarType==3) {
-      reader->AddVariable( "mva_balance"                       , &mva_balance            );
-      reader->AddVariable( "mva_cos_theta_star_l1"             , &mva_cos_theta_star_l1  );
+      //reader->AddVariable( "mva_balance"                       , &mva_balance            );
+      //reader->AddVariable( "mva_cos_theta_star_l1"             , &mva_cos_theta_star_l1  );
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
-      reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
+      //reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
-      reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
+      //reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
       reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
       reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
       reader->AddVariable( "mva_MET"                           , &mva_MET                );
       reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
+      //reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
       reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
       reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
       reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
       reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
       reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
-      reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
+      //reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
     } else if(MVAVarType==4) {
       reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
       reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );

@@ -25,15 +25,10 @@
 #include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
-// 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
-
 bool       isMINIAOD               = true;
 int        whichSkim               = 4;
-bool       useZjetsTemplate        = false;
 bool       usePureMC               = true; 
-bool       useEMFromData           = true;
-bool       useVVFromData           = true;
-bool       useZZWZEWKUnc           = true;
+bool       useEMFromData           = false;
 const bool useDYPT                 = true;
 double     mcPrescale              = 1.;
 bool       verbose                 = true;
@@ -41,8 +36,10 @@ enum selType                     { ZHGSEL,   BTAGSEL,	WWSEL,   PRESEL,  ZLLSEL, 
 TString selTypeName[nSelTypes]=  {"ZHGSEL", "BTAGSEL", "WWSEL", "PRESEL","ZLLSEL", "ZLGSEL", "ZHGLOOSESEL",};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
+enum categoryType                 { DATA=0, EM, DY, WZ, ZZ, VVV, ZH, ggZH};
 const TString typeLepSel = "medium";
 const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
+const double sf_el_gamma = 0.90;
 
 void zhgAnalysis(
  unsigned int nJetsType = 1,
@@ -51,8 +48,8 @@ void zhgAnalysis(
  bool isMIT = true
  ){
 
-  system("mkdir -p MitZHAnalysis/datacards");
-  system("mkdir -p MitZHAnalysis/plots");
+  system("mkdir -p MitZHAnalysis/datacards_zhg");
+  system("mkdir -p MitZHAnalysis/plots_zhg");
   Int_t period = 1;
   // File instances on EOS
   TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
@@ -76,7 +73,6 @@ void zhgAnalysis(
   vector<Int_t> infilecatv, signalIndex_;  
 
   TString puPath = "";
-  TString zjetsTemplatesPath = "";
   TString triggerSuffix = "*";
   if(isMINIAOD) triggerSuffix = "";
 
@@ -114,6 +110,7 @@ void zhgAnalysis(
   infilenamev.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(1);
   infilenamev.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));           infilecatv.push_back(1);
   infilenamev.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data())); 			      infilecatv.push_back(1);
+  infilenamev.push_back(Form("%sWWG_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infilecatv.push_back(1);
 
   if(useDYPT==false){
   infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));      infilecatv.push_back(2);
@@ -255,58 +252,26 @@ void zhgAnalysis(
   //TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
   delete fMuIsoSF;
 
+  TFile *fZHEwkCorr = TFile::Open(Form("MitAnalysisRunII/data/80x/Zll_nloEWK_weight_unnormalized.root"));
+  TH1D *fhDZHEwkCorr     = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_rebin"));      assert(fhDZHEwkCorr);     fhDZHEwkCorr    ->SetDirectory(0);
+  TH1D *fhDZHEwkCorrUp   = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_up_rebin"));   assert(fhDZHEwkCorrUp);   fhDZHEwkCorrUp  ->SetDirectory(0);
+  TH1D *fhDZHEwkCorrDown = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_down_rebin")); assert(fhDZHEwkCorrDown); fhDZHEwkCorrDown->SetDirectory(0);
+  delete fZHEwkCorr;
+
+  TFile *fPhotonSF = TFile::Open(Form("MitAnalysisRunII/data/80x/photon_scalefactors_37ifb.root"));
+  TH2D *fhDPhotonSF       = (TH2D*)(fPhotonSF->Get("EGamma_SF2D")); assert(fhDPhotonSF); fhDPhotonSF->SetDirectory(0);
+  TH2D *fhDElectronVetoSF = (TH2D*)(fPhotonSF->Get("Scaling_Factors_HasPix_R9 Inclusive")); assert(fhDElectronVetoSF); fhDElectronVetoSF->SetDirectory(0);
+  delete fPhotonSF;
+
   TString ECMsb  = "13TeV2016";
   
   // MVA variable types:
-  // 1: MET only
-  // 2: MET x mll
-  // 3: classifier only
-  // 4: MET x classifier
+  // 0: MT(g-MET)
 
-  //const int MVAVarType = 0; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
-  //const int MVAVarType = 0; const int nBinMVA = 14; Double_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  //const int MVAVarType = 1; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
-  const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 11; Double_t xbins[nBinMVA+1] = {0, 50, 100, 160, 240, 320, 400, 480, 560, 640, 800, 1200}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 21; Double_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1200}; TString addChan = "1";
-  //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-  //                                                                                         1125,1150,1175,1200,1250,1350,
-  //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, -0.2, -0.1, 0, 0.05, 0.075, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.2}; TString addChan = "3";
-  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.575, 0.6}; TString addChan = "3";
-  //const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
-  //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-  //                                                                                         1125,1150,1175,1200,1250,1350,
-  //                                                                                         2125,2150,2175,2200,2250,2350,
-  //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
+  const int MVAVarType = 0; const int nBinMVA = 7; Double_t xbins[nBinMVA+1] = {0, 30, 60, 90, 120, 150, 180, 250}; TString addChan = "";
   
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
-
-  if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt.root";
-  //if     (MVAVarType == 0) zjetsTemplatesPath = "MitZHAnalysis/data/76x/zjets_13TeV_25ns_metgt50_mt_13bins.root";
-  else if(MVAVarType == 1) zjetsTemplatesPath = "MitZHAnalysis/data/80x/zjets_13TeV_25ns_metgt50_met.root";
-  else useZjetsTemplate = false;
-
-  TH1D *fhDZjets;
-  TH1D *fhDZjetsSyst;
-  if(useZjetsTemplate){
-    TFile *fZjetsTemplatesFile = TFile::Open(Form("%s",zjetsTemplatesPath.Data()));
-
-    if     (nJetsType == 0) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
-    else if(nJetsType == 1) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
-    else if(nJetsType == 2) fhDZjets = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets2"));
-    assert(fhDZjets);
-    fhDZjets->SetDirectory(0);
-
-    if     (nJetsType == 0) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
-    else if(nJetsType == 1) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets0"));
-    else if(nJetsType == 2) fhDZjetsSyst = (TH1D*)(fZjetsTemplatesFile->Get("histo_Zjets1"));
-    assert(fhDZjetsSyst);
-    fhDZjetsSyst->SetDirectory(0);
-
-    delete fZjetsTemplatesFile;
-  }
 
   TFile *fVJetsKfactorFile = TFile::Open(Form("MitAnalysisRunII/data/80x/kfactors_vjets.root"));
   TH1D *fhDVjetsNum = (TH1D*)(fVJetsKfactorFile->Get("EWKcorr/Z"));
@@ -323,7 +288,7 @@ void zhgAnalysis(
   histoZHSEL[1] = new TH1D("histoZHSEL_1", "histoZHSEL_1", numberCuts+1, -0.5, numberCuts+0.5);
   histoZHSEL[2] = new TH1D("histoZHSEL_2", "histoZHSEL_2", numberCuts+1, -0.5, numberCuts+0.5);
   histoZHSEL[3] = new TH1D("histoZHSEL_3", "histoZHSEL_3", numberCuts+1, -0.5, numberCuts+0.5);
-  TString cutName[numberCuts+1] = {"ptl>25/20","3rd lepton veto","ptll>60","Z mass","npho>=1","btag-veto","tauVeto","Njets","MET>100","dPhi(ZG-MET)>2.4","|ptllg-MET|/ptll<0.4","dPhiJetMet>0.5"};
+  TString cutName[numberCuts+1] = {"ptl>25/20","3rd lepton veto","ptll>60","Z mass","npho>=1","btag-veto","tauVeto","Njets","MET>100","dPhi(ZG-MET)>2.5","|ptllg-MET|/ptll<0.4","dPhiJetMet>0.5"};
 
   double xmin = 0.0;
   double xmax = 1.0;
@@ -366,9 +331,9 @@ void zhgAnalysis(
     else if(thePlot == 27) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot == 28) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot == 29) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
-    else if(thePlot == 30) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot == 31) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
-    else if(thePlot == 32) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot == 30) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 250.0;}
+    else if(thePlot == 31) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 250.0;}
+    else if(thePlot == 32) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 250.0;}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -573,6 +538,8 @@ void zhgAnalysis(
   TH1D* histo_ZH_hinv_CMS_PUBoundingUp[nSigModels];  
   TH1D* histo_ZH_hinv_CMS_PUBoundingDown[nSigModels];
 
+  TH1D* histo_ZH_hinv_CMS_EWKCorrUp[nSigModels];
+  TH1D* histo_ZH_hinv_CMS_EWKCorrDown[nSigModels];
   TH1D* histo_WZ_CMS_EWKCorrUp    	        = new TH1D( Form("histo_WZ_EWKCorrUp")  , Form("histo_WZ_EWKCorrUp")  , nBinMVA, xbins); histo_WZ_CMS_EWKCorrUp  ->Sumw2();
   TH1D* histo_WZ_CMS_EWKCorrDown                = new TH1D( Form("histo_WZ_EWKCorrDown"), Form("histo_WZ_EWKCorrDown"), nBinMVA, xbins); histo_WZ_CMS_EWKCorrDown->Sumw2();
   TH1D* histo_ZZ_CMS_EWKCorrUp                  = new TH1D( Form("histo_ZZ_EWKCorrUp")  , Form("histo_ZZ_EWKCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_EWKCorrUp  ->Sumw2();
@@ -597,6 +564,8 @@ void zhgAnalysis(
     histo_ZH_hinv_CMS_MVABTAGBoundingDown [nModel]          = new TH1D( Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()), 	 Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVABTAGBoundingDown[nModel]->Sumw2();
     histo_ZH_hinv_CMS_PUBoundingUp [nModel]                 = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_puUp"	   , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
     histo_ZH_hinv_CMS_PUBoundingDown [nModel]               = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"	 , signalName_[nModel].Data()), 	  Form("histo_ZH_hinv_%s_CMS_puDown"	   , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_EWKCorrUp[nModel]                     = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_EWKCorrDown[nModel]                   = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Sumw2();
 
   }
 
@@ -619,7 +588,6 @@ void zhgAnalysis(
     TFile *the_input_file = TFile::Open(infilenamev[ifile].Data());
     int nModel = (infilecatv[ifile]==6 || infilecatv[ifile]==7) ? signalIndex_[ifile] : -1;
     if(nModel>=0) signalName=signalName_[nModel];
-    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
     //TTree *the_input_all  = (TTree*)the_input_file->FindObjectAny("all");
     TTree *the_SelBit_tree= (TTree*)the_input_file->FindObjectAny("SelBit_tree");
@@ -677,6 +645,7 @@ void zhgAnalysis(
     histoZHSEL[1]->Scale(0.0);
     histoZHSEL[2]->Scale(0.0);
     histoZHSEL[3]->Scale(0.0);
+    double countGenPhotons[3] = {0, 0, 0};
     double theMCPrescale = mcPrescale;
     if(infilecatv[ifile] == 0) theMCPrescale = 1.0;
     if(the_input_tree->GetEntries() != the_SelBit_tree->GetEntries()) {printf("BIG SKIMMING FAILURE\n"); return;}
@@ -973,7 +942,7 @@ void zhgAnalysis(
 
       double ptFracG = TMath::Abs(dilepg.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepg.Pt();
       bool passPTFracG    = ptFracG < 0.4;
-      bool passDPhiZGMET  = dPhiDiLepGMET > 2.6;
+      bool passDPhiZGMET  = dPhiDiLepGMET > 2.5;
 
       bool passBtagVeto  = bDiscrMax < bTagCuts[0];
       bool passPTLL      = dilep.Pt() > 60;
@@ -1034,7 +1003,7 @@ void zhgAnalysis(
       // begin event weighting
       vector<int>wBoson;
       vector<int>zBoson;
-      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;vector<int> idGenPho;
+      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;vector<int> idGenPho;vector<int> idGenLep;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
         if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
         if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
@@ -1052,7 +1021,7 @@ void zhgAnalysis(
 	bool isGoodFlags = ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::PromptFinalState) == BareMonteCarlo::PromptFinalState ||
             		   ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::DirectPromptTauDecayProductFinalState) == BareMonteCarlo::DirectPromptTauDecayProductFinalState;
         isGoodFlags = isGoodFlags && (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 11 || TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 13);
-        if(isGoodFlags == false) isGenDupl[ngen0] = 1;
+        if(isGoodFlags == false) {isGenDupl[ngen0] = 1; idGenLep.push_back(ngen0);}
 
 	// begin photons	
 	bool isGoodPhFlags = ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::PromptFinalState) == BareMonteCarlo::PromptFinalState ||
@@ -1077,10 +1046,9 @@ void zhgAnalysis(
       vector<int> isGenLep; unsigned int goodIsGenLep = 0;
       for(unsigned nl=0; nl<idLep.size(); nl++){
         bool isGenLepton = false;
-        for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
-	  if(isGenDupl[ngen] == 1) continue;
-          if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]) == TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen]) &&
-	    ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])) < 0.1) {
+        for(unsigned int ngenlep=0; ngenlep<idGenLep.size(); ngenlep++) {
+          if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]) == TMath::Abs((int)(*eventMonteCarlo.pdgId)[idGenLep[ngenlep]]) &&
+	    ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idGenLep[ngenlep]])) < 0.1) {
 	    isGenLepton = true;
 	    break;
 	  }
@@ -1088,6 +1056,36 @@ void zhgAnalysis(
 	if(isGenLepton == true) {isGenLep.push_back(1); goodIsGenLep++;}
 	else                    {isGenLep.push_back(0);}
       }
+
+      int isGenPho = 0;
+      bool isGenPhoton = false;
+      if(idPho.size() >= 1){
+        for(unsigned int ngenpho=0; ngenpho<idGenPho.size(); ngenpho++) {
+          if(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idGenPho[ngenpho]])) < 0.1) {
+	    isGenPhoton = true;
+	    break;
+	  }
+	}
+	if(isGenPhoton == true) isGenPho = 1;
+	if(isGenPho == 0){
+          bool isGenLepton = false;
+          for(unsigned int ngenlep=0; ngenlep<idGenLep.size(); ngenlep++) {
+            if(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idGenLep[ngenlep]])) < 0.1) {
+	      isGenLepton = true;
+	      break;
+	    }
+	  }
+	  if(isGenLepton == true) isGenPho = 2;
+        }
+      }
+
+      double photonSF = 1.0;
+      if(isGenPho == 2) {photonSF = sf_el_gamma; if(passAllCuts[ZHGSEL]) countGenPhotons[2]++;}
+      else if(isGenPho == 1) {
+        photonSF = effhDPhotonScaleFactor(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Pt(), ((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Eta(), "medium", fhDPhotonSF, fhDElectronVetoSF);
+        if(passAllCuts[ZHGSEL]) countGenPhotons[1]++;
+      }
+      else if(idPho.size() >= 1) {if(passAllCuts[ZHGSEL]) countGenPhotons[0]++;}
 
       // trigger efficiency
       double trigEff = 1.0;
@@ -1145,8 +1143,8 @@ void zhgAnalysis(
       }
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infilecatv[ifile] == 0) mcWeight = 1.0;
-      double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff;
-      //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,totalWeight);
+      double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff*photonSF;
+      //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,photonSF,totalWeight);
 
       // Btag scale factor
       totalWeight = totalWeight * total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0];
@@ -1155,17 +1153,18 @@ void zhgAnalysis(
                             (total_bjet_probMEDIUMDOWN[1]/total_bjet_probMEDIUMDOWN[0])/(total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0])};
 
       if(theCategory == 2 && idPho.size() > 0 && idGenPho.size() > 0 && infilenamev[ifile].Contains("ZGTo2LG") == kFALSE){
-        bool isGenPhoton = false;
-        for(unsigned int ngen=0; ngen<idGenPho.size(); ngen++) {
-          if(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[idGenPho[ngen]])) < 0.1) {
-	    isGenPhoton = true;
-	    break;
-	  }
-	}
-	if(isGenPhoton == true) totalWeight = 0;
+        if(isGenPhoton == true) totalWeight = 0;
       }
 
       if(totalWeight == 0) continue;
+
+      // ZH EWK correction (only for SM case)
+      if(theCategory == 6 && zBoson.size() >= 1 && nModel == 0) {
+        totalWeight = totalWeight * weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt());
+      }
+      else if(theCategory == 6 && zBoson.size() == 0 && nModel == 0) {
+        printf("zBoson = 0\n");
+      }
 
       // ZZ
       double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
@@ -1251,9 +1250,9 @@ void zhgAnalysis(
 	    else if(thePlot == 27 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(TMath::Min(massLG[0],massLG[1]),199.999);}
 	    else if(thePlot == 28 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(dPhiLG[0],dPhiLG[1]);}
 	    else if(thePlot == 29 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = dPhiGMET;}
-	    else if(thePlot == 30 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(mTGMET,199.999);}
-	    else if(thePlot == 31 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(mTGMET,199.999);}
-	    else if(thePlot == 32 && passAllCuts[ZHGLOOSESEL]){makePlot =true;theVar = TMath::Min(mTGMET,199.999);}
+	    else if(thePlot == 30 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(mTGMET,249.999);}
+	    else if(thePlot == 31 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(mTGMET,249.999);}
+	    else if(thePlot == 32 && passAllCuts[ZHGLOOSESEL]){makePlot =true;theVar = TMath::Min(mTGMET,249.999);}
 
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }
@@ -1261,7 +1260,7 @@ void zhgAnalysis(
       }
 
       if(typeSel == typePair || typeSel == 3) {
-	double MVAVar = getMVAVar(MVAVarType, passAllCuts[ZHGSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), 0.0, xbins[nBinMVA]);
+	double MVAVar = TMath::Min(mTGMET,xbins[nBinMVA]-0.0001);
 	double MVAVarMETSyst[2] = {MVAVar, MVAVar};	
 
 	// Avoid QCD scale weights that are anomalous high
@@ -1404,6 +1403,13 @@ void zhgAnalysis(
 	  if(passAllCuts[ZHGSEL]) {
 	     histo_ZH_hinv[nModel]   ->Fill(MVAVar,totalWeight);
 	     histo_ZH_hinvNoW[nModel]->Fill(MVAVar,1.);
+	     if(zBoson.size() >= 1 && nModel == 0) {
+	       histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Fill(MVAVar,totalWeight*weightZHEWKCorr(fhDZHEwkCorrUp,   ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt())/weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt()));
+	       histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Fill(MVAVar,totalWeight*weightZHEWKCorr(fhDZHEwkCorrDown, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt())/weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt()));
+             } else {
+	       histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Fill(MVAVar,totalWeight);
+	       histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Fill(MVAVar,totalWeight);
+	     }
 	     histo_ZH_hinv_CMS_QCDScaleBounding[nModel][0]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f2)/maxQCDscale);
 	     histo_ZH_hinv_CMS_QCDScaleBounding[nModel][1]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r1f5)/maxQCDscale);
 	     histo_ZH_hinv_CMS_QCDScaleBounding[nModel][2]  ->Fill(MVAVar,totalWeight*TMath::Abs((double)eventMonteCarlo.r2f1)/maxQCDscale);
@@ -1466,6 +1472,12 @@ void zhgAnalysis(
       }
     }
     printf("eff_cuts: %f\n",sumEventsProcess[ifile]);
+    if(countGenPhotons[0]+countGenPhotons[1]+countGenPhotons[2] > 0)
+    printf("GebPhotons fake/real/electron(%f) = %f %f %f\n",
+    countGenPhotons[0]+countGenPhotons[1]+countGenPhotons[2],
+    countGenPhotons[0]/(countGenPhotons[0]+countGenPhotons[1]+countGenPhotons[2]),
+    countGenPhotons[1]/(countGenPhotons[0]+countGenPhotons[1]+countGenPhotons[2]),
+    countGenPhotons[2]/(countGenPhotons[0]+countGenPhotons[1]+countGenPhotons[2]));
     for(int nc=0; nc<numberCuts+1; nc++){
       printf("(%20s): %10.2f %10.2f %10.2f %10.2f\n",cutName[nc].Data(),histoZHSEL[0]->GetBinContent(nc+1),histoZHSEL[1]->GetBinContent(nc+1),histoZHSEL[2]->GetBinContent(nc+1),histoZHSEL[3]->GetBinContent(nc+1));
     }
@@ -1482,7 +1494,6 @@ void zhgAnalysis(
   printf("-----------------------------------------------------------------------------------------------------------\n");
   printf("Printing yields and statistical uncertainties for all signal models\n\n");
   for(int nModel=0; nModel<nSigModels; nModel++) {
-    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     printf("Model: %s\n", signalName_[nModel].Data()); 
     printf("                    em                      mm                      ee                      ll\n");
     printf("-----------------------------------------------------------------------------------------------------------\n");
@@ -1564,7 +1575,7 @@ void zhgAnalysis(
   if(bgdDecay[0][ZHGSEL][0] > 0) EMSystTotal[2] = sqrt(EMSyst[0][2]*EMSyst[0][2] + EMSyst[1][2]*EMSyst[1][2] + 1/bgdDecay[0][ZHGSEL][0]);
   else                        EMSystTotal[2] = sqrt(EMSyst[0][2]*EMSyst[0][2] + EMSyst[1][2]*EMSyst[1][2] + 1.0);
 
-  double EMbkg = bgdDecay[0][ZHGSEL][2]+bgdDecay[0][ZHGSEL][3]+bgdDecay[0][ZHGSEL][4]+bgdDecay[0][ZHGSEL][5];
+  double EMbkg = bgdDecay[0][ZHGSEL][DY]+bgdDecay[0][ZHGSEL][WZ]+bgdDecay[0][ZHGSEL][ZZ]+bgdDecay[0][ZHGSEL][VVV];
 
   printf("(mm) EM MC: %8.3f +/- %5.3f --> EM Prediction: %8.3f +/- %5.3f, EM data/bkg: %f/%f --> syst: %f (%f,%f,%f)\n",
          bgdDecay[0][ZHGSEL+nSelTypes*1][1],sqrt(weiDecay[0][ZHGSEL+nSelTypes*1][4]),
@@ -1582,73 +1593,38 @@ void zhgAnalysis(
   if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
   else  			      systEM[0] = 2.;
   if(useEMFromData == true && histo_Data->GetSumOfWeights() > 0.0){
-    EMbkg = bgdDecay[0][ZHGSEL][2]+bgdDecay[0][ZHGSEL][3]+bgdDecay[0][ZHGSEL][4]+bgdDecay[0][ZHGSEL][5];
-    double EMNormFact[4] = {((bgdDecay[0][ZHGSEL][0]-EMbkg)*NemFact[0])/bgdDecay[0][ZHGSEL+nSelTypes*(1)][1],
-                            ((bgdDecay[0][ZHGSEL][0]-EMbkg)*NemFact[1])/bgdDecay[0][ZHGSEL+nSelTypes*(2)][1],
-                            ((bgdDecay[0][ZHGSEL][0]-EMbkg)*NemFact[2])/bgdDecay[0][ZHGSEL+nSelTypes*(3)][1],
-                            ((bgdDecay[0][ZHGSEL][0]-EMbkg)*1.00000000)/bgdDecay[0][ZHGSEL+nSelTypes*(0)][1]};
+    EMbkg = bgdDecay[0][ZHGSEL][DY]+bgdDecay[0][ZHGSEL][WZ]+bgdDecay[0][ZHGSEL][ZZ]+bgdDecay[0][ZHGSEL][VVV];
+    double EMNormFact[4] = {((bgdDecay[0][ZHGSEL][DATA]-EMbkg)*NemFact[0])/bgdDecay[0][ZHGSEL+nSelTypes*(1)][EM],
+                            ((bgdDecay[0][ZHGSEL][DATA]-EMbkg)*NemFact[1])/bgdDecay[0][ZHGSEL+nSelTypes*(2)][EM],
+                            ((bgdDecay[0][ZHGSEL][DATA]-EMbkg)*NemFact[2])/bgdDecay[0][ZHGSEL+nSelTypes*(3)][EM],
+                            ((bgdDecay[0][ZHGSEL][DATA]-EMbkg)*1.00000000)/bgdDecay[0][ZHGSEL+nSelTypes*(0)][EM]};
 
-    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*1][1],bgdDecay[0][ZHGSEL][0],EMbkg,NemFact[0],bgdDecay[0][ZHGSEL+nSelTypes*(1)][1],bgdDecay[0][ZHGSEL+nSelTypes*1][1]*EMNormFact[0],bgdDecay[0][ZHGSEL+nSelTypes*1][1]*EMNormFact[0]*EMSystTotal[0]);
-    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*2][1],bgdDecay[0][ZHGSEL][0],EMbkg,NemFact[1],bgdDecay[0][ZHGSEL+nSelTypes*(2)][1],bgdDecay[0][ZHGSEL+nSelTypes*2][1]*EMNormFact[1],bgdDecay[0][ZHGSEL+nSelTypes*2][1]*EMNormFact[1]*EMSystTotal[1]);
-    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*3][1],bgdDecay[0][ZHGSEL][0],EMbkg,NemFact[2],bgdDecay[0][ZHGSEL+nSelTypes*(3)][1],bgdDecay[0][ZHGSEL+nSelTypes*3][1]*EMNormFact[2],bgdDecay[0][ZHGSEL+nSelTypes*3][1]*EMNormFact[2]*EMSystTotal[2]);
-    printf("EM(4): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*0][1],bgdDecay[0][ZHGSEL][0],EMbkg,1.00000000,bgdDecay[0][ZHGSEL+nSelTypes*(0)][1],bgdDecay[0][ZHGSEL+nSelTypes*0][1]*EMNormFact[3],bgdDecay[0][ZHGSEL+nSelTypes*0][1]*EMNormFact[3]*0.000000000000);
+    printf("EM(1): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*1][EM],bgdDecay[0][ZHGSEL][DATA],EMbkg,NemFact[0],bgdDecay[0][ZHGSEL+nSelTypes*(1)][EM],bgdDecay[0][ZHGSEL+nSelTypes*1][EM]*EMNormFact[0],bgdDecay[0][ZHGSEL+nSelTypes*1][EM]*EMNormFact[0]*EMSystTotal[0]);
+    printf("EM(2): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*2][EM],bgdDecay[0][ZHGSEL][DATA],EMbkg,NemFact[1],bgdDecay[0][ZHGSEL+nSelTypes*(2)][EM],bgdDecay[0][ZHGSEL+nSelTypes*2][EM]*EMNormFact[1],bgdDecay[0][ZHGSEL+nSelTypes*2][EM]*EMNormFact[1]*EMSystTotal[1]);
+    printf("EM(3): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*3][EM],bgdDecay[0][ZHGSEL][DATA],EMbkg,NemFact[2],bgdDecay[0][ZHGSEL+nSelTypes*(3)][EM],bgdDecay[0][ZHGSEL+nSelTypes*3][EM]*EMNormFact[2],bgdDecay[0][ZHGSEL+nSelTypes*3][EM]*EMNormFact[2]*EMSystTotal[2]);
+    printf("EM(4): %f * (%f-%f)*%f/%f = %f +/- %f\n",bgdDecay[0][ZHGSEL+nSelTypes*0][EM],bgdDecay[0][ZHGSEL][DATA],EMbkg,1.00000000,bgdDecay[0][ZHGSEL+nSelTypes*(0)][EM],bgdDecay[0][ZHGSEL+nSelTypes*0][EM]*EMNormFact[3],bgdDecay[0][ZHGSEL+nSelTypes*0][EM]*EMNormFact[3]*0.000000000000);
 
     //systEM[0] = 1. + EMSystTotal[typeSel-1];
     //systEM[0] = 1. + EMSyst[1][typeSel-1];
     systEM[0] = 1. + 0.20;
-    systEM[1] = TMath::Max(bgdDecay[0][ZHGSEL][0],1.0);
-    if(bgdDecay[0][ZHGSEL][0] > 0) {
+    systEM[1] = TMath::Max(bgdDecay[0][ZHGSEL][DATA],1.0);
+    if(bgdDecay[0][ZHGSEL][DATA] > 0) {
       histo_EM->Scale(EMNormFact[typeSel-1]);
       histo_EM->SetBinContent(1,histo_EM->GetBinContent(1)*EMNormFact[3]/EMNormFact[typeSel-1]);
     }
   }
-
-  // DY background estimation
-  if(useZjetsTemplate){
-    histo_Zjets_CMS_ZjetsSystUp->Add(fhDZjets);
-    histo_Zjets->Scale(0.0);
-    histo_Zjets->Add(fhDZjets);
-    histo_ZjetsNoW->Scale(0.0);
-    histo_ZjetsNoW->Add(fhDZjets);
-    double ZJetsNorm[3] = {0.56, 0.52, 1.};
-    if     (MVAVarType == 0 || MVAVarType == 1 ||MVAVarType == 2 || MVAVarType == 3) {
-      ZJetsNorm[0] = 1.; ZJetsNorm[1] = 1.; ZJetsNorm[2] = 1.; 
-    }
-    if     (nJetsType == 0) histo_Zjets->Scale(TMath::Abs(ZJetsNorm[0]/histo_Zjets->GetSumOfWeights()));
-    else if(nJetsType == 1) histo_Zjets->Scale(TMath::Abs(ZJetsNorm[1]/histo_Zjets->GetSumOfWeights()));
-    else                    histo_Zjets->Scale(TMath::Abs(ZJetsNorm[2]/histo_Zjets->GetSumOfWeights()));
-    
-    histo_Zjets_CMS_ZjetsSystUp->Scale(0.0);
-    histo_Zjets_CMS_ZjetsSystUp->Add(fhDZjetsSyst);
-    if     (nJetsType == 0) histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[0]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
-    else if(nJetsType == 1) histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[1]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
-    else                    histo_Zjets_CMS_ZjetsSystUp->Scale(TMath::Abs(ZJetsNorm[2]/histo_Zjets_CMS_ZjetsSystUp->GetSumOfWeights()));
-  }
-
-  // computing DY scale factor using the first bin
-  if((MVAVarType == 0 || MVAVarType == 1 || MVAVarType == 2 || MVAVarType==3 || MVAVarType==4) && histo_Zjets->GetSumOfWeights() > 0.0 && histo_Data->GetSumOfWeights() > 0.0){
-    printf("-----------------------------------------------------------------------------------------------------------\n");
-    printf("Computing the Drell-Yan data/MC scale factor using the first shape bin\n\n");
-    int theBin = 2;
-    double the_bck = histo_EM->GetBinContent(theBin) + histo_WZ->GetBinContent(theBin) + histo_ZZ->GetBinContent(theBin) + histo_VVV->GetBinContent(theBin);
-    double the_data = histo_Data->GetBinContent(theBin);
-    double the_sf;
-    //if(MVAVarType!=3) { 
-    the_sf = (the_data-the_bck)/histo_Zjets->GetBinContent(theBin);
-    printf("DY SF: data/bck/DY = %f %f %f ==> %f\n",the_data,the_bck,histo_Zjets->GetBinContent(theBin),the_sf);
-    //} else {
-    //  the_sf=1.068889;
-    //}
-    histo_Zjets->Scale(the_sf);
-    histo_Zjets_CMS_ZjetsSystUp->Scale(the_sf);
-  }
-
-  double nZjetsNorm = histo_Zjets->GetSumOfWeights();
-  if(nZjetsNorm > 0){
-    for(int i=1; i<=histo_Zjets->GetNbinsX(); i++){
-      histo_Zjets->SetBinContent(i,TMath::Max(histo_Zjets->GetBinContent(i),0.000001));
-    }
-    histo_Zjets->Scale(nZjetsNorm/histo_Zjets->GetSumOfWeights());
+  
+  // electron to photon scale factor
+  {
+  double sig_den = bgdDecay[0][ZLLSEL][DY]+bgdDecay[0][ZLLSEL][WZ]+bgdDecay[0][ZLLSEL][ZZ]+bgdDecay[0][ZLLSEL][VVV];
+  double bck_den = bgdDecay[0][ZLLSEL][EM];
+  double dat_den = bgdDecay[0][ZLLSEL][DATA];
+  double sig_num = bgdDecay[0][ZLGSEL][DY]+bgdDecay[0][ZLGSEL][WZ]+bgdDecay[0][ZLGSEL][ZZ]+bgdDecay[0][ZLGSEL][VVV];
+  double bck_num = bgdDecay[0][ZLGSEL][EM];
+  double dat_num = bgdDecay[0][ZLGSEL][DATA];
+  printf("Electron to photon SF: ((%f-%f)/%f)/((%f-%f)/%f) = %f/%f = %f\n",dat_num,bck_num,sig_num,dat_den,bck_den,sig_den,
+                                 (dat_num-bck_num)/sig_num,  (dat_den-bck_den)/sig_den,
+				((dat_num-bck_num)/sig_num)/((dat_den-bck_den)/sig_den));
   }
 
   double mean,up,diff;
@@ -1676,10 +1652,11 @@ void zhgAnalysis(
   printf("-----------------------------------------------------------------------------------------------------------\n");
   printf("Computing diboson corrections\n\n");
   
-  printf("EWK Corr: WZ(%f/%f/%f) ZZ(%f/%f/%f) ggZZ(%f/%f/%f)\n",
+  printf("EWK Corr: WZ(%f/%f/%f) ZZ(%f/%f/%f) ggZZ(%f/%f/%f) ZH(%f/%f/%f)\n",
                      histo_WZ_CMS_EWKCorrUp->GetSumOfWeights(),histo_WZ->GetSumOfWeights(),histo_WZ_CMS_EWKCorrDown->GetSumOfWeights(),
                      histo_ZZ_CMS_EWKCorrUp->GetSumOfWeights(),histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_EWKCorrDown->GetSumOfWeights(),
-		     histo_ZZ_CMS_ggCorrUp ->GetSumOfWeights(),histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_ggCorrDown ->GetSumOfWeights());
+		     histo_ZZ_CMS_ggCorrUp ->GetSumOfWeights(),histo_ZZ->GetSumOfWeights(),histo_ZZ_CMS_ggCorrDown ->GetSumOfWeights(),
+		     histo_ZH_hinv_CMS_EWKCorrUp[0]->GetSumOfWeights(),histo_ZH_hinv[0]->GetSumOfWeights(),histo_ZH_hinv_CMS_EWKCorrDown[0]->GetSumOfWeights());
 
   printf("QCD Corr: WZ(%f:%f/%f/%f/%f/%f/%f) ZZ(%f:%f/%f/%f/%f/%f/%f) VVV(%f:%f/%f/%f/%f/%f/%f) ZH(%f:%f/%f/%f/%f/%f/%f)\n",
     histo_WZ->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[0]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[1]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[2]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[3]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[4]->GetSumOfWeights(),histo_WZ_CMS_QCDScaleBounding[5]->GetSumOfWeights(),
@@ -1701,7 +1678,7 @@ void zhgAnalysis(
   
   for(int thePlot=0; thePlot<allPlots; thePlot++){
     char output[200];
-    sprintf(output,"MitZHAnalysis/plots/histo%szhg%s_nice_%s_%d.root",addChan.Data(),finalStateName,signalName_[plotModel].Data(),thePlot);	  
+    sprintf(output,"MitZHAnalysis/plots_zhg/histo%szhg%s_nice_%s_%d.root",addChan.Data(),finalStateName,signalName_[plotModel].Data(),thePlot);	  
     TFile* outFilePlotsNote = new TFile(output,"recreate");
     outFilePlotsNote->cd();
     for(int np=0; np<histBins; np++) histo[thePlot][np]->Write();
@@ -1733,7 +1710,6 @@ void zhgAnalysis(
     histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[i-1]  ->Add(histo_ggZH_hinv); histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[i-1]->SetBinContent(i,TMath::Max(histo_ggZH_hinv->GetBinContent(i)+factorDown*histo_ggZH_hinv->GetBinError(i),0.000001));
 
     for(int nModel=0; nModel<nSigModels; nModel++) { 
-      if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
       histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]      ->SetBinContent(i,TMath::Max(histo_ZH_hinv[nModel]->GetBinContent(i)+factorUp  *histo_ZH_hinv[nModel]->GetBinError(i),0.000001));
       histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]    ->SetBinContent(i,TMath::Max(histo_ZH_hinv[nModel]->GetBinContent(i)+factorDown*histo_ZH_hinv[nModel]->GetBinError(i),0.000001));
       histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][i-1]  ->Add(histo_ZH_hinv[nModel]);
@@ -1752,8 +1728,7 @@ void zhgAnalysis(
   char outputLimits[200];
   // Output the limits for all the models
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-    if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
-    sprintf(outputLimits,"MitZHAnalysis/plots/zll%szhg%s_%s_input_%s.root",addChan.Data(),finalStateName,signalName_[nModel].Data(),ECMsb.Data());
+    sprintf(outputLimits,"MitZHAnalysis/plots_zhg/zll%szhg%s_%s_input_%s.root",addChan.Data(),finalStateName,signalName_[nModel].Data(),ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
     outFileLimits->cd();
     
@@ -1853,6 +1828,8 @@ void zhgAnalysis(
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_ZZ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_EWKCorrDown->GetBinContent(i)/histo_ZZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_ZZ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_ggCorrUp  ->GetBinContent(i)/histo_ZZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_ZZ->GetBinContent(i)>0)printf("%5.1f ",histo_ZZ_CMS_ggCorrDown->GetBinContent(i)/histo_ZZ->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_ZH_hinv[nModel]->GetBinContent(i)>0)printf("%5.1f ",histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->GetBinContent(i)/histo_ZH_hinv[nModel]->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
+      for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_ZH_hinv[nModel]->GetBinContent(i)>0)printf("%5.1f ",histo_ZH_hinv_CMS_EWKCorrDown[nModel]->GetBinContent(i)/histo_ZH_hinv[nModel]->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
       printf("uncertainties Zjets\n");
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystUp  ->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
       for(int i=1; i<=histo_ZH_hinv[nModel]->GetNbinsX(); i++) {if(histo_Zjets->GetBinContent(i)>0)printf("%5.1f ",histo_Zjets_CMS_ZjetsSystDown->GetBinContent(i)/histo_Zjets->GetBinContent(i)*100);else printf("100.0 ");} printf("\n");
@@ -2112,26 +2089,19 @@ void zhgAnalysis(
       if(histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystUp   ->GetBinContent(nb) > 0) systZjetsUp  [0] = histo_Zjets_CMS_ZjetsSystUp  ->GetBinContent(nb)/histo_Zjets->GetBinContent(nb);
       if(histo_Zjets->GetBinContent(nb) > 0 && histo_Zjets_CMS_ZjetsSystDown ->GetBinContent(nb) > 0) systZjetsDown[0] = histo_Zjets_CMS_ZjetsSystDown->GetBinContent(nb)/histo_Zjets->GetBinContent(nb);
   
-      double syst_EWKCorrUp[3]   = {1.0,1.0,1.0}; // WZ, ZZ, ggZZ
-      double syst_EWKCorrDown[3] = {1.0,1.0,1.0};
+      double syst_EWKCorrUp[4]   = {1.0,1.0,1.0,1.0}; // WZ, ZZ, ggZZ, ZH
+      double syst_EWKCorrDown[4] = {1.0,1.0,1.0,1.0};
       if(histo_WZ->GetBinContent(nb) > 0 &&  histo_WZ_CMS_EWKCorrUp  ->GetBinContent(nb) > 0) syst_EWKCorrUp  [0] = histo_WZ_CMS_EWKCorrUp  ->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
       if(histo_WZ->GetBinContent(nb) > 0 &&  histo_WZ_CMS_EWKCorrDown->GetBinContent(nb) > 0) syst_EWKCorrDown[0] = histo_WZ_CMS_EWKCorrDown->GetBinContent(nb)/histo_WZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_EWKCorrUp  ->GetBinContent(nb) > 0) syst_EWKCorrUp  [1] = histo_ZZ_CMS_EWKCorrUp  ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb) > 0) syst_EWKCorrDown[1] = histo_ZZ_CMS_EWKCorrDown->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb) > 0) syst_EWKCorrUp  [2] = histo_ZZ_CMS_ggCorrUp   ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
       if(histo_ZZ->GetBinContent(nb) > 0 &&  histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb) > 0) syst_EWKCorrDown[2] = histo_ZZ_CMS_ggCorrDown ->GetBinContent(nb)/histo_ZZ->GetBinContent(nb);
-
-      // If VV normalization is from data
-      double systVV[2] = {0,0};
-      if(useVVFromData){
-        systVV[0] = sqrt(TMath::Power(syst_EWKCorrUp[0]-1,2)+TMath::Power(systQCDScale[2]-1,2)+TMath::Power(systPDF[2]-1,2));
-	systVV[1] = sqrt(TMath::Power(syst_EWKCorrUp[1]-1,2)+TMath::Power(systQCDScale[3]-1,2)+TMath::Power(systPDF[3]-1,2));
-	//printf("systVV_theo = %f(%f/%f/%f) %f(%f/%f/%f)\n",systVV[0],syst_EWKCorrUp[0]-1,systQCDScale[2]-1,systPDF[2]-1,
-	//                                                   systVV[1],syst_EWKCorrUp[1]-1,systQCDScale[3]-1,systPDF[3]-1);
-      }
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0 &&  histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->GetBinContent(nb) > 0) syst_EWKCorrUp  [3] = histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
+      if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0 &&  histo_ZH_hinv_CMS_EWKCorrDown[nModel]->GetBinContent(nb) > 0) syst_EWKCorrDown[3] = histo_ZH_hinv_CMS_EWKCorrDown[nModel]->GetBinContent(nb)/histo_ZH_hinv[nModel]->GetBinContent(nb);
 
       char outputLimitsShape[200];                                            
-      sprintf(outputLimitsShape,"MitZHAnalysis/datacards/histo_limits_zll%szhg%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName,signalName_[nModel].Data(),ECMsb.Data(),nb-1);
+      sprintf(outputLimitsShape,"MitZHAnalysis/datacards_zhg/histo_limits_zll%szhg%s_%s_shape_%s_bin%d.txt",addChan.Data(),finalStateName,signalName_[nModel].Data(),ECMsb.Data(),nb-1);
       ofstream newcardShape;
       newcardShape.open(outputLimitsShape);
       newcardShape << Form("imax 1 number of channels\n");
@@ -2145,14 +2115,14 @@ void zhgAnalysis(
       newcardShape << Form("lumi_%4s                               lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);		     
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
-      if(MVAVarType != 3) {
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
       newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
-      }
       newcardShape << Form("CMS_pu2016                             lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_met                          lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2],systMetUp[3],systMetDown[3],systMetUp[0],systMetDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_j                            lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systJesUp[0],systJesDown[0],systJesUp[1],systJesDown[1],systJesUp[2],systJesDown[2],systJesUp[3],systJesDown[3],systJesUp[0],systJesDown[0]); // 0 --> 4		 
       newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",1.01,1.01,1.01,1.01,1.01);
+      newcardShape << Form("CMS_eff_photon                         lnN  %7.5f %7.5f   -     -     -     -   %7.5f\n",1.02,1.02,1.02);
+      newcardShape << Form("CMS_fake_el                            lnN    -     -   %7.5f %7.5f %7.5f   -     -\n",1.10,1.10,1.10);
       newcardShape << Form("UEPS			           lnN  1.030   -     -     -     -     -   1.030\n");
       newcardShape << Form("CMS_eff_b_2016                         lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systBtagUp[0],systBtagDown[0],systBtagUp[1],systBtagDown[1],systBtagUp[2],systBtagDown[2],systBtagUp[3],systBtagDown[3],systBtagUp[0],systBtagDown[0]); // 0 --> 4
       newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  %7.5f   -   %7.5f %7.5f %7.5f   -     -  \n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01),TMath::Max(systPDF[3],1.01));
@@ -2171,39 +2141,19 @@ void zhgAnalysis(
       newcardShape << Form("QCDscale_VVV		                 lnN    -     -   %7.5f   -     -     -     -  \n",systQCDScale[1]);		
       newcardShape << Form("QCDscale_WZ		                   lnN    -     -     -   %7.5f      -    -      -  \n",systQCDScale[2]);
       newcardShape << Form("QCDscale_ZZ		                   lnN    -     -     -   -      %7.5f    -      -  \n",systQCDScale[3]);
+      newcardShape << Form("CMS_zllhinv_ZH_EWKCorr                 lnN    %7.5f/%7.5f      -     -   -  -      -      -  \n",syst_EWKCorrUp[3],syst_EWKCorrDown[3]);		
 
-      if(useVVFromData && nb != 1){
-      if(useZZWZEWKUnc){
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
-      newcardShape << Form("CMS_hinv_vvnorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      newcardShape << Form("CMS_zllhinv_ZZWZ_EWKCorr               lnN    -     -     -   -      %7.5f    -      -\n",1.+sqrt(0.02*0.02+(syst_EWKCorrUp[1]-1.0)*(syst_EWKCorrUp[1]-1.0)));		
-      } else {
-      newcardShape << Form("CMS_hinv_wznorm_bin%d rateParam  * WZ 1 [0.1,10]\n",nb-1);		
-      newcardShape << Form("CMS_hinv_wznorm_bin%d param 1 %5.3f\n",nb-1, systVV[0]);		
-      newcardShape << Form("CMS_hinv_zznorm_bin%d rateParam  * ZZ 1 [0.1,10]\n",nb-1);	
-      newcardShape << Form("CMS_hinv_zznorm_bin%d param 1 %5.3f\n",nb-1, systVV[1]);	
-      }
-      }
-      else if(!useVVFromData){
       newcardShape << Form("CMS_zllhinv_WZ_EWKCorr                 lnN    -     -     -   %7.5f/%7.5f   -      -      -  \n",syst_EWKCorrUp[0],syst_EWKCorrDown[0]);		
       newcardShape << Form("CMS_zllhinv_ZZ_EWKCorr                 lnN    -     -     -     -    %7.5f/%7.5f   -      -  \n",syst_EWKCorrUp[1],syst_EWKCorrDown[1]);		
-      }
 
       newcardShape << Form("CMS_zllhinv_ggZZCorr                   lnN    -     -     -     -   %7.5f/%7.5f   -     -  \n",syst_EWKCorrUp[2],syst_EWKCorrDown[2]);		
 
       newcardShape << Form("CMS_zllhinv_WZ_lep2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[0]);	    
       newcardShape << Form("CMS_zllhinv_WZ_tau2016                 lnN     -	 -     -   %7.5f   -	  -    -  \n",syst_WZl[1]);	    
-      if(nb>=3){
       newcardShape << Form("CMS_zllhinv_ZLLNorm2016_%s_%s              lnN	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
-      //newcardShape << Form("CMS_zllhinv_ZLLShape2016_%s_%s             lnN	-   %7.5f/%7.5f   -	-     -     -     -  \n",finalStateName,ECMsb.Data(),systZjetsUp[0],systZjetsDown[0]);	    
-      }
-      if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 4){
-      newcardShape << Form("CMS_zllhinv_ZLLFit2016_%s_%s               lnU	-   %7.5f   -	  -     -     -     -  \n",finalStateName,ECMsb.Data(),2.0);	    
-      }
-      if(nb>=2)
       newcardShape << Form("CMS_zllhinv_EMSyst2016_%s_%s               lnN	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),systEM[0]);	       
 
-      newcardShape << Form("CMS_zllhinv_EMNorm2016_%s_%s               lnU	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),2.0);      
+      //newcardShape << Form("CMS_zllhinv_EMNorm2016_%s_%s               lnU	-     -     -	  -     -   %7.5f   -  \n",finalStateName,ECMsb.Data(),2.0);      
   
       if(histo_ZH_hinv[nModel]->GetBinContent(nb) > 0) newcardShape << Form("CMS_zllhinv%s_MVAZHStatBounding2016_%s_Bin%d    lnN    %7.5f -      -	 -    -    -	 -  \n",finalStateName,ECMsb.Data(),nb-1,1.0+TMath::Min(histo_ZH_hinv[nModel]->GetBinError(nb)  /histo_ZH_hinv[nModel]->GetBinContent(nb),0.999));
   

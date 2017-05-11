@@ -816,7 +816,9 @@ void zhgAnalysis(
         else                                                             type3l += 2;
       }
 
-      if(tagZ[0] == -1 || tagZ[1] == -1) {tagZ[0] = 0; tagZ[1] = 1;}
+      if(tagZ[0] == -1 && tagZ[1] != -1) printf("NOOOOOO1\n");
+      if(tagZ[0] != -1 && tagZ[1] == -1) printf("NOOOOOO2\n");
+      if(tagZ[0] == -1 || tagZ[1] == -1) {tagZ[0] = 0; tagZ[1] = 1; tagZ[2] = -1;}
 
       bool tight3rdLepId = true;
       if(tagZ[2] != -1 && idTight[tagZ[2]] == 1){
@@ -1001,12 +1003,12 @@ void zhgAnalysis(
       bool passMET     = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
 
       double ptFracG = TMath::Abs(dilepg.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepg.Pt();
-      bool passPTFracG    = ptFracG < 0.4;
-      bool passDPhiZGMET  = dPhiDiLepGMET > 2.5;
+      bool passPTFracG   = ptFracG < 0.4;
+      bool passDPhiZGMET = dPhiDiLepGMET > 2.5;
 
       bool passBtagVeto  = bDiscrMax < bTagCuts[0];
       bool pass3rdLVeto  = idLep.size() == numberOfLeptons && TMath::Abs(signQ) == 0;
-      bool pass3rdLSel   = idLep.size() == 3;
+      bool pass3rdLSel   = idLep.size() == 3 && TMath::Abs(signQ) == 1 && idPho.size() == 0 && tagZ[2] != -1;
       double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]]));
       double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[0]]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[1]]])->Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
@@ -1035,7 +1037,6 @@ void zhgAnalysis(
 	passZMass && passPhotonSel && passNjets && passMET && passPTFracG && passDPhiZGMET && passBtagVeto && passPTLL && pass3rdLVeto && passDPhiJetMET && passTauVeto
                                };
 
-
       bool passAllCuts[nSelTypes] = {                   
                          passZMass && passPhotonSel && passNjets && passMET    && passPTFracG && passDPhiZGMET &&  passBtagVeto && passPTLL && pass3rdLVeto && passDPhiJetMET && passTauVeto && passMT,  // ZHGSEL
                          passZMass && passPhotonSel && passNjets && passMET    && passPTFracG && passDPhiZGMET && !passBtagVeto && passPTLL && pass3rdLVeto && passDPhiJetMET && passTauVeto && passMT,  // BTAGSEL
@@ -1045,6 +1046,7 @@ void zhgAnalysis(
                          passZMass && passLepPhotonSel &&           passMETMin &&                                  passBtagVeto && passPTLL && pass3rdLVeto &&		         passTauVeto          ,  // ZLGSEL
                          passZMass &&                  passNjets && passMET    && passPTFracG && passDPhiZGMET &&  passBtagVeto && passPTLL && pass3rdLSel  && passDPhiJetMET &&                passMT   // WZSEL
                                     };
+
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passPTLL,passZMass,passPhotonSel,passBtagVeto,passTauVeto,passNjets,passMET,passDPhiZGMET,passPTFracG,passDPhiJetMET,passMT};
 
      int sumEvol = 0;
@@ -1142,8 +1144,8 @@ void zhgAnalysis(
 
       double photonSF = 1.0;
       if(isGenPho == 2) {
-        if(TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Eta()) < 1.5) photonSF = sf_el_gamma[0]; 
-	else                                                                        photonSF = sf_el_gamma[1]; 
+        if(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Eta()) < 1.5) photonSF = sf_el_gamma[0]; 
+	else                                                                         photonSF = sf_el_gamma[1]; 
 	if(passAllCuts[ZHGSEL]) countGenPhotons[2]++;
       }
       else if(isGenPho == 1) {

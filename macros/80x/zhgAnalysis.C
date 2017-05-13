@@ -32,8 +32,8 @@ bool       useEMFromData           = false;
 const bool useDYPT                 = true;
 double     mcPrescale              = 1.;
 bool       verbose                 = true;
-enum selType                     { ZHGSEL,   BTAGSEL,	WWSEL,   PRESEL,  ZLLSEL,   ZLGSEL,   WZSEL,   ZZSEL,   ZZLOOSESEL, nSelTypes};
-TString selTypeName[nSelTypes]=  {"ZHGSEL", "BTAGSEL", "WWSEL", "PRESEL","ZLLSEL", "ZLGSEL", "WZSEL", "ZZSEL", "ZZLOOSESEL"};
+enum selType                     { ZHGSEL,   BTAGSEL,	WWSEL,   PRESEL,  ZLLSEL,   ZLGSEL,   WZSEL,   ZZSEL,   ZZLOOSESEL,   LOOSESEL, nSelTypes};
+TString selTypeName[nSelTypes]=  {"ZHGSEL", "BTAGSEL", "WWSEL", "PRESEL","ZLLSEL", "ZLGSEL", "WZSEL", "ZZSEL", "ZZLOOSESEL", "LOOSESEL"};
 enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
 TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 enum categoryType                 { DATA=0, EM, DY, WZ, ZZ, VVV, ZH, ggZH};
@@ -183,7 +183,7 @@ void zhgAnalysis(
 
   int nSigModels=signalName_.size();
   
-  char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
+  char finalStateName[4],effMName[20],effEName[20],momMName[20],momEName[20];
   sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
   sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
   if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
@@ -311,7 +311,7 @@ void zhgAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 40;
+  const int allPlots = 50;
   const int histBins = 8;
   TH1D* histo[allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
@@ -352,6 +352,15 @@ void zhgAnalysis(
     else if(thePlot == 32) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot == 33) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
     else if(thePlot == 34) {nBinPlot =   4; xminPlot =-0.5; xmaxPlot = 3.5;}
+    else if(thePlot == 35) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
+    else if(thePlot == 36) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot == 37) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
+    else if(thePlot == 38) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot = 200.0;}
+    else if(thePlot == 39) {nBinPlot =  60; xminPlot = 0.0; xmaxPlot =   3.0;}
+    else if(thePlot == 40) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   2.5;}
+    else if(thePlot == 41) {nBinPlot =  40; xminPlot =60.0; xmaxPlot = 100.0;}
+    else if(thePlot == 42) {nBinPlot =   7; xminPlot =-0.5; xmaxPlot =   6.5;}
+    else if(thePlot == 43) {nBinPlot = 200; xminPlot = 0.0; xmaxPlot = TMath::Pi();}
     else if(thePlot == allPlots-2)          {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5;}
     TH1D* histos;
     if(thePlot != allPlots-1) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
@@ -1073,8 +1082,10 @@ void zhgAnalysis(
                          passZMass &&                               passMETMin &&                                  passBtagVeto && passPTLL && pass3rdLVeto &&		         passTauVeto          ,  // ZLLSEL
                          passZMass && passLepPhotonSel &&           passMETMin &&                                  passBtagVeto && passPTLL && pass3rdLVeto &&		         passTauVeto          ,  // ZLGSEL
                          passZMass &&                  passNjets && passMET    && passPTFracG && passDPhiZGMET &&  passBtagVeto && passPTLL && pass3rdLSel  && passDPhiJetMET &&                passMT,  // WZSEL
-                         passZMass &&                  passNjets && passMETMin && passPTFracG && passDPhiZGMET &&  passBtagVeto && passPTLL && pass4thLSel  && passDPhiJetMET &&                passMT,  // ZZSEL
-                         passZMass &&                               passMETMin &&                passDPhiZGMET &&                  passPTLL && pass4thLSel                                               // ZZLOOSESEL
+                         passZMass &&                  passNjets && passMET    && passPTFracG && passDPhiZGMET &&  passBtagVeto && passPTLL && pass4thLSel  && passDPhiJetMET &&                passMT,  // ZZSEL
+                         passZMass &&                               passMETMin &&                passDPhiZGMET &&                  passPTLL && pass4thLSel                                            ,  // ZZLOOSESEL
+ ((TLorentzVector*)(*eventMet.p4)[0])->Pt()  < 100 &&
+                         passZMass && passPhotonSel && passNjets && passMETMin && ptFracG < 1.0 && dPhiGMET > 0.15 && passBtagVeto && passPTLL && pass3rdLVeto &&                   passTauVeto          ,  // LOOSESEL
                                     };
 
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passPTLL,passZMass,passPhotonSel,passBtagVeto,passTauVeto,passNjets,passMET,passDPhiZGMET,passPTFracG,passDPhiJetMET,passMT};
@@ -1319,6 +1330,15 @@ void zhgAnalysis(
 	    else if(thePlot == 32 && passAllCuts[WZSEL])     {makePlot = true;theVar = mTGMET;}
 	    else if(thePlot == 33 && passAllCuts[ZZLOOSESEL]){makePlot = true;theVar = mTGMET;}
 	    else if(thePlot == 34 && passAllCuts[WZSEL])     {makePlot = true;theVar = type3l;}
+	    else if(thePlot == 35 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min(ptFracG,0.999);}
+	    else if(thePlot == 36 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = dPhiDiLepGMET;}
+	    else if(thePlot == 37 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = dPhiJetMET;}
+	    else if(thePlot == 38 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min(mTGMET,249.999);}
+	    else if(thePlot == 39 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min(drll,2.999);}
+	    else if(thePlot == 40 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
+	    else if(thePlot == 41 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),399.999);}
+	    else if(thePlot == 42 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
+	    else if(thePlot == 43 && passAllCuts[LOOSESEL])  {makePlot = true;theVar = dPhiGMET;}
 
 	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
 	  }

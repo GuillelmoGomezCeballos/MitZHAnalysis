@@ -40,7 +40,6 @@ TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
 enum categoryType                 { DATA=0, EM, DY, WZ, ZZ, VVV, ZH, ggZH};
 const TString typeLepSel = "medium";
 const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
-const double sf_el_gamma[2] = {1.13, 1.25};
 
 void zhgAnalysis(
  unsigned int nJetsType = 1,
@@ -167,13 +166,19 @@ void zhgAnalysis(
   }
 
   // Monte Carlo signals
-  { // Model 0: standard model Higgs (125) with glu-glu
+  {
     int mH=125;
-    signalName_.push_back("sm_powheg");
-    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
-    signalName_.push_back("sm_amcnlo");
-    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_13TeV_amcnlo_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(1);
-  }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
+    signalName_.push_back("sm_amcnlo_00");
+    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_00_13TeV_amcnlo_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
+    signalName_.push_back("sm_powheg_00");
+    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_00_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(1);
+    signalName_.push_back("sm_amcnlo_10");
+    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_10_13TeV_amcnlo_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(2);
+    signalName_.push_back("sm_amcnlo_60");
+    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_60_13TeV_amcnlo_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(3);
+    signalName_.push_back("sm_amcnlo_90");
+    infilenamev.push_back(Form("%sZH_ZToLL_HToInvG_M%d_90_13TeV_amcnlo_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(4);
+  } 
 
   if(infilenamev.size() != infilecatv.size()) {assert(0); return;}
   
@@ -1196,8 +1201,7 @@ void zhgAnalysis(
 
       double photonSF = 1.0;
       if(isGenPho == 2) {
-        if(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Eta()) < 1.5) photonSF = sf_el_gamma[0]; 
-	else                                                                         photonSF = sf_el_gamma[1]; 
+        photonSF = electronToPhotonSF(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Pt());
 	if(passAllCuts[ZHGSEL]) countGenPhotons[2]++;
       }
       else if(isGenPho == 1) {

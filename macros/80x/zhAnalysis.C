@@ -100,6 +100,7 @@ void zhAnalysis(
     infilenamev.push_back(Form("%sWWdps.root",filesPathMC.Data()));infilecatv.push_back(1);
     // Include this one? Does it include (WGToLNuG) ? ~DGH
     infilenamev.push_back(Form("%sVG.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sH125.root",filesPathMC.Data()));infilecatv.push_back(1);
     // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
     // Missing WWW or included in VVV ? ~DGH
     
@@ -137,7 +138,7 @@ void zhAnalysis(
   }
 
   // Monte Carlo signals
-  { // Model 0: standard model Higgs (125) with glu-glu
+  if(false){ // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;
     signalName_.push_back("sm");
     infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
@@ -145,7 +146,7 @@ void zhAnalysis(
     infilenamev.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()));       infilecatv.push_back(7); signalIndex_.push_back(0);
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
 
-  { int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
+  if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
     signalName_.push_back(Form("mh%d", mH));
     infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); 
     infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH));
@@ -154,7 +155,7 @@ void zhAnalysis(
     iH++;
   }}
 
-  { // ls -l ~/eos/cms/store/caf/user/ceballos/Nero/output_80x/|grep -e DarkMatter -e Unpart -e ADD|awk '{printf("    signalName_.push_back(\"%s\"); infilenamev.push_back(Form(\"%s\", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;\n",$9,$9)}'
+  if(false){ // ls -l ~/eos/cms/store/caf/user/ceballos/Nero/output_80x/|grep -e DarkMatter -e Unpart -e ADD|awk '{printf("    signalName_.push_back(\"%s\"); infilenamev.push_back(Form(\"%s\", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;\n",$9,$9)}'
     int i=signalName_.size();
     signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
     signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
@@ -403,15 +404,6 @@ void zhAnalysis(
 
   if(infilenamev.size() != infilecatv.size()) {assert(0); return;}
   
-  //signalName_.clear();infilenamev.clear();infilecatv.clear();signalIndex_.clear();int i = 0;
-  //signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-  //signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-2"); infilenamev.push_back(Form("/scratch5/ceballos/test/NeroNtuples_skim.root")); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-  //infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	   infilecatv.push_back(2);
-  //infilenamev.push_back(Form("%sZZTo2L2Nu_13TeV_powheg_pythia8.root",filesPathMC.Data()));  				   infilecatv.push_back(4);
-  //infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathMC.Data(),600)); infilecatv.push_back(5);
-  //infilenamev.push_back(Form("/home/ceballos/cms/hist/tt_all/t2mit/filefi/044/ZZTo2L2Nu_13TeV_powheg_pythia8.root")); infilecatv.push_back(5);
-  //infilenamev.push_back(Form("/home/ceballos/cms/hist/tt_all/t2mit/filefi/044/ZZTo2L2Nu_13TeV_powheg_pythia8_JSON.root")); infilecatv.push_back(5);
-
   int nSigModels=signalName_.size();
   
   char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
@@ -514,16 +506,10 @@ void zhAnalysis(
   // 4: MET x classifier
 
   //const int MVAVarType = 0; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
-  //const int MVAVarType = 0; const int nBinMVA = 14; Double_t xbins[nBinMVA+1] = {0, 50, 200, 225, 250, 275, 300, 350, 400, 500, 600, 700, 800, 900, 1000}; TString addChan = "";
-  //const int MVAVarType = 1; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350}; TString addChan = "1";
   const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 11; Double_t xbins[nBinMVA+1] = {0, 50, 100, 160, 240, 320, 400, 480, 560, 640, 800, 1200}; TString addChan = "1";
-  //const int MVAVarType = 1; const int nBinMVA = 21; Double_t xbins[nBinMVA+1] = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1200}; TString addChan = "1";
   //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
   //											     2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, -0.2, -0.1, 0, 0.05, 0.075, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.2}; TString addChan = "3";
-  //const int MVAVarType = 3; const int nBinMVA = 13; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.575, 0.6}; TString addChan = "3";
   //const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
   //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
   //                                                                                         1125,1150,1175,1200,1250,1350,
@@ -1318,65 +1304,119 @@ void zhAnalysis(
     if(nModel>=0) signalName=signalName_[nModel];
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
-    //TTree *the_input_all  = (TTree*)the_input_file->FindObjectAny("all");
-    TTree *the_SelBit_tree= (TTree*)the_input_file->FindObjectAny("SelBit_tree");
-    TTree *the_PDF_tree   = (TTree*)the_input_file->FindObjectAny("pdfReweight");
 
-    BareEvent eventEvent;
-    eventEvent.setBranchAddresses(the_input_tree);
-
-    BareJets eventJets;
-    eventJets.setBranchAddresses(the_input_tree);
-
-    BareLeptons eventLeptons;
-    eventLeptons.setBranchAddresses(the_input_tree);
-
-    BareTaus eventTaus;
-    eventTaus.SetExtend();
-    eventTaus.setBranchAddresses(the_input_tree);
-
-    BarePhotons eventPhotons;
-    eventPhotons.SetExtend();
-    eventPhotons.setBranchAddresses(the_input_tree);
-
-    BareMet eventMet;
-    eventMet.SetExtend();
-    eventMet.setBranchAddresses(the_input_tree);
-
-    BareTrigger eventTrigger;
-    eventTrigger.setBranchAddresses(the_input_tree);
-
-    BareVertex eventVertex;
-    eventVertex.setBranchAddresses(the_input_tree);
-
-    BareMonteCarlo eventMonteCarlo;
-    eventMonteCarlo.SetExtend();
-    eventMonteCarlo.setBranchAddresses(the_input_tree);
-
-    TNamed *triggerNames = (TNamed*)the_input_file->FindObjectAny("triggerNames");
-    char **tokens;
-    size_t numtokens;
-    tokens = strsplit(triggerNames->GetTitle(), ",", &numtokens);
-    if(ifile == 0){
-      for (int i = 0; i < (int)numtokens; i++) {
-        printf("triggerNames(%2d): \"%s\"\n",(int)i,tokens[i]);
-      }
-    }
-    else {
+    GeneralLeptonicTree gltEvent;
+    { // set branch addresses
+      the_input_tree->SetBranchAddress("runNumber", &gltEvent.runNumber);
+      the_input_tree->SetBranchAddress("lumiNumber", &gltEvent.lumiNumber);
+      the_input_tree->SetBranchAddress("eventNumber", &gltEvent.eventNumber);
+      the_input_tree->SetBranchAddress("npv", &gltEvent.npv);
+      the_input_tree->SetBranchAddress("pu", &gltEvent.pu);
+      the_input_tree->SetBranchAddress("trigger", &gltEvent.trigger);
+      the_input_tree->SetBranchAddress("metFilter", &gltEvent.metFilter);
+      the_input_tree->SetBranchAddress("egmFilter", &gltEvent.egmFilter);
+      the_input_tree->SetBranchAddress("nLooseLep", &gltEvent.nLooseLep);
+      the_input_tree->SetBranchAddress("looseGenLep1PdgId", &gltEvent.looseGenLep1PdgId);
+      the_input_tree->SetBranchAddress("looseGenLep2PdgId", &gltEvent.looseGenLep2PdgId);
+      the_input_tree->SetBranchAddress("looseGenLep3PdgId", &gltEvent.looseGenLep3PdgId);
+      the_input_tree->SetBranchAddress("looseGenLep4PdgId", &gltEvent.looseGenLep4PdgId);
+      the_input_tree->SetBranchAddress("looseLep1PdgId", &gltEvent.looseLep1PdgId);
+      the_input_tree->SetBranchAddress("looseLep2PdgId", &gltEvent.looseLep2PdgId);
+      the_input_tree->SetBranchAddress("looseLep3PdgId", &gltEvent.looseLep3PdgId);
+      the_input_tree->SetBranchAddress("looseLep4PdgId", &gltEvent.looseLep4PdgId);
+      the_input_tree->SetBranchAddress("looseLep1SelBit", &gltEvent.looseLep1SelBit);
+      the_input_tree->SetBranchAddress("looseLep2SelBit", &gltEvent.looseLep2SelBit);
+      the_input_tree->SetBranchAddress("looseLep3SelBit", &gltEvent.looseLep3SelBit);
+      the_input_tree->SetBranchAddress("looseLep4SelBit", &gltEvent.looseLep4SelBit);
+      the_input_tree->SetBranchAddress("looseLep1Pt", &gltEvent.looseLep1Pt);
+      the_input_tree->SetBranchAddress("looseLep2Pt", &gltEvent.looseLep2Pt);
+      the_input_tree->SetBranchAddress("looseLep3Pt", &gltEvent.looseLep3Pt);
+      the_input_tree->SetBranchAddress("looseLep4Pt", &gltEvent.looseLep4Pt);
+      the_input_tree->SetBranchAddress("looseLep1Eta", &gltEvent.looseLep1Eta);
+      the_input_tree->SetBranchAddress("looseLep2Eta", &gltEvent.looseLep2Eta);
+      the_input_tree->SetBranchAddress("looseLep3Eta", &gltEvent.looseLep3Eta);
+      the_input_tree->SetBranchAddress("looseLep4Eta", &gltEvent.looseLep4Eta);
+      the_input_tree->SetBranchAddress("looseLep1Phi", &gltEvent.looseLep1Phi);
+      the_input_tree->SetBranchAddress("looseLep2Phi", &gltEvent.looseLep2Phi);
+      the_input_tree->SetBranchAddress("looseLep3Phi", &gltEvent.looseLep3Phi);
+      the_input_tree->SetBranchAddress("looseLep4Phi", &gltEvent.looseLep4Phi);
+      the_input_tree->SetBranchAddress("nJet", &gltEvent.nJet);
+      the_input_tree->SetBranchAddress("jetNLBtags", &gltEvent.jetNLBtags);
+      the_input_tree->SetBranchAddress("jetNMBtags", &gltEvent.jetNMBtags);
+      the_input_tree->SetBranchAddress("jetNTBtags", &gltEvent.jetNTBtags);
+      the_input_tree->SetBranchAddress("jet1Pt", &gltEvent.jet1Pt);
+      the_input_tree->SetBranchAddress("jet2Pt", &gltEvent.jet2Pt);
+      the_input_tree->SetBranchAddress("jet3Pt", &gltEvent.jet3Pt);
+      the_input_tree->SetBranchAddress("jet4Pt", &gltEvent.jet4Pt);
+      the_input_tree->SetBranchAddress("jet1Eta", &gltEvent.jet1Eta);
+      the_input_tree->SetBranchAddress("jet2Eta", &gltEvent.jet2Eta);
+      the_input_tree->SetBranchAddress("jet3Eta", &gltEvent.jet3Eta);
+      the_input_tree->SetBranchAddress("jet4Eta", &gltEvent.jet4Eta);
+      the_input_tree->SetBranchAddress("jet1Phi", &gltEvent.jet1Phi);
+      the_input_tree->SetBranchAddress("jet2Phi", &gltEvent.jet2Phi);
+      the_input_tree->SetBranchAddress("jet3Phi", &gltEvent.jet3Phi);
+      the_input_tree->SetBranchAddress("jet4Phi", &gltEvent.jet4Phi);
+      the_input_tree->SetBranchAddress("jet1BTag", &gltEvent.jet1BTag);
+      the_input_tree->SetBranchAddress("jet2BTag", &gltEvent.jet2BTag);
+      the_input_tree->SetBranchAddress("jet3BTag", &gltEvent.jet3BTag);
+      the_input_tree->SetBranchAddress("jet4BTag", &gltEvent.jet4BTag);
+      the_input_tree->SetBranchAddress("jet1GenPt", &gltEvent.jet1GenPt);
+      the_input_tree->SetBranchAddress("jet2GenPt", &gltEvent.jet2GenPt);
+      the_input_tree->SetBranchAddress("jet3GenPt", &gltEvent.jet3GenPt);
+      the_input_tree->SetBranchAddress("jet4GenPt", &gltEvent.jet4GenPt);
+      the_input_tree->SetBranchAddress("jet1Flav", &gltEvent.jet1Flav);
+      the_input_tree->SetBranchAddress("jet2Flav", &gltEvent.jet2Flav);
+      the_input_tree->SetBranchAddress("jet3Flav", &gltEvent.jet3Flav);
+      the_input_tree->SetBranchAddress("jet4Flav", &gltEvent.jet4Flav);
+      the_input_tree->SetBranchAddress("jet1SelBit", &gltEvent.jet1SelBit);
+      the_input_tree->SetBranchAddress("jet2SelBit", &gltEvent.jet2SelBit);
+      the_input_tree->SetBranchAddress("jet3SelBit", &gltEvent.jet3SelBit);
+      the_input_tree->SetBranchAddress("jet4SelBit", &gltEvent.jet4SelBit);
+      the_input_tree->SetBranchAddress("jet1PtUp", &gltEvent.jet1PtUp);
+      the_input_tree->SetBranchAddress("jet2PtUp", &gltEvent.jet2PtUp);
+      the_input_tree->SetBranchAddress("jet3PtUp", &gltEvent.jet3PtUp);
+      the_input_tree->SetBranchAddress("jet4PtUp", &gltEvent.jet4PtUp);
+      the_input_tree->SetBranchAddress("jet1PtDown", &gltEvent.jet1PtDown);
+      the_input_tree->SetBranchAddress("jet2PtDown", &gltEvent.jet2PtDown);
+      the_input_tree->SetBranchAddress("jet3PtDown", &gltEvent.jet3PtDown);
+      the_input_tree->SetBranchAddress("jet4PtDown", &gltEvent.jet4PtDown);
+      the_input_tree->SetBranchAddress("jet1EtaUp", &gltEvent.jet1EtaUp);
+      the_input_tree->SetBranchAddress("jet2EtaUp", &gltEvent.jet2EtaUp);
+      the_input_tree->SetBranchAddress("jet3EtaUp", &gltEvent.jet3EtaUp);
+      the_input_tree->SetBranchAddress("jet4EtaUp", &gltEvent.jet4EtaUp);
+      the_input_tree->SetBranchAddress("jet1EtaDown", &gltEvent.jet1EtaDown);
+      the_input_tree->SetBranchAddress("jet2EtaDown", &gltEvent.jet2EtaDown);
+      the_input_tree->SetBranchAddress("jet3EtaDown", &gltEvent.jet3EtaDown);
+      the_input_tree->SetBranchAddress("jet4EtaDown", &gltEvent.jet4EtaDown);
+      the_input_tree->SetBranchAddress("pfmet", &gltEvent.pfmet);
+      the_input_tree->SetBranchAddress("pfmetphi", &gltEvent.pfmetphi);
+      the_input_tree->SetBranchAddress("pfmetRaw", &gltEvent.pfmetRaw);
+      the_input_tree->SetBranchAddress("pfmetUp", &gltEvent.pfmetUp);
+      the_input_tree->SetBranchAddress("pfmetDown", &gltEvent.pfmetDown);
+      the_input_tree->SetBranchAddress("pfmetnomu", &gltEvent.pfmetnomu);
+      the_input_tree->SetBranchAddress("puppimet", &gltEvent.puppimet);
+      the_input_tree->SetBranchAddress("puppimetphi", &gltEvent.puppimetphi);
+      the_input_tree->SetBranchAddress("calomet", &gltEvent.calomet);
+      the_input_tree->SetBranchAddress("calometphi", &gltEvent.calometphi);
+      the_input_tree->SetBranchAddress("trkmet", &gltEvent.trkmet);
+      the_input_tree->SetBranchAddress("trkmetphi", &gltEvent.trkmetphi);
+      the_input_tree->SetBranchAddress("dphipfmet", &gltEvent.dphipfmet);
+      the_input_tree->SetBranchAddress("dphipuppimet", &gltEvent.dphipuppimet);
+      the_input_tree->SetBranchAddress("nTau", &gltEvent.nTau);
+      the_input_tree->SetBranchAddress("nLoosePhoton", &gltEvent.nLoosePhoton);
+      the_input_tree->SetBranchAddress("loosePho1Pt", &gltEvent.loosePho1Pt);
+      the_input_tree->SetBranchAddress("loosePho1Eta", &gltEvent.loosePho1Eta);
+      the_input_tree->SetBranchAddress("loosePho1Phi", &gltEvent.loosePho1Phi);
     }
 
     int initPDFTag = -1;
-
     bool errorMsgQCDscale = false;
-    unsigned int selBit_= 0;
-    the_SelBit_tree->SetBranchAddress("selBit", &selBit_);
     histoZHSEL[0]->Scale(0.0);
     histoZHSEL[1]->Scale(0.0);
     histoZHSEL[2]->Scale(0.0);
     histoZHSEL[3]->Scale(0.0);
     double theMCPrescale = mcPrescale;
     if(infilecatv[ifile] == 0) theMCPrescale = 1.0;
-    if(the_input_tree->GetEntries() != the_SelBit_tree->GetEntries()) {printf("BIG SKIMMING FAILURE\n"); return;}
     for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
       the_SelBit_tree->GetEntry(i);
       if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());

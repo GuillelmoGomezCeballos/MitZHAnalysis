@@ -12,15 +12,7 @@
 #include <fstream>
 #include "TMVA/Reader.h"
 
-#include "NeroProducer/Core/interface/BareEvent.hpp"
-#include "NeroProducer/Core/interface/BareJets.hpp"
-#include "NeroProducer/Core/interface/BareLeptons.hpp"
-#include "NeroProducer/Core/interface/BareTaus.hpp"
-#include "NeroProducer/Core/interface/BarePhotons.hpp"
-#include "NeroProducer/Core/interface/BareMet.hpp"
-#include "NeroProducer/Core/interface/BareTrigger.hpp"
-#include "NeroProducer/Core/interface/BareVertex.hpp"
-#include "NeroProducer/Core/interface/BareMonteCarlo.hpp"
+#include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
@@ -38,7 +30,6 @@ bool       useVVFromData           = true;
 bool       useZZWZEWKUnc           = true;
 const bool useDYPT                 = true;
 double     mcPrescale              = 1.;
-bool       makeMVAtrees            = false;
 bool       useBDT                  = false;
 bool       useCachedBDTSystematics = false;
 const unsigned int    num_bdt_toys = 1000;
@@ -66,21 +57,21 @@ void zhAnalysis(
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
-  if(makeMVAtrees) system("mkdir -p MitZHAnalysis/mva");
   Int_t period = 1;
   // File instances on EOS
+  // These paths are OUT OF DATE! ~DGH Aug 1 2017
   TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
   TString filesPathMC   = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
   TString filesPathMC2  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
   TString filesPathDMMC = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
   // File instances on T3 hadoop
   if(isMIT){
-    filesPathDA   = "/mnt/hadoop/scratch/ceballos/Nero/v2.2/output_80x/data/met_";
-    filesPathMC	  = "/mnt/hadoop/scratch/ceballos/Nero/v2.2/output_80x/mc/met_";
-    filesPathMC2  = "/mnt/hadoop/scratch/ceballos/Nero/v2.2/output_80x/mc/met_";
-    filesPathDMMC = "/mnt/hadoop/scratch/ceballos/Nero/v2.2/output_80x/dm/";
+    filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
   }
-  Double_t lumi = 35.9;
+  Double_t lumi = 3.8;
   TString processTag = "";
 
   //*******************************************************
@@ -91,78 +82,56 @@ void zhAnalysis(
 
   TString puPath = "";
   TString zjetsTemplatesPath = "";
-  TString triggerSuffix = "*";
-  if(isMINIAOD) triggerSuffix = "";
 
   puPath = "MitAnalysisRunII/data/80x/puWeights_80x_37ifb.root";
 
-  // Data files
-  if(isMINIAOD) {
-    infilenamev.push_back(Form("%sdata_Run2016B.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016C.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016D.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016E.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016F.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016G.root",filesPathDA.Data())); infilecatv.push_back(0);
-    infilenamev.push_back(Form("%sdata_Run2016H.root",filesPathDA.Data())); infilecatv.push_back(0);
-  } else {
-  }
+  // Data files - Macro Category 0
+  infilenamev.push_back(Form("%sdata.root",filesPathDA.Data())); infilecatv.push_back(0);
 
-  // Monte carlo backgrounds
-  infilenamev.push_back(Form("%sWWTo2L2Nu_13TeV-powheg.root",filesPathMC.Data()));                                            infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sGluGluWWTo2L2Nu_MCFM_13TeV.root",filesPathMC.Data()));					      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTTo2L2Nu_13TeV-powheg.root",filesPathMC2.Data()));					      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));    infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1.root",filesPathMC.Data()));infilecatv.push_back(1);
+  // Begin MC backgrounds 
+    // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
+    infilenamev.push_back(Form("%sggWW.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sTT2L.root",filesPathMC.Data()));infilecatv.push_back(1);
+    // Previously counted TTZToLLNuNu as VVV background? ~DGH
+    infilenamev.push_back(Form("%sTTV.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sTW.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sqqWW.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sWGstar.root",filesPathMC.Data()));infilecatv.push_back(1);
+    infilenamev.push_back(Form("%sWWdps.root",filesPathMC.Data()));infilecatv.push_back(1);
+    // Include this one? Does it include (WGToLNuG) ? ~DGH
+    infilenamev.push_back(Form("%sVG.root",filesPathMC.Data()));infilecatv.push_back(1);
+    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
+    // Missing WWW or included in VVV ? ~DGH
+    
+    // Drell-Yan / Z backgrounds - Macro Category 2
+    if(useDYPT==false){
+      infilenamev.push_back(Form("%sDYJetsToLL_M-10to50.root",filesPathMC.Data()));      infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_M-50_LO.root",filesPathMC.Data()));          infilecatv.push_back(2);
+    }
+    else {
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt0To50.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt50To100.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt100To250.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt250To400.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt400To650.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      infilenamev.push_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()));   infilecatv.push_back(2);
+      //infilenamev.push_back(Form("%s",filesPathMC.Data()));   infilecatv.push_back(2);
+    }
+    // Include Z->tau tau ? ~DGH
+    infilenamev.push_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()));  infilecatv.push_back(2);
+    
+    // WZ backgrounds - Macro Category 3
+    infilenamev.push_back(Form("%sWZ.root",filesPathMC.Data()));			      infilecatv.push_back(3);
 
-  //infilenamev.push_back(Form("%sWJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sWGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));                  infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sGluGluHToWWTo2L2Nu_M125_13TeV_powheg_JHUgen_pythia8.root",filesPathMC.Data()));	              infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sVBFHToWWTo2L2Nu_M125_13TeV_powheg_JHUgenv628_pythia8.root",filesPathMC.Data()));              infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sGluGluHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sVBFHToTauTau_M125_13TeV_powheg_pythia8.root",filesPathMC.Data()));                            infilecatv.push_back(1);
-  //infilenamev.push_back(Form("%sVHToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data())); 	      infilecatv.push_back(1);
-  //infilenamev.push_back(Form("%sttHToNonbb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8.root",filesPathMC.Data()));   infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));	      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sTTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.root",filesPathMC.Data()));           infilecatv.push_back(1);
-  infilenamev.push_back(Form("%sWWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data())); 			      infilecatv.push_back(1);
+    // ZZ Backgrounds - Macro Category 4
+    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
+    infilenamev.push_back(Form("%sZZ.root",filesPathMC.Data()));			      infilecatv.push_back(4);
 
-  if(useDYPT==false){
-  infilenamev.push_back(Form("%sDYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));      infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sDYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));          infilecatv.push_back(2);
-  }
-  else {
-  infilenamev.push_back(Form("%sDYJetsToLL_Pt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));   infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sDYJetsToLL_Pt-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sDYJetsToLL_Pt-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sDYJetsToLL_Pt-400To650_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(2);
-  infilenamev.push_back(Form("%sDYJetsToLL_Pt-650ToInf_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(2);
-  }
-
-  infilenamev.push_back(Form("%sWZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(3);
-  infilenamev.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(3);
-
-  infilenamev.push_back(Form("%sZZTo2L2Nu_13TeV_powheg_pythia8.root",filesPathMC.Data()));  				      infilecatv.push_back(4);
-
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8.root",filesPathMC.Data()));			      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8.root",filesPathMC.Data()));					      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));	 	      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo4e_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-  infilenamev.push_back(Form("%sGluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		      infilecatv.push_back(4);
-
-  infilenamev.push_back(Form("%sWWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data())); 			      infilecatv.push_back(5);
-  infilenamev.push_back(Form("%sWZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infilecatv.push_back(5);
-  infilenamev.push_back(Form("%sZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                           infilecatv.push_back(5);
-  infilenamev.push_back(Form("%sTTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));	      infilecatv.push_back(5);
-  infilenamev.push_back(Form("%stZq_ll_4f_13TeV-amcatnlo-pythia8.root",filesPathMC.Data()));                                  infilecatv.push_back(5);
-
+    // Triboson / VVV Backgrounds - Macro Category 5
+    // Does this include tZq? ~DGH
+    infilenamev.push_back(Form("%sVVV.root",filesPathMC.Data())); 			      infilecatv.push_back(5);
+  // End MC backgrounds
+  
   for(int ifile=0; ifile<(int)infilenamev.size(); ifile++) {
     signalIndex_.push_back(-1); // Populate vector of signal indices with -1 for the non-MC-signal files
   }

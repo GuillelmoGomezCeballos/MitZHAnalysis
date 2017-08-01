@@ -13,6 +13,7 @@
 #include "TMVA/Reader.h"
 
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
+#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
 
 #include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
@@ -1365,90 +1366,52 @@ void zhAnalysis(
     double theMCPrescale = mcPrescale;
     if(infilecatv[ifile] == 0) theMCPrescale = 1.0;
     for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
-      the_SelBit_tree->GetEntry(i);
       if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
-      if((selBit_ & 0x1<<whichSkim) == 0) continue;
       the_input_tree->GetEntry(i);
 
       Bool_t passFilter[4] = {kFALSE,kFALSE,kFALSE,kFALSE};
-      if(eventLeptons.p4->GetEntriesFast() >= 2 &&
-     	 ((TLorentzVector*)(*eventLeptons.p4)[0])->Pt() > 20 && 
-     	 ((TLorentzVector*)(*eventLeptons.p4)[1])->Pt() > 10) passFilter[0] = kTRUE;
-      if(infilecatv[ifile] != 999) {
-	for (int nt = 0; nt <(int)numtokens; nt++) {
-          if((*eventTrigger.triggerFired)[nt] == 0) continue;
-          if((strcmp(tokens[nt],Form("HLT_Ele25_eta2p1_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Ele27_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_IsoMu24_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_IsoTkMu24_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Ele27_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Ele30_WPTight_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Ele35_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_DoubleEle24_22_eta2p1_WPLoose_Gsf_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_IsoMu22_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_IsoTkMu22_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu45_eta2p1_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu50_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v%s",triggerSuffix.Data()))  == 0) ||
-	     (strcmp(tokens[nt],Form("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v%s",triggerSuffix.Data()))  == 0)
-             ) passFilter[1] = kTRUE;
-	}
-      } else { passFilter[1] = kTRUE;}
-
+      if(looseLep1Pt>20 && looseLep2Pt>10) passFilter[0] = kTRUE;
       if(passFilter[0] == kFALSE) continue;
-      if(passFilter[1] == kFALSE) continue;
-
-      vector<int> idLep; vector<int> idTight; vector<int> idSoft; unsigned int goodIsTight = 0;
-      for(int nlep=0; nlep<eventLeptons.p4->GetEntriesFast(); nlep++) {
-
-        //if(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt() <= 10) continue; // next generation
-
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepBaseline )== BareLeptons::LepBaseline ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepVeto	  )== BareLeptons::LepVeto     ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake	  )== BareLeptons::LepFake     ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoft	  )== BareLeptons::LepSoft     ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepLoose    )== BareLeptons::LepLoose    ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepMedium   )== BareLeptons::LepMedium   ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepTight    )== BareLeptons::LepTight    ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepMediumIP )== BareLeptons::LepMediumIP ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepTightIP  )== BareLeptons::LepTightIP  ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP   )== BareLeptons::LepSoftIP   ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepVetoIso  )== BareLeptons::LepVetoIso  ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepLooseIso )== BareLeptons::LepLooseIso ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepMediumIso)== BareLeptons::LepMediumIso){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepTightIso )== BareLeptons::LepTightIso ){idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-
-        if(selectIdIsoCut(typeLepSel.Data(),TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
-	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
-	                                                                                               {idTight.push_back(1); idLep.push_back(nlep); goodIsTight++;}
-        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepFake)  == BareLeptons::LepFake ) {idTight.push_back(0); idLep.push_back(nlep);}
-        //else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepLoose)  == BareLeptons::LepLoose ) {idTight.push_back(0); idLep.push_back(nlep);}
-        else if(selectIdIsoCut("veto",TMath::Abs((int)(*eventLeptons.pdgId)[nlep]),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Pt()),
-	   TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[nlep])->Eta()),(double)(*eventLeptons.iso)[nlep],(int)(*eventLeptons.selBits)[nlep],(double)(*eventLeptons.mva)[nlep]))
-	                                                                                               {idTight.push_back(0); idLep.push_back(nlep);}
-        else if(((int)(*eventLeptons.selBits)[nlep] & BareLeptons::LepSoftIP)== BareLeptons::LepSoftIP){idSoft.push_back(nlep);}
-
-      }
-      if(idLep.size()!=idTight.size()) {assert(1); return;}
-      if(idLep.size()>=numberOfLeptons) passFilter[2] = kTRUE;
       
-      if(passFilter[2] == kFALSE) continue; 
+      passFilter[1] = (infilecatv[ifile] != 0) || ( 
+        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kEGTrig  ) != 0 ||
+        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuTrig  ) != 0 ||
+        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kEGEGTrig) != 0 ||
+        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuMuTrig) != 0 ||
+        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuEGTrig) != 0
+      ); // pass filter if it's a MC file or if it passes the trigger soup
+      if(passFilter[1] == kFALSE) continue;
+      
+      // Begin the offline leptonic selection 
+      vector<int> idLep(4); vector<int> idTight(4); vector<int> idSoft(4); unsigned int goodIsTight = 0;
+      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer
+      vector<float*> idLepPts(4),idLepEtas(4),idLepPhis(4); // Vectors of addresses to the kinematics of chosen leptons
+      vector<int*> idLepSelBits(4), idLepGenPdgIds(4), idLepPdgIds(4); // Vectors of addresses to the integer properties of chosen leptons
 
-      if(idLep.size()==goodIsTight) passFilter[3] = kTRUE;
+      // Implement the (flavor -> selection) correspondence as a map for now
+      std::map<unsigned, unsigned> fsMap;
+      fsMap[-11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
+      fsMap[11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
+      fsMap[-13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
+      fsMap[13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
+
+      // Store idTight values for the leptons that pass the selection
+      { bool isTight;
+        if(fsMap.find(gltEvent.looseLep1PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep1SelBit & fsMap[gltEvent.looseLep1PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
+        if(fsMap.find(gltEvent.looseLep2PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep2SelBit & fsMap[gltEvent.looseLep2PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
+        if(fsMap.find(gltEvent.looseLep3PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep3SelBit & fsMap[gltEvent.looseLep3PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
+        if(fsMap.find(gltEvent.looseLep4PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep4SelBit & fsMap[gltEvent.looseLep4PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
+        idLepPts.push_back(&gltEvent.looseLep1Pt); idLepPts.push_back(&gltEvent.looseLep1Eta); idLepPts.push_back(&gltEvent.looseLep1Phi); idLepPdgIds.push_back(&gltEvent.looseLep1PdgId);
+        idLepPts.push_back(&gltEvent.looseLep2Pt); idLepPts.push_back(&gltEvent.looseLep2Eta); idLepPts.push_back(&gltEvent.looseLep2Phi); idLepPdgIds.push_back(&gltEvent.looseLep2PdgId);
+        idLepPts.push_back(&gltEvent.looseLep3Pt); idLepPts.push_back(&gltEvent.looseLep3Eta); idLepPts.push_back(&gltEvent.looseLep3Phi); idLepPdgIds.push_back(&gltEvent.looseLep3PdgId);
+        idLepPts.push_back(&gltEvent.looseLep4Pt); idLepPts.push_back(&gltEvent.looseLep4Eta); idLepPts.push_back(&gltEvent.looseLep4Phi); idLepPdgIds.push_back(&gltEvent.looseLep4PdgId);
+        // Not storing soft muons for now, need to support it in PandaLeptonicAnalyzer if we want to do it here! ~DGH
+      }
+      if(idTight.size()>=numberOfLeptons) passFilter[2] = kTRUE;
+      if(passFilter[2] == kFALSE) continue; 
+      if(idTight.size()==goodIsTight) passFilter[3] = kTRUE;
       if(usePureMC ==  true && passFilter[3] == kFALSE) continue;
-      if(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() <= 25 ||
-         ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt() <= 20) continue;
+      if(gltEvent.looseLep1Pt<=25 || gltEvent.looseLep2Pt<=20) continue;
 
       double dPhiLepMETMin = 999.;
       int signQ = 0;

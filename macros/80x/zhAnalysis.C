@@ -903,8 +903,6 @@ void zhAnalysis(
   for(int nModel=0; nModel<nSigModels; nModel++) { for(unsigned int i=0; i<nSelTypes*4; i++) { for(int j=0; j<histBins; j++) {       
     bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
   }}}
-  TFile *mva_trees;
-  TTree *data_mva_tree, *Zjets_mva_tree, *EM_mva_tree, *WZ_mva_tree, *ZZ_mva_tree, *VVV_mva_tree, *signal_mva_trees[nSigModels];
   TMVA::Reader *reader; // =new TMVA::Reader();
   Float_t  mva_balance,
            mva_cos_theta_star_l1,
@@ -944,57 +942,6 @@ void zhAnalysis(
            aux_njets_JESdown;
   Bool_t   mva_btag_veto,
            mva_3lveto;
-  if(makeMVAtrees) {
-    mva_trees=new TFile("MitZHAnalysis/mva/mva_input_trees.root", "RECREATE");
-    data_mva_tree = new TTree("bkg_mva_tree_data", "MVA input tree with data events");
-    data_mva_tree->Branch( "mva_balance"             , &mva_balance              , "mva_balance/F"           ); 
-    data_mva_tree->Branch( "mva_cos_theta_star_l1"   , &mva_cos_theta_star_l1    , "mva_cos_theta_star_l1/F" ); 
-    data_mva_tree->Branch( "mva_cos_theta_CS_l1"     , &mva_cos_theta_CS_l1      , "mva_cos_theta_CS_l1/F"   ); 
-    data_mva_tree->Branch( "mva_delphi_ptll_MET"     , &mva_delphi_ptll_MET      , "mva_delphi_ptll_MET/F"   ); 
-    data_mva_tree->Branch( "mva_delphi_ll"           , &mva_delphi_ll            , "mva_delphi_ll/F"         ); 
-    data_mva_tree->Branch( "mva_delphi_jet_MET"      , &mva_delphi_jet_MET       , "mva_delphi_jet_MET/F"    ); 
-    data_mva_tree->Branch( "mva_deltaR_ll"           , &mva_deltaR_ll            , "mva_deltaR_ll/F"         ); 
-    data_mva_tree->Branch( "mva_etall"               , &mva_etall                , "mva_etall/F"             ); 
-    data_mva_tree->Branch( "mva_etal1"               , &mva_etal1                , "mva_etal1/F"             ); 
-    data_mva_tree->Branch( "mva_etal2"               , &mva_etal2                , "mva_etal2/F"             ); 
-    data_mva_tree->Branch( "mva_MET"                 , &mva_MET                  , "mva_MET/F"               ); 
-    data_mva_tree->Branch( "mva_mll_minus_mZ"        , &mva_mll_minus_mZ         , "mva_mll_minus_mZ/F"      ); 
-    data_mva_tree->Branch( "mva_mTjetMET"            , &mva_mTjetMET             , "mva_mTjetMET/F"          ); 
-    data_mva_tree->Branch( "mva_mTll"                , &mva_mTll                 , "mva_mTll/F"              ); 
-    data_mva_tree->Branch( "mva_mTl1MET"             , &mva_mTl1MET              , "mva_mTl1MET/F"           ); 
-    data_mva_tree->Branch( "mva_mTl2MET"             , &mva_mTl2MET              , "mva_mTl2MET/F"           ); 
-    data_mva_tree->Branch( "mva_ptll"                , &mva_ptll                 , "mva_ptll/F"              ); 
-    data_mva_tree->Branch( "mva_ptl1"                , &mva_ptl1                 , "mva_ptl1/F"              ); 
-    data_mva_tree->Branch( "mva_ptl2"                , &mva_ptl2                 , "mva_ptl2/F"              ); 
-    data_mva_tree->Branch( "mva_ptl1mptl2_over_ptll" , &mva_ptl1mptl2_over_ptll  , "mva_ptl1mptl2_over_ptll/F"); 
-    data_mva_tree->Branch( "mva_weight"              , &mva_weight               , "mva_weight/F"            ); 
-    data_mva_tree->Branch( "mva_njets"               , &mva_njets                , "mva_njets/b"             ); 
-    data_mva_tree->Branch( "mva_ntaus"               , &mva_ntaus                , "mva_ntaus/b"             ); 
-    data_mva_tree->Branch( "mva_3lveto"              , &mva_3lveto               , "mva_3lveto/O"            ); 
-    data_mva_tree->Branch( "mva_btag_veto"           , &mva_btag_veto            , "mva_btag_veto/O"         ); 
-    Zjets_mva_tree = (TTree*) data_mva_tree->CloneTree(); Zjets_mva_tree  ->SetName("bkg_mva_tree_Zjets" ); Zjets_mva_tree  ->SetTitle( "MVA input tree with Drell-Yan background events" );
-    //Zjets_mva_tree->Branch( "aux_PDFscale"            , &aux_PDFscale);
-    //Zjets_mva_tree->Branch( "aux_PUscale"             , &aux_PUscale              , "aux_PUscale/F"           );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r1f2"       , &aux_QCDscale_r1f2        , "aux_QCDscale_r1f2/F"     );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r1f5"       , &aux_QCDscale_r1f5        , "aux_QCDscale_r1f5/F"     );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r2f1"       , &aux_QCDscale_r2f1        , "aux_QCDscale_r2f1/F"     );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r2f2"       , &aux_QCDscale_r2f2        , "aux_QCDscale_r2f2/F"     );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r5f1"       , &aux_QCDscale_r5f1        , "aux_QCDscale_r5f1/F"     );
-    //Zjets_mva_tree->Branch( "aux_QCDscale_r5f5"       , &aux_QCDscale_r5f5        , "aux_QCDscale_r5f5/F"     );
-    //Zjets_mva_tree->Branch( "aux_njets_JESup"         , &aux_njets_JESup          , "aux_njets_JESup/b"       ); 
-    //Zjets_mva_tree->Branch( "aux_njets_JESdown"       , &aux_njets_JESdown        , "aux_njets_JESdown/b"     ); 
-    //Zjets_mva_tree->Branch( "aux_MET_JESup"           , &aux_MET_JESup            , "aux_MET_JESup/F"         );
-    //Zjets_mva_tree->Branch( "aux_MET_JESdown"         , &aux_MET_JESdown          , "aux_MET_JESdown/F"       );
-    EM_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); EM_mva_tree     ->SetName("bkg_mva_tree_EM" );    EM_mva_tree     ->SetTitle( "MVA input tree with WW/top background events" );
-    WZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); WZ_mva_tree     ->SetName("bkg_mva_tree_WZ" );    WZ_mva_tree     ->SetTitle( "MVA input tree with WZ background events"     );
-    ZZ_mva_tree    = (TTree*)Zjets_mva_tree->CloneTree(); ZZ_mva_tree     ->SetName("bkg_mva_tree_ZZ" );    ZZ_mva_tree     ->SetTitle( "MVA input tree with ZZ background events"     );
-    VVV_mva_tree   = (TTree*)Zjets_mva_tree->CloneTree(); VVV_mva_tree    ->SetName("bkg_mva_tree_VVV");    VVV_mva_tree    ->SetTitle( "MVA input tree with VVV background events"    );
-    for(int nModel=0; nModel<nSigModels; nModel++) {
-      signal_mva_trees[nModel] = (TTree*)Zjets_mva_tree->CloneTree(); 
-      signal_mva_trees[nModel]->SetName( Form("signal_mva_tree_%s", signalName_[nModel].Data()));
-      signal_mva_trees[nModel]->SetTitle(Form("MVA input tree with signal events (%s)", signalName_[nModel].Data()));
-    }
-  }
   if(useBDT) {
     reader=new TMVA::Reader();
     if(MVAVarType==3) {
@@ -1978,98 +1925,6 @@ void zhAnalysis(
       // end event weighting
       //totalWeight = 1;
 
-      if(makeMVAtrees) {
-        // Save values for MVA trees
-        mva_balance             = ptFrac;
-        mva_delphi_ptll_MET     = dPhiDiLepMET; 
-        mva_cos_theta_star_l1   = cos_theta_star_l1;
-        mva_cos_theta_CS_l1     = cos_theta_collins_soper(*(TLorentzVector*)(*eventLeptons.p4)[idLep[0]],*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]);
-        mva_deltaR_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaR(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
-        mva_delphi_ll           = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]])); 
-        mva_delphi_jet_MET      = dPhiJetMET;
-        mva_etal1               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta();
-        mva_etal2               = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta();
-        mva_etall               = dilep.Eta(); 
-        mva_MET                 = ((TLorentzVector*)(*eventMet.p4)[0])->Pt(); 
-        mva_mll_minus_mZ        = TMath::Abs(dilep.M() - 91.1876); 
-        mva_mTjetMET            = mTJetMET;
-        mva_mTll                = mtW; 
-        mva_mTl1MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-        mva_mTl2MET             = TMath::Sqrt(2.0*((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
-        mva_ptll                = dilep.Pt(); 
-        mva_ptl1                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(); 
-        mva_ptl2                = ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(); 
-        mva_ptl1mptl2_over_ptll = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt() - ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt()) / dilep.Pt();
-        mva_weight              = totalWeight; 
-        mva_njets               = idJet.size(); 
-        mva_ntaus               = (unsigned char) numberGoodTaus; 
-        mva_btag_veto           = passBtagVeto; 
-        mva_3lveto              = pass3rdLVeto;
-      }
-      if((infilecatv[ifile] != 0 || theCategory == 0) && passAllCuts[SIGSEL]) sumEventsProcess[ifile] += totalWeight;
-
-      for(int nl=0; nl <=sumEvol; nl++) histo[allPlots-2][theCategory]->Fill((double)nl,totalWeight);
-      for(int nl=0; nl <=sumEvol; nl++) histoZHSEL[typePair ]         ->Fill((double)nl,totalWeight);
-      if(typePair == 1 || typePair == 2)
-      for(int nl=0; nl <=sumEvol; nl++) histoZHSEL[3]                 ->Fill((double)nl,totalWeight);
-
-      for(unsigned int i=0; i<nSelTypes; i++) {
-        if(passAllCuts[i] && (theCategory == 6 || theCategory == 7)) {
-          bgdDecay[nModel][i+typePair*nSelTypes][theCategory] += totalWeight;
-          weiDecay[nModel][i+typePair*nSelTypes][theCategory] += totalWeight*totalWeight;
-        } else if(passAllCuts[i]) { for(int mModel=0; mModel<nSigModels; mModel++) { 
-          bgdDecay[mModel][i+typePair*nSelTypes][theCategory] += totalWeight;
-          weiDecay[mModel][i+typePair*nSelTypes][theCategory] += totalWeight*totalWeight;
-        }}
-      }
-
-      if((typeSel == typePair) || (typeSel == 3 && (typePair == 1 || typePair == 2))) {
-	if(nModel<0 || nModel==plotModel){
-	  for(int thePlot=0; thePlot<allPlots-2; thePlot++){
-	    double theVar = 0.0;
-	    bool makePlot = false;
-	    if     (thePlot ==  0 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(mtW,999.999);}
-	    else if(thePlot ==  1 && passNMinusOne[1])       {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.M()-91.1876),99.999);}
-	    else if(thePlot ==  2 && passNMinusOne[2])       {makePlot = true;theVar = TMath::Min((double)idJet.size(),6.499);}
-	    else if(thePlot ==  3 && passNMinusOne[3])       {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),399.999);}
-	    else if(thePlot ==  4 && passNMinusOne[4])       {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
-	    else if(thePlot ==  5 && passNMinusOne[5])       {makePlot = true;theVar = dPhiDiLepMET;}
-	    else if(thePlot ==  6 && passNMinusOne[6])       {makePlot = true;theVar = TMath::Max(TMath::Min(bDiscrMax,0.999),0.001);}
-	    else if(thePlot ==  7 && passNMinusOne[7])       {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
-	    else if(thePlot ==  8 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),199.999);}
-	    else if(thePlot ==  9 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),199.999);}
-	    else if(thePlot == 10 && passAllCuts[ZHGSEL])    {makePlot = true;theVar = TMath::Min(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[idPho[0]])->Eta()),2.499);}
-	    else if(thePlot == 11 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min((double)eventVertex.npv,39.499);}
-	    else if(thePlot == 12 && passNMinusOne[9])       {makePlot = true;theVar = dPhiJetMET;}
-	    else if(thePlot == 13 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = dPhiLepMETMin;}
-	    else if(thePlot == 14 && passNMinusOne[8])       {makePlot = true;theVar = dphill;}
-	    else if(thePlot == 15 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),199.999);}
-	    else if(thePlot == 16 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
-	    else if(thePlot == 17 && passAllCuts[PRESEL])    {makePlot = true;theVar = TMath::Min(dilep.Pt(),249.999);}
-	    else if(thePlot == 18 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = (double)(numberGoodGenLep[0]+10*numberGoodGenLep[1]+100*numberGoodGenLep[2]);}
-	    else if(thePlot == 19 && passNMinusOne[10])      {makePlot = true;theVar = TMath::Min((double)numberGoodTaus,3.499);}
-	    else if(thePlot == 20 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(TMath::Abs(dilep.Eta()),2.499);}
-	    else if(thePlot == 21 && passNMinusOne[0])       {makePlot = true;theVar = TMath::Min(mtW,999.999);}
-	    else if(thePlot == 22 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(the_rho,0.999);}
-	    else if(thePlot == 23 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min(TMath::Max(dPhiJetMET,-0.05),3.099);}
-	    else if(thePlot == 24 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min(caloMinusPFMETRel,1.999);}
-	    else if(thePlot == 25 && passAllCuts[DYSANESEL1]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
-	    else if(thePlot == 26 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(TMath::Max(dPhiJetMET,-0.05),3.099);}
-	    else if(thePlot == 27 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min(caloMinusPFMETRel,1.999);}
-	    else if(thePlot == 28 && passAllCuts[DYSANESEL2]){makePlot = true;theVar = TMath::Min((double)((TLorentzVector*)(*eventMet.p4)[0])->Pt(),499.999);}
-	    else if(thePlot == 29 && passZMass)              {makePlot = true;theVar = idJet.size();}
-	    else if(thePlot == 30 && passZMass)              {makePlot = true;theVar = idBJet.size();}
-	    else if(thePlot == 31 && passZMass)              {makePlot = true;theVar = idLep.size();;}
-	    else if(thePlot == 32 && passZMass)              {makePlot = true;theVar = TMath::Min(TMath::Max(dPhiDiLepMET,-0.05),3.099);}
-	    else if(thePlot == 33 && passNMinusOne[3])       {makePlot = true;theVar = (double)((TLorentzVector*)(*eventMet.p4)[0])->Pt();}
-	    else if(thePlot == 34 && passNMinusOne[8])       {makePlot = true;theVar = TMath::Min(drll,2.999);}
-	    else if(thePlot == 35 && passAllCuts[TIGHTSEL])  {makePlot = true;theVar = TMath::Min(dilep.Pt()/mtW,0.999);}
-            else if(thePlot == 36 && passAllCuts[TIGHTSEL] && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > 150) {makePlot=true;theVar = TMath::Min(1., TMath::Max(-1.,bdt_value));}
-	    else if(thePlot == 37 && passNMinusOne[2])       {makePlot = true;theVar = TMath::Min(sumPtJets/(sumPtJets+((TLorentzVector*)(*eventMet.p4)[0])->Pt()+dilep.Pt()),0.999);}
-	    if(makePlot) histo[thePlot][theCategory]->Fill(theVar,totalWeight);
-	  }
-        }
-      }
 
       if(typeSel == typePair || typeSel == 3) {
 	double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
@@ -2151,17 +2006,14 @@ void zhAnalysis(
               ptFrac
             );
           }
-          if(makeMVAtrees) data_mva_tree->Fill();
         }
         else if(theCategory == 1){
 	  if(passAllCuts[SIGSEL]) histo_EM   ->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[SIGSEL]) histo_EMNoW->Fill(MVAVar,1.);
-          if(makeMVAtrees) EM_mva_tree->Fill();
         }
         else if(theCategory == 2){
 	  if(passAllCuts[SIGSEL]) histo_Zjets   ->Fill(MVAVar,totalWeight);
 	  if(passAllCuts[SIGSEL]) histo_ZjetsNoW->Fill(MVAVar,1.);
-          if(makeMVAtrees) Zjets_mva_tree->Fill();
         }
         else if(theCategory == 3){
 	  if(passAllCuts[SIGSEL]) {
@@ -2193,7 +2045,6 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_WZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_WZ_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
           if(passSystCuts[METDOWN])histo_WZ_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);
-          if(makeMVAtrees) WZ_mva_tree->Fill();
 	}
         else if(theCategory == 4){
 	  if(passAllCuts[SIGSEL]) {
@@ -2232,7 +2083,6 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ZZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ZZ_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
           if(passSystCuts[METDOWN])histo_ZZ_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);
-          if(makeMVAtrees) ZZ_mva_tree->Fill();
         }
         else if(theCategory == 5){
 	  if(passAllCuts[SIGSEL]) {
@@ -2263,7 +2113,6 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_VVV_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
           if(passSystCuts[METDOWN])histo_VVV_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);
-          if(makeMVAtrees) VVV_mva_tree->Fill();
         }
         else if(theCategory == 6){
 	  if(passAllCuts[SIGSEL]) {
@@ -2301,7 +2150,6 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ZH_hinv_CMS_MVAMETBoundingUp  [nModel]->Fill(MVAVarMETSyst[0],totalWeight);
           if(passSystCuts[METDOWN])histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Fill(MVAVarMETSyst[1],totalWeight);
-          if(makeMVAtrees) signal_mva_trees[nModel]->Fill();
         }
         else if(theCategory == 7){
 	  if(passAllCuts[SIGSEL]) {
@@ -2332,7 +2180,6 @@ void zhAnalysis(
           if(passSystCuts[JESDOWN])histo_ggZH_hinv_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
           if(passSystCuts[METUP])  histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Fill(MVAVarMETSyst[0],totalWeight);
           if(passSystCuts[METDOWN])histo_ggZH_hinv_CMS_MVAMETBoundingDown->Fill(MVAVarMETSyst[1],totalWeight);
-          if(makeMVAtrees) signal_mva_trees[nModel]->Fill();
         }
 	else {
 	  printf("CATEGORY PROBLEM!\n"); return;
@@ -2345,21 +2192,6 @@ void zhAnalysis(
     }
     the_input_file->Close();
   } // end of chain
-
-
-  if(makeMVAtrees) {
-    mva_trees->cd();
-    data_mva_tree ->Write();
-    Zjets_mva_tree->Write();
-    EM_mva_tree   ->Write();
-    WZ_mva_tree   ->Write();
-    ZZ_mva_tree   ->Write();
-    VVV_mva_tree  ->Write();
-    for(int nModel=0; nModel<nSigModels; nModel++) {
-      signal_mva_trees[nModel]->Write();
-    }
-    mva_trees->Close();
-  }
 
   // "-1" to remove the Higgs contribution
   double sumEvents = 0;

@@ -6,8 +6,10 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH2F.h>
+#include <TLorentzVector.h>
 #include <TMath.h>
 #include <TRandom3.h>
+#include <TVector2.h>
 #include <iostream>
 #include <fstream>
 #include "TMVA/Reader.h"
@@ -1384,9 +1386,11 @@ void zhAnalysis(
       
       // Begin the offline leptonic selection 
       vector<int> idLep(4); vector<int> idTight(4); vector<int> idSoft(4); unsigned int goodIsTight = 0;
-      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer
       vector<float*> idLepPts(4),idLepEtas(4),idLepPhis(4); // Vectors of addresses to the kinematics of chosen leptons
       vector<int*> idLepSelBits(4), idLepGenPdgIds(4), idLepPdgIds(4); // Vectors of addresses to the integer properties of chosen leptons
+
+      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer
+      idLep[0]=0; idLep[1]=1; idLep[2]=2; idLep[3]=3;
 
       // Implement the (flavor -> selection) correspondence as a map for now
       std::map<unsigned, unsigned> fsMap;
@@ -1401,10 +1405,10 @@ void zhAnalysis(
         if(fsMap.find(gltEvent.looseLep2PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep2SelBit & fsMap[gltEvent.looseLep2PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
         if(fsMap.find(gltEvent.looseLep3PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep3SelBit & fsMap[gltEvent.looseLep3PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
         if(fsMap.find(gltEvent.looseLep4PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep4SelBit & fsMap[gltEvent.looseLep4PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;}
-        idLepPts.push_back(&gltEvent.looseLep1Pt); idLepPts.push_back(&gltEvent.looseLep1Eta); idLepPts.push_back(&gltEvent.looseLep1Phi); idLepPdgIds.push_back(&gltEvent.looseLep1PdgId);
-        idLepPts.push_back(&gltEvent.looseLep2Pt); idLepPts.push_back(&gltEvent.looseLep2Eta); idLepPts.push_back(&gltEvent.looseLep2Phi); idLepPdgIds.push_back(&gltEvent.looseLep2PdgId);
-        idLepPts.push_back(&gltEvent.looseLep3Pt); idLepPts.push_back(&gltEvent.looseLep3Eta); idLepPts.push_back(&gltEvent.looseLep3Phi); idLepPdgIds.push_back(&gltEvent.looseLep3PdgId);
-        idLepPts.push_back(&gltEvent.looseLep4Pt); idLepPts.push_back(&gltEvent.looseLep4Eta); idLepPts.push_back(&gltEvent.looseLep4Phi); idLepPdgIds.push_back(&gltEvent.looseLep4PdgId);
+        idLepPts.push_back(&gltEvent.looseLep1Pt); idLepEtas.push_back(&gltEvent.looseLep1Eta); idLepPhis.push_back(&gltEvent.looseLep1Phi); idLepPdgIds.push_back(&gltEvent.looseLep1PdgId);
+        idLepPts.push_back(&gltEvent.looseLep2Pt); idLepEtas.push_back(&gltEvent.looseLep2Eta); idLepPhis.push_back(&gltEvent.looseLep2Phi); idLepPdgIds.push_back(&gltEvent.looseLep2PdgId);
+        idLepPts.push_back(&gltEvent.looseLep3Pt); idLepEtas.push_back(&gltEvent.looseLep3Eta); idLepPhis.push_back(&gltEvent.looseLep3Phi); idLepPdgIds.push_back(&gltEvent.looseLep3PdgId);
+        idLepPts.push_back(&gltEvent.looseLep4Pt); idLepEtas.push_back(&gltEvent.looseLep4Eta); idLepPhis.push_back(&gltEvent.looseLep4Phi); idLepPdgIds.push_back(&gltEvent.looseLep4PdgId);
         // Not storing soft muons for now, need to support it in PandaLeptonicAnalyzer if we want to do it here! ~DGH
       }
       if(idTight.size()>=numberOfLeptons) passFilter[2] = kTRUE;
@@ -1416,13 +1420,13 @@ void zhAnalysis(
       double dPhiLepMETMin = 999.;
       int signQ = 0;
       for(unsigned nl=0; nl<idLep.size(); nl++){
-        signQ = signQ + (int)(*eventLeptons.pdgId)[idLep[nl]]/TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]);
-        if(dPhiLepMETMin > TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))))
-           dPhiLepMETMin = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));      
+        signQ = signQ + (int)idLepPdgIds[idLep[nl]]/TMath::Abs((int)idLepPdgIds[idLep[nl]]);
+        double dPhiLepMETOption = TMath::Abs(TVector2::Phi_mpi_pi( gltEvent.pfmetphi - idLepPhis[idLep[nl]]));
+           dPhiLepMETMin = dPhiLepMETOption;
       }
-      double minMET  = TMath::Min(((TLorentzVector*)(*eventMet.p4)[0])->Pt(),(double)eventMet.trackMet->Pt());
-      double minPMET = TMath::Min(((TLorentzVector*)(*eventMet.p4)[0])->Pt(),(double)eventMet.trackMet->Pt());
-      if(dPhiLepMETMin < TMath::Pi()/2) minPMET = minPMET * sin(dPhiLepMETMin);
+      double minMET  = TMath::Min(gltEvent.pfmet, gltEvent.trkmetphi);
+      double minPMET = TMath::Min(gltEvent.pfmet, gltEvent.trkmetphi);
+      if(dPhiLepMETMin < TMath::Pi()/2.) minPMET = minPMET * sin(dPhiLepMETMin);
 
       vector<int> idB,idC;
       for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {

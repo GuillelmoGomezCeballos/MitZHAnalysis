@@ -1,26 +1,6 @@
-#include <TROOT.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TSystem.h>
-#include <TString.h>
-#include <TH1D.h>
-#include <TH2D.h>
-#include <TH2F.h>
-#include <TLorentzVector.h>
-#include <TMath.h>
-#include <TRandom3.h>
-#include <TVector2.h>
-#include <iostream>
-#include <fstream>
-#include "TMVA/Reader.h"
-
-#include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
-#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
-
-#include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
-#include "MitZHAnalysis/macros/80x/zhMVA.h"
+#include "MitZHAnalysis/macros/80x/zhAnalysis.h"
 
 // 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
 
@@ -50,8 +30,7 @@ void zhAnalysis(
  Int_t plotModel = 0,
  bool verbose = true,
  string the_BDT_weights="",
- string subdirectory="",
- bool isMIT = true
+ string subdirectory=""
  ){
   std::time_t t = std::time(0);
   unsigned long int time_now = static_cast<unsigned long int>(time(NULL));
@@ -61,20 +40,6 @@ void zhAnalysis(
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
   Int_t period = 1;
-  // File instances on EOS
-  // These paths are OUT OF DATE! ~DGH Aug 1 2017
-  TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  TString filesPathMC   = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
-  TString filesPathMC2  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
-  TString filesPathDMMC = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
-  // File instances on T3 hadoop
-  if(isMIT){
-    filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
-  }
-  Double_t lumi = 3.8;
   TString processTag = "";
 
   //*******************************************************
@@ -425,20 +390,21 @@ void zhAnalysis(
   else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
   else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
   else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
-
-  double denBTagging[5][5][3],jetEpsBtagMEDIUM[5][5][3];
-  double numBTaggingMEDIUM[5][5][3];
-  for(int i0=0; i0<5; i0++) {
-    for(int i1=0; i1<5; i1++) {
-      for(int i2=0; i2<3; i2++) {
-        denBTagging[i0][i1][i2] = 0.0;
-        numBTaggingMEDIUM[i0][i1][i2] = 0.0;
-	if     (i2==BTagEntry::FLAV_B)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagBMEDIUM[i0][i1];
-	else if(i2==BTagEntry::FLAV_C)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagCMEDIUM[i0][i1];
-	else if(i2==BTagEntry::FLAV_UDSG) jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagLMEDIUM[i0][i1];
-      }
-    }
-  }
+  
+  // Comment out this B-tagging stuff for now? Not sure what we need it for, maybe we are covered already by PandaLeptonicAnalyzer? ~DGH
+  //double denBTagging[5][5][3],jetEpsBtagMEDIUM[5][5][3];
+  //double numBTaggingMEDIUM[5][5][3];
+  //for(int i0=0; i0<5; i0++) {
+  //  for(int i1=0; i1<5; i1++) {
+  //    for(int i2=0; i2<3; i2++) {
+  //      denBTagging[i0][i1][i2] = 0.0;
+  //      numBTaggingMEDIUM[i0][i1][i2] = 0.0;
+  //  if     (i2==BTagEntry::FLAV_B)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagBMEDIUM[i0][i1];
+  //  else if(i2==BTagEntry::FLAV_C)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagCMEDIUM[i0][i1];
+  //  else if(i2==BTagEntry::FLAV_UDSG) jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagLMEDIUM[i0][i1];
+  //    }
+  //  }
+  //}
 
   //Float_t fMVACut[4][4];
   //InitializeJetIdCuts(fMVACut);
@@ -1428,33 +1394,33 @@ void zhAnalysis(
       double minPMET = TMath::Min(gltEvent.pfmet, gltEvent.trkmetphi);
       if(dPhiLepMETMin < TMath::Pi()/2.) minPMET = minPMET * sin(dPhiLepMETMin);
 
-      vector<int> idB,idC;
-      for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
-        if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idB.push_back(ngen0);
-        else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idC.push_back(ngen0);
-      }
+      //vector<int> idB,idC;
+      //for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
+      //  if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idB.push_back(ngen0);
+      //  else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idC.push_back(ngen0);
+      //}
 
       vector<int> idPho;
-      for(int npho=0; npho<eventPhotons.p4->GetEntriesFast(); npho++) {
-        if(TMath::Abs(((TLorentzVector*)(*eventPhotons.p4)[npho])->Eta()) >= 2.5) continue;
-	if(((TLorentzVector*)(*eventPhotons.p4)[npho])->Pt() <= 30) continue;
-	//if((double)(*eventPhotons.r9)[npho] <= 0.9) continue;
-	//if((double)(*eventPhotons.sieie)[npho] >= 0.011) continue;
-        bool isRecoLepton = false;
-	for(unsigned int nl=0; nl<idLep.size(); nl++){
-          if(((TLorentzVector*)(*eventPhotons.p4)[npho])->DeltaR(*((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])) < 0.3)
-	    {isRecoLepton = true; break;}
-        }
-	if(isRecoLepton == true) continue;
-        if(((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoTight)== BarePhotons::PhoTight &&
-	   ((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoElectronVeto)== BarePhotons::PhoElectronVeto){idPho.push_back(npho);}
-      }
+      // Photon-lepton cleaning handled already by PandaLeptonicAnalyzer ~DGH
+      bool isGoodPhoton=(gltEvent.loosePho1Pt>30 && TMath::Abs(gltEvent.loosePho1Eta)<2.5);
+      
+      // The equivalent of Nero BarePhotons::PhoElectronVeto is the panda::Photon::csafeVeto
+      // This is currently not implemented in PandaLeptonicAnalyzer, need to add it ~DGH
+      // Old code:
+      //  if(((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoTight)== BarePhotons::PhoTight &&
+      //   ((int)(*eventPhotons.selBits)[npho] & BarePhotons::PhoElectronVeto)== BarePhotons::PhoElectronVeto){idPho.push_back(npho);}
 
-      TLorentzVector dilep(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
-      TLorentzVector dilepMET(dilep + (*((TLorentzVector*)(*eventMet.p4)[0]))); 
-      TLorentzVector dilepg(( ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[0])) ) + ( *(TLorentzVector*)(eventLeptons.p4->At(idLep[1])) ) )); 
+      TLorentzVector idLep1P4, idLep2P4, metP4;
+      idLep1P4.SetPtEtaPhiM( idLepPts[idLep[0]], idLepEtas[idLep[0]], idLepPhis[idLep[0]], (idLepPdgIds[idLep[0]]==13||idLepPdgIds[idLep[0]]==-13)? 0.105658 : 0.000511);
+      idLep2P4.SetPtEtaPhiM( idLepPts[idLep[1]], idLepEtas[idLep[1]], idLepPhis[idLep[1]], (idLepPdgIds[idLep[1]]==13||idLepPdgIds[idLep[1]]==-13)? 0.105658 : 0.000511);
+      metP4.SetPtEtaPhiM(gltEvent.pfmet,0,gltEvent.pfmetphi,0);
+      // Form dilepton and dilepton+MET system
+      TLorentzVector dilep(idLep1P4+idLep2P4); TLorentzVector dilepMET(dilep+metP4);
+      TLorentzVector dilepg(dilep); //dilepton+y system
       if(idPho.size() >= 1){
-        dilepg = dilepg + ( *(TLorentzVector*)(eventPhotons.p4->At(idPho[0])));
+        TLorentzVector idPho1P4;
+        idPho1P4.SetPtEtaPhiM(loosePho1Pt,loosePho1Eta,loosePho1Phi,0);
+        dilepg = dilepg + idPho1P4;
       }
 
       vector<int> idJet,idJetUp,idJetDown,idBJet,idJetNoPh;
@@ -1502,8 +1468,9 @@ void zhAnalysis(
 	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 1.5) nJEta = 2;
 	  else if(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()) < 2.0) nJEta = 3;
           else                                                                     nJEta = 4;
-          denBTagging[nJEta][nJPt][jetFlavor]++;
-          if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingMEDIUM[nJEta][nJPt][jetFlavor]++;
+          // Comment out this B-tagging stuff for now? Not sure what we need it for, maybe we are covered already by PandaLeptonicAnalyzer? ~DGH
+          //denBTagging[nJEta][nJPt][jetFlavor]++;
+          //if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingMEDIUM[nJEta][nJPt][jetFlavor]++;
 
           double bjet_SFMEDIUM = 1;
 	  if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFMEDIUM = btagReaderLMEDIUM.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));

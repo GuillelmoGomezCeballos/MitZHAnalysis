@@ -1694,21 +1694,21 @@ void zhAnalysis(
        //if(totalSel == kTRUE && isel == 2&&typePair!=0) printf("TTT %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
        //if(totalSel == kTRUE && isel == 7&&typePair!=0) printf("JJJ %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
      }
-     double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt()*(1.0 - cos(dPhiDiLepMET))),
-                          TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt()*(1.0 - cos(dPhiDiLepMET)))};
+     double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*gltEvent.pfmetUp  *(1.0 - TMath::Cos(dPhiDiLepMET))),
+                          TMath::Sqrt(2.0*dilep.Pt()*gltEvent.pfmetDown*(1.0 - TMath::Cos(dPhiDiLepMET)))};
      // Syst cuts for MVA
      bool passSystCuts[nSystTypes] = {
           passZMass && idJetUp.size() <= nJetsType  && passMET && passMT                                                                                                                                         && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
           passZMass && idJetDown.size()<= nJetsType && passMET && passMT                                                                                                                                         && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
-          passZMass && passNjets && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metMIN && (mtWSyst[0] > mtMIN || ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() < metTIGHT) && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
-          passZMass && passNjets && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metMIN && (mtWSyst[1] > mtMIN || ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() < metTIGHT) && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto
+          passZMass && passNjets && gltEvent.pfmetUp > metMIN && (mtWSyst[0] > mtMIN || gltEvent.pfmetUp < metTIGHT) && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
+          passZMass && passNjets && gltEvent.pfmetDown > metMIN && (mtWSyst[1] > mtMIN || gltEvent.pfmetDown < metTIGHT) && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto
      };
      if(MVAVarType==3) {
          // (Cuts in common between DY bin and signal region) && ((Exclusive BDT signal region cuts || Exclusive DY bin cuts))  
          passSystCuts[0] = (idJetUp.size()   <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && passBDT) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
          passSystCuts[1] = (idJetDown.size() <= nJetsType && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && passMETTight && passBDT) || (passZMass && passMET && !passMETTight && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
-         passSystCuts[2] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metTIGHT && passBDT) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
-         passSystCuts[3] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metTIGHT && passBDT) || (passZMass && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() > metMIN && ((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt() <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[2] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && gltEvent.pfmetUp > metTIGHT && passBDT) || (passZMass && gltEvent.pfmetUp > metMIN && gltEvent.pfmetUp <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
+         passSystCuts[3] = (passNjets && passBtagVeto && pass3rdLVeto && passTauVeto && passDPhiJetMET) && ((passZMassLarge && gltEvent.pfmetDown > metTIGHT && passBDT) || (passZMass && gltEvent.pfmetDown > metMIN && gltEvent.pfmetDown <= metTIGHT && passPTFrac && passDPhiZMET && passPTLL && passDelphiLL));
      }
       
       // begin event weighting
@@ -1791,58 +1791,51 @@ void zhAnalysis(
       double fakeSF = 1.0;
       if(usePureMC == false){
         printf("NEED TO WORK ON IT IF WE WANT TO USE IT\n");return;
-        if     (theCategory == 5){ // remove W+jets from MC
-          fakeSF = 0.0;
-        }
-        else if(theCategory == 2 && goodIsTight != idTight.size()){ // remove Z+jets from MC as fakeable objects
-          fakeSF = 0.0;
-        }
-        else if((infilecatv[ifile] == 0 || infilecatv[ifile] == 6 || goodIsGenLep == isGenLep.size()) && goodIsTight != idTight.size()){ // add W+jets from data
-          for(unsigned int nl=0; nl<idLep.size(); nl++){
-            if(idTight[nl] == 1) continue;
-            effSF = effSF * fakeRateFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
-            theCategory = 5;
-          }
-          if     (infilecatv[ifile] != 0 && goodIsTight == idTight.size()-2) effSF =  1.0 * effSF; // double fake, MC
-          else if(infilecatv[ifile] != 0 && goodIsTight == idTight.size()-1) effSF = -1.0 * effSF; // single fake, MC
-          else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-2) effSF = -1.0 * effSF; // double fake, data
-          else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-1) effSF =  1.0 * effSF; // single fake, data
-        }
-        else if(infilecatv[ifile] != 0 && infilecatv[ifile] != 6 && goodIsGenLep != isGenLep.size()){ // remove MC dilepton fakes from ll events
-          fakeSF = 0.0;
-        }
-        else if(infilecatv[ifile] != 0 && goodIsGenLep == isGenLep.size()){ // MC with all good leptons
-          fakeSF = 1.0;
-        }
-        else if(infilecatv[ifile] == 0 || infilecatv[ifile] == 6){ // data or W+gamma with all good leptons
-          fakeSF = 1.0;
-        }
-        else {
-          printf("PROBLEM: %d %d %d %d %d\n",infilecatv[ifile],goodIsGenLep,(int)isGenLep.size(),goodIsTight,(int)idTight.size());
-          assert(0);
-        }
+        // What can I say... we need to work on it, if we want to use it. ~DGH
+
+        //if     (theCategory == 5){ // remove W+jets from MC
+        //  fakeSF = 0.0;
+        //}
+        //else if(theCategory == 2 && goodIsTight != idTight.size()){ // remove Z+jets from MC as fakeable objects
+        //  fakeSF = 0.0;
+        //}
+        //else if((infilecatv[ifile] == 0 || infilecatv[ifile] == 6 || goodIsGenLep == isGenLep.size()) && goodIsTight != idTight.size()){ // add W+jets from data
+        //  for(unsigned int nl=0; nl<idLep.size(); nl++){
+        //    if(idTight[nl] == 1) continue;
+        //    effSF = effSF * fakeRateFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
+        //    theCategory = 5;
+        //  }
+        //  if     (infilecatv[ifile] != 0 && goodIsTight == idTight.size()-2) effSF =  1.0 * effSF; // double fake, MC
+        //  else if(infilecatv[ifile] != 0 && goodIsTight == idTight.size()-1) effSF = -1.0 * effSF; // single fake, MC
+        //  else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-2) effSF = -1.0 * effSF; // double fake, data
+        //  else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-1) effSF =  1.0 * effSF; // single fake, data
+        //}
+        //else if(infilecatv[ifile] != 0 && infilecatv[ifile] != 6 && goodIsGenLep != isGenLep.size()){ // remove MC dilepton fakes from ll events
+        //  fakeSF = 0.0;
+        //}
+        //else if(infilecatv[ifile] != 0 && goodIsGenLep == isGenLep.size()){ // MC with all good leptons
+        //  fakeSF = 1.0;
+        //}
+        //else if(infilecatv[ifile] == 0 || infilecatv[ifile] == 6){ // data or W+gamma with all good leptons
+        //  fakeSF = 1.0;
+        //}
+        //else {
+        //  printf("PROBLEM: %d %d %d %d %d\n",infilecatv[ifile],goodIsGenLep,(int)isGenLep.size(),goodIsTight,(int)idTight.size());
+        //  assert(0);
+        //}
       }
       double mcWeight = eventMonteCarlo.mcWeight;
       if(infilecatv[ifile] == 0) mcWeight = 1.0;
       double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff;
       //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,totalWeight);
-
+      
       // Btag scale factor
       // I think this is already handled by PandaLeptonicAnalyzer ~DGH
-      //totalWeight = totalWeight * total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0];
-
-      //double btagCorr[2] = {(total_bjet_probMEDIUMUP[1]  /total_bjet_probMEDIUMUP[0]  )/(total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0]),
-      //                      (total_bjet_probMEDIUMDOWN[1]/total_bjet_probMEDIUMDOWN[0])/(total_bjet_probMEDIUM[1]/total_bjet_probMEDIUM[0])};
-
-      //if(totalWeight == 0) continue;
+      totalWeight *= gltEvent.sf_btag0;
+      if(totalWeight == 0) continue;
 
       // ZH EWK correction (only for SM case)
-      if(theCategory == 6 && zBoson.size() >= 1 && nModel == 0) {
-        totalWeight = totalWeight * weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt());
-      }
-      else if(theCategory == 6 && zBoson.size() == 0 && nModel == 0) {
-        printf("zBoson = 0\n");
-      }
+      if(theCategory==6 && nModel==0) totalWeight *= gltEvent.sf_zh;
 
       // ZZ
       double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
@@ -1881,8 +1874,8 @@ void zhAnalysis(
         double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
         double MVAVarMETSyst[2] = {MVAVar, MVAVar};        
         if(MVAVarType==1) {
-          MVAVarMETSyst[0] = TMath::Min(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt(),xbins[nBinMVA]-0.001);
-          MVAVarMETSyst[1] = TMath::Min(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt(),xbins[nBinMVA]-0.001);
+          MVAVarMETSyst[0] = TMath::Min(gltEvent.pfmetUp,xbins[nBinMVA]-0.001);
+          MVAVarMETSyst[1] = TMath::Min(gltEvent.pfmetDown,xbins[nBinMVA]-0.001);
         }
 
         // Avoid QCD scale weights that are anomalous high
@@ -1922,9 +1915,9 @@ void zhAnalysis(
             }
             // BDT variation with the MET scale variation (from Nero)
             if(bdt_toy_scale[i_toy] >= 0) 
-              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() / MET.Pt() - 1.), 0);
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (gltEvent.pfmetUp / MET.Pt() - 1.), 0);
             else
-              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])  ->Pt() / MET.Pt() - 1.), 0);
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (gltEvent.pfmetDown / MET.Pt() - 1.), 0);
                   MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
             // debug
             //if(passAllCuts[SIGSEL] && theCategory == 4 && typePair!=3) printf("ZZ event METscale toy %d changes BDT value / MVA var (%f, %f) => (%f, %f)\n", i_toy, bdt_value, MVAVar, bdt_toy_value_METScale, MVAVar_toy_METScale);

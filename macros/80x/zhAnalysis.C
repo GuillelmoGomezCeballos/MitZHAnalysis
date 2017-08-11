@@ -1388,7 +1388,7 @@ void zhAnalysis(
       vector<float*> idLepPts(4),idLepEtas(4),idLepPhis(4); // Vectors of addresses to the kinematics of chosen leptons
       vector<int*> idLepSelBits(4), idLepGenPdgIds(4), idLepPdgIds(4); // Vectors of addresses to the integer properties of chosen leptons
 
-      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer
+      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer ~DGH
       idLep[0]=0; idLep[1]=1; idLep[2]=2; idLep[3]=3;
 
       // Implement the (flavor -> selection) correspondence as a map for now
@@ -1419,8 +1419,8 @@ void zhAnalysis(
       double dPhiLepMETMin = 999.;
       int signQ = 0;
       for(unsigned nl=0; nl<idLep.size(); nl++){
-        signQ = signQ + (int)idLepPdgIds[idLep[nl]]/TMath::Abs((int)idLepPdgIds[idLep[nl]]);
-        double dPhiLepMETOption = TMath::Abs(TVector2::Phi_mpi_pi( gltEvent.pfmetphi - idLepPhis[idLep[nl]]));
+        signQ = signQ + (int)*idLepPdgIds[idLep[nl]]/TMath::Abs((int)*idLepPdgIds[idLep[nl]]);
+        double dPhiLepMETOption = TMath::Abs(TVector2::Phi_mpi_pi( gltEvent.pfmetphi - *idLepPhis[idLep[nl]]));
         if(dPhiLepMETOption < dPhiLepMETMin) dPhiLepMETMin = dPhiLepMETOption;
       }
       double minMET  = TMath::Min(gltEvent.pfmet, gltEvent.trkmetphi);
@@ -1459,7 +1459,7 @@ void zhAnalysis(
       }
 
       // Begin the offline jet selection 
-     i vector<int> idJet, idJetUp, idJetDown, idBJet, idJetNoPhi; 
+      vector<int> idJet, idJetUp, idJetDown, idBJet, idJetNoPh; 
       vector<float*> jetPts(4),jetEtas(4),jetPhis(4); // Vectors of addresses to the kinematics of chosen leptons
       vector<int*> jetSelBits(4), jetBTags(4), jetFlavs(4), jetGenPts(4); // Vectors of addresses to the integer properties of chosen leptons
 
@@ -1468,6 +1468,12 @@ void zhAnalysis(
       jetPts[1]=&gltEvent.jet2Pt; jetEtas[1]=&gltEvent.jet2Eta; jetPhis[1]=&gltEvent.jet2Phi; jetBTags[1]=&gltEvent.jet2BTag; jetSelBits[1]=&gltEvent.jet2SelBit;
       jetPts[2]=&gltEvent.jet3Pt; jetEtas[2]=&gltEvent.jet3Eta; jetPhis[2]=&gltEvent.jet3Phi; jetBTags[2]=&gltEvent.jet3BTag; jetSelBits[2]=&gltEvent.jet3SelBit;
       jetPts[3]=&gltEvent.jet4Pt; jetEtas[3]=&gltEvent.jet4Eta; jetPhis[3]=&gltEvent.jet4Phi; jetBTags[3]=&gltEvent.jet4BTag; jetSelBits[3]=&gltEvent.jet4SelBit;
+      
+      jetPtsUp[0]=&gltEvent.jet1PtUp; jetPtsDown[0]=&gltEvent.jet1PtDown; jetEtasUp[0]=&gltEvent.jet1EtaUp; jetEtasDown[0]=&gltEvent.jet1EtaDown; 
+      jetPtsUp[1]=&gltEvent.jet2PtUp; jetPtsDown[1]=&gltEvent.jet2PtDown; jetEtasUp[1]=&gltEvent.jet2EtaUp; jetEtasDown[1]=&gltEvent.jet2EtaDown; 
+      jetPtsUp[2]=&gltEvent.jet3PtUp; jetPtsDown[2]=&gltEvent.jet3PtDown; jetEtasUp[2]=&gltEvent.jet3EtaUp; jetEtasDown[2]=&gltEvent.jet3EtaDown; 
+      jetPtsUp[3]=&gltEvent.jet4PtUp; jetPtsDown[3]=&gltEvent.jet4PtDown; jetEtasUp[3]=&gltEvent.jet4EtaUp; jetEtasDown[3]=&gltEvent.jet4EtaDown; 
+
       if(infilecatv[ifile] != 0){
         jetGenPts[0]=&gltEvent.jet1GenPt; jetFlavs[0]=&gltEvent.jet1Flav;
         jetGenPts[1]=&gltEvent.jet2GenPt; jetFlavs[1]=&gltEvent.jet2Flav;
@@ -1505,11 +1511,11 @@ void zhAnalysis(
           else if(*jetPts[nj] < 80) nJPt = 3;
           else                      nJPt = 4;
           int nJEta = 0;
-          if     (TMath::Abs(*jetEtas[nj])) nJEta = 0;
-          else if(TMath::Abs(*jetEtas[nj])) nJEta = 1;
-          else if(TMath::Abs(*jetEtas[nj])) nJEta = 2;
-          else if(TMath::Abs(*jetEtas[nj])) nJEta = 3;
-          else                              nJEta = 4;
+          if     (TMath::Abs(*jetEtas[nj])<0.5) nJEta = 0;
+          else if(TMath::Abs(*jetEtas[nj])<1.0) nJEta = 1;
+          else if(TMath::Abs(*jetEtas[nj])<1.5) nJEta = 2;
+          else if(TMath::Abs(*jetEtas[nj])<2.0) nJEta = 3;
+          else                                  nJEta = 4;
           // Comment out this B-tagging stuff for now? Not sure what we need it for, maybe we are covered already by PandaLeptonicAnalyzer? ~DGH
           //denBTagging[nJEta][nJPt][jetFlavor]++;
           //if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingMEDIUM[nJEta][nJPt][jetFlavor]++;
@@ -1543,103 +1549,73 @@ void zhAnalysis(
           //  total_bjet_probMEDIUMDOWN[1] = total_bjet_probMEDIUMDOWN[1] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUMDOWN);
           //}
         }
+        
+        // Removed photon-jet cleaning here, already covered by PandaLeptonicAnalyzer ~DGH
 
-        Bool_t isPhoton = kFALSE;
-        for(unsigned int np=0; np<idPho.size(); np++){
-          if(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaR(*((TLorentzVector*)(*eventPhotons.p4)[idPho[np]])) < 0.3) isPhoton = kTRUE;
+        if(*jetPts[nj] > 20) { // WARNING: Previously computed the b-veto using 20 GeV jets, but PandaLeptonicAnalyzer only considers 30 GeV+ jets! ~DGH
+          sumPtJets += *jetPts[nj];
+          if( *jetBTags[nj] > bDiscrMax ) bDiscrMax = *jetBTags[nj];
+          if( *jetBTags[nj] > 0.8       ) idBJet.push_back(nj);
         }
-        if(isPhoton == kFALSE && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 30) idJetNoPh.push_back(nj);
-
-        if(dPhiJetMET   == -1 && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-          mTJetMET = TMath::Sqrt(2.0*((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])))))); 
+        if(*jetPts[nj]      > 30) {
+          idJet.push_back(nj);
+          // WARNING: jet energy/mass not available in PandaLeptonicAnalyzer, need to add it. ~DGH
+          TLorentzVector jetP4; jetP4.SetPtEtaPhiM( *jetPts[nj], *jetEtas[nj], *jetPhis[nj], 0.0); dilepJet += jetP4;
         }
-
-        if(dPhiJetNoPhMET   == -1 && isPhoton == kFALSE  && ((TLorentzVector*)(*eventJets.p4)[nj])->Pt()> 30) {
-          dPhiJetNoPhMET = TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-        }
-
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt() > 20) {
-           sumPtJets = sumPtJets + ((TLorentzVector*)(*eventJets.p4)[nj])->Pt();
-           if ((float)(*eventJets.bDiscr)[nj] > bDiscrMax) bDiscrMax = (float)(*eventJets.bDiscr)[nj];
-           if ((float)(*eventJets.bDiscr)[nj] > 0.8) idBJet.push_back(nj);
-        }
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()      > 30) {idJet.push_back(nj); dilepJet = dilepJet + ( *(TLorentzVector*)(eventJets.p4->At(nj)) );}
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*1.03 > 30) idJetUp.push_back(nj);
-        if(((TLorentzVector*)(*eventJets.p4)[nj])->Pt()*0.97 > 30) idJetDown.push_back(nj);
+        if(*jetPtsUp[nj]   > 30.) idJetUp.push_back(nj);
+        if(*jetPtsDown[nj] > 30.) idJetDown.push_back(nj);
       }
 
-      int numberGoodTaus = 0;
-      for(int ntau=0; ntau<eventTaus.p4->GetEntriesFast(); ntau++) {
-        if(((TLorentzVector*)(*eventTaus.p4)[ntau])->Pt() <= 18.0 ||
-           TMath::Abs(((TLorentzVector*)(*eventTaus.p4)[ntau])->Eta()) >= 2.3) continue;
-        bool isElMu = false;
-        for(unsigned nl=0; nl<idLep.size(); nl++){
-          if(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventTaus.p4)[ntau])) < 0.3) {
-            isElMu = true;
-            break;
-          }
-        }
-        if(isElMu == false &&
-           ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFinding         ) == BareTaus::TauDecayModeFinding &&
-           ((int)(*eventTaus.selBits)[ntau] & BareTaus::TauDecayModeFindingNewDMs) == BareTaus::TauDecayModeFindingNewDMs &&
-           //((int)(*eventTaus.selBits)[ntau] & BareTaus::byVLooseIsolationMVArun2v1DBnewDMwLT) == BareTaus::byVLooseIsolationMVArun2v1DBnewDMwLT){ // next generation
-           (double)(*eventTaus.iso)[ntau] < 5.0){
-          numberGoodTaus++;
-        }
-      }
-
-      TLorentzVector theCaloMET;
-      theCaloMET.SetPx((double)eventMet.CaloMet->Px());
-      theCaloMET.SetPy((double)eventMet.CaloMet->Py());
-      for(unsigned int nl=0; nl<idLep.size(); nl++){
-        if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]])==13) {
-          theCaloMET.SetPx(theCaloMET.Px()-((TLorentzVector*)(*eventLeptons.p4)[nl])->Px());
-          theCaloMET.SetPy(theCaloMET.Py()-((TLorentzVector*)(*eventLeptons.p4)[nl])->Py());
+      // Removed finding "numberGoodTaus" section, as this is already done in PandaLeptonicAnalyzer and stored in gltEvent.nTau ~DGH
+      
+      TLorentzVector theCaloMET; theCaloMET.SetPtEtaPhiM(gltEvent.calomet, 0, gltEvent.calometphi, 0);
+      for(unsigned int nl=0; nl<idLep.size(); nl++) { // Calo MET No Mu calculation
+        if(TMath::Abs((int)*idLepPdgIds[idLep[nl]]) == 13) {
+          // It's redundant to make this 4vector again after having made idLep1P4, idLep2P4, but the code is more portable to other selections this way. ~DGH
+          TLorentzVector muP4; muP4.SetPtEtaPhiM(*idLepPts[idLep[nl]], *idLepEtas[idLep[nl]], *idLepPhis[idLep[nl]], 0.105658);
+          theCaloMET.SetPx(theCaloMET.Px()-muP4.Px());
+          theCaloMET.SetPy(theCaloMET.Py()-muP4.Py());
         }
       }
 
       // Determine flavor of the pair (0 means e-mu pair, 1 means mu-mu, 2 means e-e)
       int typePair = 0;
-      if     (TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13) typePair = 1;
-      else if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11&&TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11) typePair = 2;
+      if     (TMath::Abs((int)*idLepPdgIds[idLep[0]])==13 && TMath::Abs((int)*idLepPdgIds[idLep[1]])==13) typePair = 1;
+      else if(TMath::Abs((int)*idLepPdgIds[idLep[0]])==11 && TMath::Abs((int)*idLepPdgIds[idLep[1]])==11) typePair = 2;
 
       // Calculate a lot of physics quantities used for the rectangular selection
 
-      double dPhiDiLepMET = TMath::Abs(dilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0]))); // TMath::Abs((*(TLorentzVector*)(*eventMet.p4)[0]).DeltaPhi(*eventMet.trackMet));
-      double ptFrac = TMath::Abs(dilep.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilep.Pt(); // TMath::Abs(dilepJet.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepJet.Pt();
-      double deltaPhiDileptonMet = TMath::Abs(dilep.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-      double mtW = TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.p4)[0])->Pt()*(1.0 - cos(deltaPhiDileptonMet)));
+      double dPhiDiLepMET = TMath::Abs(dilep.DeltaPhi(metP4));
+      double ptFrac = TMath::Abs(dilep.Pt()-metP4.Pt())/dilep.Pt(); // TMath::Abs(dilepJet.Pt()-metP4.Pt())/dilepJet.Pt();
+      double mtW = TMath::Sqrt(2.0*dilep.Pt()*metP4.Pt()*(1.0 - TMath::Cos(dPhiDiLepMET)));
 
-      double dPhiDiLepGMET = TMath::Abs(dilepg.DeltaPhi(*((TLorentzVector*)(*eventMet.p4)[0])));
-      double ptFracG = TMath::Abs(dilepg.Pt()-((TLorentzVector*)(*eventMet.p4)[0])->Pt())/dilepg.Pt();
+      double dPhiDiLepGMET = TMath::Abs(dilepg.DeltaPhi(metP4.));
+      double ptFracG = TMath::Abs(dilepg.Pt()-metP4.Pt())/dilepg.Pt();
 
-      double caloMinusPFMETRel = TMath::Abs( (double)eventMet.CaloMet->Pt() - ((TLorentzVector*)(*eventMet.p4)[0])->Pt() ) / ((TLorentzVector*)(*eventMet.p4)[0])->Pt();
+      double caloMinusPFMETRel = TMath::Abs( gltEvent.calomet - gltEvent.pfmet ) / gltEvent.pfmet;
       
-      TVector2 metv(((TLorentzVector*)(*eventMet.p4)[0])->Px(), ((TLorentzVector*)(*eventMet.p4)[0])->Py());
+      TVector2 metv(metP4.Px(), metP4.Py());
       TVector2 dilv(dilep.Px(), dilep.Py());
       TVector2 utv = -1.*(metv+dilv);
       double phiv = utv.DeltaPhi(dilv);
       double the_upara = TMath::Abs(utv.Mod()*TMath::Cos(phiv))/dilep.Pt();
       
-      // Helicity angle calculation
-      double cos_theta_star_l1 = cos_theta_star( *(TLorentzVector*)(*eventLeptons.p4)[idLep[0]], *(TLorentzVector*)(*eventLeptons.p4)[idLep[1]], dilepMET);
-      
       bool passZMass = dilep.M() > 76.1876 && dilep.M() < 106.1876;
       bool passNjets = idJet.size() <= nJetsType;
+      // idJetNoPh is meaningless/empty right now, because PandaLeptonicAnalyzer only stores a single photon. Need to check jet dR < 0.3 with all the photons if we want to use it. ~DGH
       bool passNjetsG = idJetNoPh.size() <= 1;
 
       double metMIN = 100; double mtMIN = 200; double metTIGHT = 100;
       double bdtMIN = xbins[2]; //boundary after the drell yan bin [-1, ?]
       
-      bool passMETTight  = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metTIGHT;
+      bool passMETTight  = metP4.Pt() > metTIGHT;
 
       if(MVAVarType == 0)                                            {metMIN = 50; mtMIN = 200;}
       else if(MVAVarType == 1 || MVAVarType == 2 || MVAVarType == 4) {metMIN = 50; mtMIN = 0;}
       else if(MVAVarType ==3) { metMIN = 80; mtMIN = 0;}
-      bool passMET = ((TLorentzVector*)(*eventMet.p4)[0])->Pt() > metMIN;
+      bool passMET = metP4.Pt() > metMIN;
       bool passMT = mtW > mtMIN || !passMETTight;
-      if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100;
+      if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && metP4.Pt() < 100;
 
       bool passPTFracG    = ptFracG < 0.5;
       bool passDPhiZGMET  = dPhiDiLepGMET > 2.6;
@@ -1649,8 +1625,8 @@ void zhAnalysis(
       bool passBtagVeto  = bDiscrMax < bTagCuts[0];
       bool passPTLL      = dilep.Pt() > 60;
       bool pass3rdLVeto  = idLep.size() == numberOfLeptons && TMath::Abs(signQ) == 0;
-      double dphill = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));
-      double detall = TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta()-((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta());
+      double dphill = TMath::Abs(idLep1P4.DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));
+      double detall = TMath::Abs(idLep1P4.Eta()-idLep2P4.Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
       bool passDelphiLL  = drll < 1.8;//dphill < TMath::Pi()/2.;
 
@@ -1659,44 +1635,43 @@ void zhAnalysis(
 
       bool passDPhiJetMET     = dPhiJetMET     == -1 || dPhiJetMET     >= 0.5;
       bool passDPhiJetNoPhMET = dPhiJetNoPhMET == -1 || dPhiJetNoPhMET >= 0.5;
-      bool passTauVeto    = numberGoodTaus == 0;
+      bool passTauVeto    = gltEvent.nTau == 0;
 
       bool passNMinusOne[11] = {
                   passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT &&               passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
+        passMT &&              passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT && passZMass &&              passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-                  passZMass && passNjets &&               passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
+                  passZMass && passNjets &&            passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
         passMT && passZMass && passNjets && passMET &&               passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT && passZMass && passNjets && passMET && passPTFrac                  && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET                  && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto              &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
+        passMT && passZMass && passNjets && passMET && passPTFrac                 && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
+        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET                 && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
+        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto             &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight,
         passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto                 && passDPhiJetMET && passTauVeto && passMETTight,
-        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL &&                    passTauVeto && passMETTight,
+        passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL &&                   passTauVeto && passMETTight,
         passMT && passZMass && passNjets && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET                && passMETTight
-                               };
-
+      };
 
       bool passAllCuts[nSelTypes] = {                   
-                               passZMass && passNjets                                                                                  &&  pass3rdLVeto                                                   ,         // ZSEL
-                           passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // SIGSEL
-      idPho.size() >= 1 && passZMass && passNjetsG &&     passMETTight && passPTFracG&& passDPhiZGMET&&  passBtagVeto && passPTLL &&  pass3rdLVeto &&             passDPhiJetNoPhMET && passTauVeto,         // ZHGSEL
-        passZMassSB    && !passZMass && passNjets && passMET                                         && !passBtagVeto                  &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // WWLOOSESEL
-                           passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && !passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // BTAGSEL
-                           passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL && !pass3rdLVeto,                                                         // WZSEL
-                              passZMass && passNjets && passMET                         && passDPhiZMET                      && passPTLL &&  pass3rdLVeto && ((TLorentzVector*)(*eventMet.p4)[0])->Pt() < 100., // PRESEL
-                              passZMass && passNjets && passMT && passMET &&!passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR1SEL
-                              passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR2SEL
-                              passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR12SEL
-                           passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&  passBtagVeto && passPTLL &&  pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto && passMETTight, // TIGHTSEL
-                              passZMass && passNjets &&           passMET &&!passPTFrac                                           && passPTLL &&  pass3rdLVeto                                                  && passMETTight, // DYSANESEL1
-                              passZMass && passNjets &&           passMET               &&!passDPhiZMET                         && passPTLL &&  pass3rdLVeto                                                  && passMETTight  // DYSANESEL2
-                                    };
+                             passZMass && passNjets                                                                                && pass3rdLVeto                                                   ,         // ZSEL
+                             passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // SIGSEL
+        idPho.size() >= 1 && passZMass && passNjetsG&& passMETTight      && passPTFracG&& passDPhiZGMET&& passBtagVeto && passPTLL && pass3rdLVeto &&             passDPhiJetNoPhMET && passTauVeto,         // ZHGSEL
+        passZMassSB       &&!passZMass && passNjets && passMET                                         &&!passBtagVeto             && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // WWLOOSESEL
+                             passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&!passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // BTAGSEL
+                             passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&!pass3rdLVeto,                                                         // WZSEL
+                             passZMass && passNjets && passMET                         && passDPhiZMET                 && passPTLL && pass3rdLVeto && metP4.Pt() < 100., // PRESEL
+                             passZMass && passNjets && passMT && passMET &&!passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR1SEL
+                             passZMass && passNjets && passMT && passMET && passPTFrac &&!passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR2SEL
+                             passZMass && passNjets && passMT && passMET &&!passPTFrac &&!passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // CR12SEL
+                             passZMass && passNjets && passMETTight      && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto, // TIGHTSEL
+                             passZMass && passNjets && passMETTight      &&!passPTFrac                                 && passPTLL && pass3rdLVeto,                                                  // DYSANESEL1
+                             passZMass && passNjets && passMETTight      &&!passDPhiZMET                               && passPTLL && pass3rdLVeto                                                   // DYSANESEL2
+      };
      // Evaluate nominal BDT value
      double bdt_value=-1;
      if(useBDT) {
-       TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
-                      lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
-                      MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
+       TLorentzVector lepton1 = idLep1P4,
+                      lepton2 = idLep2P4,
+                      MET     = metP4,
                       jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
         bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
      }
@@ -1719,8 +1694,8 @@ void zhAnalysis(
        //if(totalSel == kTRUE && isel == 2&&typePair!=0) printf("TTT %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
        //if(totalSel == kTRUE && isel == 7&&typePair!=0) printf("JJJ %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
      }
-     double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt()*(1.0 - cos(deltaPhiDileptonMet))),
-                          TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt()*(1.0 - cos(deltaPhiDileptonMet)))};
+     double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt()*(1.0 - cos(dPhiDiLepMET))),
+                          TMath::Sqrt(2.0*dilep.Pt()*((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])->Pt()*(1.0 - cos(dPhiDiLepMET)))};
      // Syst cuts for MVA
      bool passSystCuts[nSystTypes] = {
           passZMass && idJetUp.size() <= nJetsType  && passMET && passMT                                                                                                                                         && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,
@@ -1791,8 +1766,8 @@ void zhAnalysis(
       // trigger efficiency
       double trigEff = 1.0;
       //if(infilecatv[ifile] != 0) {
-      //  trigEff = trigLookup.GetExpectedTriggerEfficiency(((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(),
-      //                                                    ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(),
+      //  trigEff = trigLookup.GetExpectedTriggerEfficiency(idLep1P4.Eta(),idLep1P4.Pt(),
+      //                                                    idLep2P4.Eta(),idLep2P4.Pt(),
       //                                                   TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
       //}
       // luminosity
@@ -1903,7 +1878,7 @@ void zhAnalysis(
 
 
       if(typeSel == typePair || typeSel == 3) {
-        double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
+        double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
         double MVAVarMETSyst[2] = {MVAVar, MVAVar};        
         if(MVAVarType==1) {
           MVAVarMETSyst[0] = TMath::Min(((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt(),xbins[nBinMVA]-0.001);
@@ -1923,9 +1898,9 @@ void zhAnalysis(
         // Throw O(1000) toys for the BDT nuisance evaluations
         if(useBDT && passAllCuts[SIGSEL] && !useCachedBDTSystematics && theCategory >= 3) {
           double bdt_toy_value_muonScale, bdt_toy_value_electronScale, bdt_toy_value_METScale, MVAVar_toy_muonScale, MVAVar_toy_electronScale, MVAVar_toy_METScale;
-          TLorentzVector lepton1 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[0]]),
-                         lepton2 = *((TLorentzVector*)(*eventLeptons.p4)[idLep[1]]),
-                         MET     = *((TLorentzVector*)(*eventMet.p4)[0]),
+          TLorentzVector lepton1 = idLep1P4,
+                         lepton2 = idLep2P4,
+                         MET     = metP4,
                          jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
           double lepton1_scale_variation, lepton2_scale_variation;
           for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
@@ -1935,7 +1910,7 @@ void zhAnalysis(
               lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 ? 0.01 * bdt_toy_scale[i_toy] : 0;
               lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13 ? 0.01 * bdt_toy_scale[i_toy] : 0;
               bdt_toy_value_muonScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-                MVAVar_toy_muonScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_toy_value_muonScale, xbins[nBinMVA]);
+                MVAVar_toy_muonScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_muonScale, xbins[nBinMVA]);
             }
             // BDT variation with the electron scale variation (flat 1%)
             bdt_toy_value_electronScale = bdt_value; MVAVar_toy_electronScale = MVAVar;
@@ -1943,14 +1918,14 @@ void zhAnalysis(
               lepton1_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 ? 0.01 * bdt_toy_scale[i_toy] : 0;
               lepton2_scale_variation = TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11 ? 0.01 * bdt_toy_scale[i_toy] : 0;
               bdt_toy_value_electronScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
-                  MVAVar_toy_electronScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_toy_value_electronScale, xbins[nBinMVA]);
+                  MVAVar_toy_electronScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_electronScale, xbins[nBinMVA]);
             }
             // BDT variation with the MET scale variation (from Nero)
             if(bdt_toy_scale[i_toy] >= 0) 
               bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesUp])  ->Pt() / MET.Pt() - 1.), 0);
             else
               bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (((TLorentzVector*)(*eventMet.metSyst)[BareMet::JesDown])  ->Pt() / MET.Pt() - 1.), 0);
-                  MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, ((TLorentzVector*)(*eventMet.p4)[0])->Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
+                  MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
             // debug
             //if(passAllCuts[SIGSEL] && theCategory == 4 && typePair!=3) printf("ZZ event METscale toy %d changes BDT value / MVA var (%f, %f) => (%f, %f)\n", i_toy, bdt_value, MVAVar, bdt_toy_value_METScale, MVAVar_toy_METScale);
 
@@ -1975,10 +1950,10 @@ void zhAnalysis(
               eventEvent.lumiNum,
               eventEvent.eventNum,
               dilep.Pt(),
-              ((TLorentzVector*)(*eventMet.p4)[0])->Pt(),
+              metP4.Pt(),
               (int)idJet.size(),
-              ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Pt(), ((TLorentzVector*)(*eventLeptons.p4)[idLep[0]])->Eta(),
-              ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Pt(), ((TLorentzVector*)(*eventLeptons.p4)[idLep[1]])->Eta(),
+              idLep1P4.Pt(), idLep1P4.Eta(),
+              idLep2P4.Pt(), idLep2P4.Eta(),
               ptFrac
             );
           }

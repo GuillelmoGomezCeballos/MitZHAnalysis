@@ -1221,7 +1221,7 @@ void zhAnalysis(
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
 
-    GeneralLeptonicTree gltEvent;
+    GeneralLeptonicTree gltEvent; double normalizedWeight;
     { // set branch addresses
       the_input_tree->SetBranchAddress("runNumber", &gltEvent.runNumber);
       the_input_tree->SetBranchAddress("lumiNumber", &gltEvent.lumiNumber);
@@ -1354,7 +1354,7 @@ void zhAnalysis(
         the_input_tree->SetBranchAddress("sf_unc2"          , &gltEvent.sf_unc2);
         the_input_tree->SetBranchAddress("sf_unc3"          , &gltEvent.sf_unc3);
         the_input_tree->SetBranchAddress("sf_unc4"          , &gltEvent.sf_unc4);
-        the_input_tree->SetBranchAddress("normalizedWeight" , &gltEvent.normalizedWeight);
+        the_input_tree->SetBranchAddress("normalizedWeight" , &normalizedWeight);
       }
     }
 
@@ -1384,31 +1384,46 @@ void zhAnalysis(
       if(passFilter[1] == kFALSE) continue;
       
       // Begin the offline leptonic selection 
-      vector<int> idLep(4), idTight(4), idSoft(4); unsigned int goodIsTight = 0;
-      vector<float*> idLepPts(4),idLepEtas(4),idLepPhis(4); // Vectors of addresses to the kinematics of chosen leptons
-      vector<int*> idLepSelBits(4), idLepGenPdgIds(4), idLepPdgIds(4); // Vectors of addresses to the integer properties of chosen leptons
+      vector<int> idLep;
+      vector<bool> idTight, idSoft; unsigned int goodIsTight = 0;
+      vector<float*> idLepPts, idLepEtas, idLepPhis;            // Vectors of addresses to the kinematics of chosen leptons
+      vector<float*> idLepIdSfs, idLepTrkSfs;                    // Vectors of addresses to the scale factors of chosen leptons
+      vector<int*> idLepSelBits, idLepGenPdgIds, idLepPdgIds; // Vectors of addresses to the integer properties of chosen leptons
 
-      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer ~DGH
-      idLep[0]=0; idLep[1]=1; idLep[2]=2; idLep[3]=3;
 
       // Implement the (flavor -> selection) correspondence as a map for now
+      // Currently the ID working point is hardcoded, maybe there is a better solution ~DGH
       std::map<unsigned, unsigned> fsMap;
       fsMap[-11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
       fsMap[11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
       fsMap[-13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
       fsMap[13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
 
-      // Create the lepton container. Store idTight values for the leptons that pass the selection.
+      // Create the lepton container. Store "true" in idTight for the leptons that pass the selection.
+      // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer ~DGH
       { bool isTight;
-        if(fsMap.find(gltEvent.looseLep1PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep1SelBit & fsMap[gltEvent.looseLep1PdgId])!=0); idTight[0]=isTight; goodIsTight+=isTight;}
-        if(fsMap.find(gltEvent.looseLep2PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep2SelBit & fsMap[gltEvent.looseLep2PdgId])!=0); idTight[1]=isTight; goodIsTight+=isTight;}
-        if(fsMap.find(gltEvent.looseLep3PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep3SelBit & fsMap[gltEvent.looseLep3PdgId])!=0); idTight[2]=isTight; goodIsTight+=isTight;}
-        if(fsMap.find(gltEvent.looseLep4PdgId)!=fsMap.end()) { isTight=((gltEvent.looseLep4SelBit & fsMap[gltEvent.looseLep4PdgId])!=0); idTight[3]=isTight; goodIsTight+=isTight;}
-        idLepPts[0]=&gltEvent.looseLep1Pt; idLepEtas[0]=&gltEvent.looseLep1Eta; idLepPhis[0]=&gltEvent.looseLep1Phi; idLepPdgIds[0]=&gltEvent.looseLep1PdgId;
-        idLepPts[1]=&gltEvent.looseLep2Pt; idLepEtas[1]=&gltEvent.looseLep2Eta; idLepPhis[1]=&gltEvent.looseLep2Phi; idLepPdgIds[1]=&gltEvent.looseLep2PdgId;
-        idLepPts[2]=&gltEvent.looseLep3Pt; idLepEtas[2]=&gltEvent.looseLep3Eta; idLepPhis[2]=&gltEvent.looseLep3Phi; idLepPdgIds[2]=&gltEvent.looseLep3PdgId;
-        idLepPts[3]=&gltEvent.looseLep4Pt; idLepEtas[3]=&gltEvent.looseLep4Eta; idLepPhis[3]=&gltEvent.looseLep4Phi; idLepPdgIds[3]=&gltEvent.looseLep4PdgId;
         // Not storing soft muons for now, need to support it in PandaLeptonicAnalyzer if we want to do it here! ~DGH
+        if(gltEvent.looseLep1Pt>=10 && fsMap.find(gltEvent.looseLep1PdgId)==fsMap.end()) {
+          isTight=((gltEvent.looseLep1SelBit & fsMap[gltEvent.looseLep1PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
+          idLepPts.push_back(&gltEvent.looseLep1Pt); idLepEtas.push_back(&gltEvent.looseLep1Eta); idLepPhis.push_back(&gltEvent.looseLep1Phi); idLepPdgIds.push_back(&gltEvent.looseLep1PdgId); idLep.push_back((int)idLep.size());
+          idLepIdSfs.push_back( (gltEvent.looseLep1PdgId==13 || gltEvent.looseLep1PdgId==-13)? &gltEvent.sf_tight1 : &gltEvent.sf_medium1 );
+          idLepTrkSfs.push_back( &gltEvent.sf_trk1 );
+        } if(gltEvent.looseLep2Pt>=10 && fsMap.find(gltEvent.looseLep2PdgId)==fsMap.end()) {
+          isTight=((gltEvent.looseLep2SelBit & fsMap[gltEvent.looseLep2PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
+          idLepPts.push_back(&gltEvent.looseLep2Pt); idLepEtas.push_back(&gltEvent.looseLep2Eta); idLepPhis.push_back(&gltEvent.looseLep2Phi); idLepPdgIds.push_back(&gltEvent.looseLep2PdgId); idLep.push_back((int)idLep.size());
+          idLepIdSfs.push_back( (gltEvent.looseLep2PdgId==13 || gltEvent.looseLep2PdgId==-13)? &gltEvent.sf_tight2 : &gltEvent.sf_medium2 );
+          idLepTrkSfs.push_back( &gltEvent.sf_trk2 );
+        } if(gltEvent.looseLep3Pt>=10 && fsMap.find(gltEvent.looseLep3PdgId)==fsMap.end()) {
+          isTight=((gltEvent.looseLep3SelBit & fsMap[gltEvent.looseLep3PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
+          idLepPts.push_back(&gltEvent.looseLep3Pt); idLepEtas.push_back(&gltEvent.looseLep3Eta); idLepPhis.push_back(&gltEvent.looseLep3Phi); idLepPdgIds.push_back(&gltEvent.looseLep3PdgId); idLep.push_back((int)idLep.size());
+          idLepIdSfs.push_back( (gltEvent.looseLep3PdgId==13 || gltEvent.looseLep3PdgId==-13)? &gltEvent.sf_tight3 : &gltEvent.sf_medium3 );
+          idLepTrkSfs.push_back( &gltEvent.sf_trk3 );
+        } if(gltEvent.looseLep4Pt>=10 && fsMap.find(gltEvent.looseLep4PdgId)==fsMap.end()) {
+          isTight=((gltEvent.looseLep4SelBit & fsMap[gltEvent.looseLep4PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
+          idLepPts.push_back(&gltEvent.looseLep4Pt); idLepEtas.push_back(&gltEvent.looseLep4Eta); idLepPhis.push_back(&gltEvent.looseLep4Phi); idLepPdgIds.push_back(&gltEvent.looseLep4PdgId); idLep.push_back((int)idLep.size());
+          idLepIdSfs.push_back( (gltEvent.looseLep4PdgId==13 || gltEvent.looseLep4PdgId==-13)? &gltEvent.sf_tight4 : &gltEvent.sf_medium4 );
+          idLepTrkSfs.push_back( &gltEvent.sf_trk4 );
+        }          
       }
       if(idTight.size()>=numberOfLeptons) passFilter[2] = kTRUE;
       if(passFilter[2] == kFALSE) continue; 
@@ -1428,15 +1443,8 @@ void zhAnalysis(
       if(dPhiLepMETMin < TMath::Pi()/2.) minPMET = minPMET * sin(dPhiLepMETMin);
 
       // Gen jet flavor tagging already handled by PandaLeptonicAnalyzer ~DGH
-      //vector<int> idB,idC;
-      //for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
-      //  if     (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 5 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idB.push_back(ngen0);
-      //  else if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 4 && ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() > 15) idC.push_back(ngen0);
-      //}
-
       // Photon-lepton cleaning handled already by PandaLeptonicAnalyzer ~DGH
       bool isGoodPhoton=(gltEvent.loosePho1Pt>30 && TMath::Abs(gltEvent.loosePho1Eta)<2.5);
-      
       // The equivalent of Nero BarePhotons::PhoElectronVeto is the panda::Photon::csafeVeto
       // This is currently not implemented in PandaLeptonicAnalyzer, need to add it ~DGH
       // Old code:
@@ -1460,30 +1468,33 @@ void zhAnalysis(
 
       // Begin the offline jet selection 
       vector<int> idJet, idJetUp, idJetDown, idBJet, idJetNoPh; 
-      vector<float*> jetPts(4),jetEtas(4),jetPhis(4); // Vectors of addresses to the kinematics of chosen leptons
-      vector<int*> jetSelBits(4), jetBTags(4), jetFlavs(4), jetGenPts(4); // Vectors of addresses to the integer properties of chosen leptons
+      vector<float*> jetPts, jetEtas, jetPhis; // Vectors of addresses to the kinematics of jets
+      vector<int*> jetSelBits, jetBTags, jetFlavs, jetGenPts; // Vectors of addresses to the integer properties of jets
 
       // Create the jet container.
-      jetPts[0]=&gltEvent.jet1Pt; jetEtas[0]=&gltEvent.jet1Eta; jetPhis[0]=&gltEvent.jet1Phi; jetBTags[0]=&gltEvent.jet1BTag; jetSelBits[0]=&gltEvent.jet1SelBit;
-      jetPts[1]=&gltEvent.jet2Pt; jetEtas[1]=&gltEvent.jet2Eta; jetPhis[1]=&gltEvent.jet2Phi; jetBTags[1]=&gltEvent.jet2BTag; jetSelBits[1]=&gltEvent.jet2SelBit;
-      jetPts[2]=&gltEvent.jet3Pt; jetEtas[2]=&gltEvent.jet3Eta; jetPhis[2]=&gltEvent.jet3Phi; jetBTags[2]=&gltEvent.jet3BTag; jetSelBits[2]=&gltEvent.jet3SelBit;
-      jetPts[3]=&gltEvent.jet4Pt; jetEtas[3]=&gltEvent.jet4Eta; jetPhis[3]=&gltEvent.jet4Phi; jetBTags[3]=&gltEvent.jet4BTag; jetSelBits[3]=&gltEvent.jet4SelBit;
-      
-      jetPtsUp[0]=&gltEvent.jet1PtUp; jetPtsDown[0]=&gltEvent.jet1PtDown; jetEtasUp[0]=&gltEvent.jet1EtaUp; jetEtasDown[0]=&gltEvent.jet1EtaDown; 
-      jetPtsUp[1]=&gltEvent.jet2PtUp; jetPtsDown[1]=&gltEvent.jet2PtDown; jetEtasUp[1]=&gltEvent.jet2EtaUp; jetEtasDown[1]=&gltEvent.jet2EtaDown; 
-      jetPtsUp[2]=&gltEvent.jet3PtUp; jetPtsDown[2]=&gltEvent.jet3PtDown; jetEtasUp[2]=&gltEvent.jet3EtaUp; jetEtasDown[2]=&gltEvent.jet3EtaDown; 
-      jetPtsUp[3]=&gltEvent.jet4PtUp; jetPtsDown[3]=&gltEvent.jet4PtDown; jetEtasUp[3]=&gltEvent.jet4EtaUp; jetEtasDown[3]=&gltEvent.jet4EtaDown; 
-
-      if(infilecatv[ifile] != 0){
-        jetGenPts[0]=&gltEvent.jet1GenPt; jetFlavs[0]=&gltEvent.jet1Flav;
-        jetGenPts[1]=&gltEvent.jet2GenPt; jetFlavs[1]=&gltEvent.jet2Flav;
-        jetGenPts[2]=&gltEvent.jet3GenPt; jetFlavs[2]=&gltEvent.jet3Flav;
-        jetGenPts[3]=&gltEvent.jet4GenPt; jetFlavs[3]=&gltEvent.jet4Flav;
-      }
+      if(gltEvent.jet1Pt>=30) {
+        jetPts.push_back(&gltEvent.jet1Pt); jetEtas.push_back(&gltEvent.jet1Eta); jetPhis.push_back(&gltEvent.jet1Phi); jetBTags.push_back(&gltEvent.jet1BTag); jetSelBits.push_back(&gltEvent.jet1SelBit);
+        jetPtsUp.push_back(&gltEvent.jet1PtUp); jetPtsDown.push_back(&gltEvent.jet1PtDown); jetEtasUp.push_back(&gltEvent.jet1EtaUp); jetEtasDown.push_back(&gltEvent.jet1EtaDown);
+        idJet.push_back((int)idJet.size());
+        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet1GenPt); jetFlavs.push_back(&gltEvent.jet1Flav); }
+      } if(gltEvent.jet2Pt>=30) {
+        jetPts.push_back(&gltEvent.jet2Pt); jetEtas.push_back(&gltEvent.jet2Eta); jetPhis.push_back(&gltEvent.jet2Phi); jetBTags.push_back(&gltEvent.jet2BTag); jetSelBits.push_back(&gltEvent.jet2SelBit);
+        jetPtsUp.push_back(&gltEvent.jet2PtUp); jetPtsDown.push_back(&gltEvent.jet2PtDown); jetEtasUp.push_back(&gltEvent.jet2EtaUp); jetEtasDown.push_back(&gltEvent.jet2EtaDown);
+        idJet.push_back((int)idJet.size());
+        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet2GenPt); jetFlavs.push_back(&gltEvent.jet2Flav); }
+      } if(gltEvent.jet3Pt>=30) {
+        jetPts.push_back(&gltEvent.jet3Pt); jetEtas.push_back(&gltEvent.jet3Eta); jetPhis.push_back(&gltEvent.jet3Phi); jetBTags.push_back(&gltEvent.jet3BTag); jetSelBits.push_back(&gltEvent.jet3SelBit);
+        jetPtsUp.push_back(&gltEvent.jet3PtUp); jetPtsDown.push_back(&gltEvent.jet3PtDown); jetEtasUp.push_back(&gltEvent.jet3EtaUp); jetEtasDown.push_back(&gltEvent.jet3EtaDown);
+        idJet.push_back((int)idJet.size());
+        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet3GenPt); jetFlavs.push_back(&gltEvent.jet3Flav); }
+      } if(gltEvent.jet4Pt>=30) {
+        jetPts.push_back(&gltEvent.jet4Pt); jetEtas.push_back(&gltEvent.jet4Eta); jetPhis.push_back(&gltEvent.jet4Phi); jetBTags.push_back(&gltEvent.jet4BTag); jetSelBits.push_back(&gltEvent.jet4SelBit);
+        jetPtsUp.push_back(&gltEvent.jet4PtUp); jetPtsDown.push_back(&gltEvent.jet4PtDown); jetEtasUp.push_back(&gltEvent.jet4EtaUp); jetEtasDown.push_back(&gltEvent.jet4EtaDown);
+        idJet.push_back((int)idJet.size());
+        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet4GenPt); jetFlavs.push_back(&gltEvent.jet4Flav); }
+      }  
       // End create jet container
 
-      vector<int> idJet,idJetUp,idJetDown,idBJet,idJetNoPh;
-      double total_bjet_probMEDIUM[2] = {1,1};double total_bjet_probMEDIUMUP[2] = {1,1};double total_bjet_probMEDIUMDOWN[2] = {1,1};
       bool isBtag = kFALSE;
       double sumPtJets = 0.0;
       double bDiscrMax = 0.0;
@@ -1516,38 +1527,7 @@ void zhAnalysis(
           else if(TMath::Abs(*jetEtas[nj])<1.5) nJEta = 2;
           else if(TMath::Abs(*jetEtas[nj])<2.0) nJEta = 3;
           else                                  nJEta = 4;
-          // Comment out this B-tagging stuff for now? Not sure what we need it for, maybe we are covered already by PandaLeptonicAnalyzer? ~DGH
-          //denBTagging[nJEta][nJPt][jetFlavor]++;
-          //if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]) numBTaggingMEDIUM[nJEta][nJPt][jetFlavor]++;
-
-          //double bjet_SFMEDIUM = 1;
-          //if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFMEDIUM = btagReaderLMEDIUM.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //else                                  bjet_SFMEDIUM = btagReaderBCMEDIUM.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //if(bjet_SFMEDIUM == 0) bjet_SFMEDIUM = 1;
-          //double bjet_SFMEDIUMUP = 1;
-          //if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFMEDIUMUP = btagReaderLMEDIUMUP.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //else                                  bjet_SFMEDIUMUP = btagReaderBCMEDIUMUP.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //if(bjet_SFMEDIUMUP == 0) bjet_SFMEDIUMUP = 1;
-          //double bjet_SFMEDIUMDOWN = 1;
-          //if(jetFlavor == BTagEntry::FLAV_UDSG) bjet_SFMEDIUMDOWN = btagReaderLMEDIUMDOWN.eval (jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //else                                  bjet_SFMEDIUMDOWN = btagReaderBCMEDIUMDOWN.eval(jetFlavor,TMath::Abs(((TLorentzVector*)(*eventJets.p4)[nj])->Eta()),TMath::Max(((TLorentzVector*)(*eventJets.p4)[nj])->Pt(),20.0));
-          //if(bjet_SFMEDIUMDOWN == 0) bjet_SFMEDIUMDOWN = 1;
-
-          //if((float)(*eventJets.bDiscr)[nj] >= bTagCuts[0]){
-          //  total_bjet_probMEDIUM[0] = total_bjet_probMEDIUM[0] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor];
-          //  total_bjet_probMEDIUM[1] = total_bjet_probMEDIUM[1] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUM;
-          //  total_bjet_probMEDIUMUP[0] = total_bjet_probMEDIUMUP[0] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor];
-          //  total_bjet_probMEDIUMUP[1] = total_bjet_probMEDIUMUP[1] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUMUP;
-          //  total_bjet_probMEDIUMDOWN[0] = total_bjet_probMEDIUMDOWN[0] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor];
-          //  total_bjet_probMEDIUMDOWN[1] = total_bjet_probMEDIUMDOWN[1] * jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUMDOWN;
-          //} else {
-          //  total_bjet_probMEDIUM[0] = total_bjet_probMEDIUM[0] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor]);
-          //  total_bjet_probMEDIUM[1] = total_bjet_probMEDIUM[1] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUM);
-          //  total_bjet_probMEDIUMUP[0] = total_bjet_probMEDIUMUP[0] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor]);
-          //  total_bjet_probMEDIUMUP[1] = total_bjet_probMEDIUMUP[1] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUMUP);
-          //  total_bjet_probMEDIUMDOWN[0] = total_bjet_probMEDIUMDOWN[0] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor]);
-          //  total_bjet_probMEDIUMDOWN[1] = total_bjet_probMEDIUMDOWN[1] * (1.0 - jetEpsBtagMEDIUM[nJEta][nJPt][jetFlavor] * bjet_SFMEDIUMDOWN);
-          //}
+          // B-tagging stuff removed, we are covered already by PandaLeptonicAnalyzer ~DGH
         }
         
         // Removed photon-jet cleaning here, already covered by PandaLeptonicAnalyzer ~DGH
@@ -1625,7 +1605,7 @@ void zhAnalysis(
       bool passBtagVeto  = bDiscrMax < bTagCuts[0];
       bool passPTLL      = dilep.Pt() > 60;
       bool pass3rdLVeto  = idLep.size() == numberOfLeptons && TMath::Abs(signQ) == 0;
-      double dphill = TMath::Abs(idLep1P4.DeltaPhi(*(TLorentzVector*)(*eventLeptons.p4)[idLep[1]]));
+      double dphill = TMath::Abs(idLep1P4.DeltaPhi(idLep2P4));
       double detall = TMath::Abs(idLep1P4.Eta()-idLep2P4.Eta());
       double drll = sqrt(dphill*dphill+detall*detall);
       bool passDelphiLL  = drll < 1.8;//dphill < TMath::Pi()/2.;
@@ -1668,11 +1648,13 @@ void zhAnalysis(
       };
      // Evaluate nominal BDT value
      double bdt_value=-1;
+     TLorentzVector jet1P4(0,0,0,0);
      if(useBDT) {
+       idJet.size()>0? jet1P4.SetPtEtaPhiM(*jetPts[0], *jetEtas[0], *jetPhis[0], 0); // Wrong jet energy, need to fix ~DGH
        TLorentzVector lepton1 = idLep1P4,
                       lepton2 = idLep2P4,
                       MET     = metP4,
-                      jet1    = idJet.size() > 0 ? *((TLorentzVector*)(*eventJets.p4)[idJet[0]]) : TLorentzVector(0,0,0,0);
+                      jet1    = jet1P4;
         bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
      }
      bool passBDT = bdt_value>bdtMIN;
@@ -1683,16 +1665,12 @@ void zhAnalysis(
        passAllCuts[TIGHTSEL] = passAllCuts[PRESEL] && passBDT && passMETTight;
      }
      bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,passMETTight,passDPhiZMET,passPTFrac,passDPhiJetMET,passDelphiLL&&passMT};
-     //bool passEvolFilter[numberCuts] = {pass3rdLVeto,passBtagVeto,passTauVeto,passNjets,passZMass,passPTLL,true,true,true,true,true};
 
-     //if(typePair!=0)printf("LLL %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
      int sumEvol = 0;
      bool totalSel = kTRUE;
      for(int isel=0; isel<numberCuts; isel++) {
        totalSel = totalSel && passEvolFilter[isel];
        if(totalSel == kTRUE) sumEvol++;
-       //if(totalSel == kTRUE && isel == 2&&typePair!=0) printf("TTT %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
-       //if(totalSel == kTRUE && isel == 7&&typePair!=0) printf("JJJ %d %d %llu\n",eventEvent.runNum,eventEvent.lumiNum,eventEvent.eventNum);
      }
      double mtWSyst[2] = {TMath::Sqrt(2.0*dilep.Pt()*gltEvent.pfmetUp  *(1.0 - TMath::Cos(dPhiDiLepMET))),
                           TMath::Sqrt(2.0*dilep.Pt()*gltEvent.pfmetDown*(1.0 - TMath::Cos(dPhiDiLepMET)))};
@@ -1712,56 +1690,9 @@ void zhAnalysis(
      }
       
       // begin event weighting
-      vector<int>wBoson;
-      vector<int>zBoson;
-      vector<bool> isGenDupl;double bosonPtMin = 1000000000; bool isBosonFound = false;vector<bool> isNeuDupl;
-      for(int ngen0=0; ngen0<eventMonteCarlo.p4->GetEntriesFast(); ngen0++) {
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) wBoson.push_back(ngen0);
-        if(TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23) zBoson.push_back(ngen0);
-        if((TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 23||TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 24) &&
-           ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt() < bosonPtMin) {bosonPtMin = ((TLorentzVector*)(*eventMonteCarlo.p4)[ngen0])->Pt(); isBosonFound = true;}
-        // begin neutrinos
-        isNeuDupl.push_back(0);
-        bool isGoodNFlags = ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::PromptFinalState) == BareMonteCarlo::PromptFinalState ||
-                               ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::DirectPromptTauDecayProductFinalState) == BareMonteCarlo::DirectPromptTauDecayProductFinalState;
-        isGoodNFlags = isGoodNFlags && (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 12 || TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 14 || TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 16);
-        if(isGoodNFlags == false) isNeuDupl[ngen0] = 1;
+      
 
-        // begin leptons        
-        isGenDupl.push_back(0);
-        bool isGoodFlags = ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::PromptFinalState) == BareMonteCarlo::PromptFinalState ||
-                               ((*eventMonteCarlo.flags)[ngen0] & BareMonteCarlo::DirectPromptTauDecayProductFinalState) == BareMonteCarlo::DirectPromptTauDecayProductFinalState;
-        isGoodFlags = isGoodFlags && (TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 11 || TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen0]) == 13);
-        if(isGoodFlags == false) isGenDupl[ngen0] = 1;
-      }
-      if(isBosonFound==false) bosonPtMin = 0;
-      int numberGoodGenLep[3] = {0,0,0};
-      TLorentzVector the_rhoP4(0,0,0,0);
-      for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
-        if(isNeuDupl[ngen] == 0 || isGenDupl[ngen] == 0) {
-          the_rhoP4 = the_rhoP4 + *(TLorentzVector*)(*eventMonteCarlo.p4)[ngen];
-        }
-        if(isNeuDupl[ngen] == 0) numberGoodGenLep[0]++;
-        if(isGenDupl[ngen] == 1) continue;
-        numberGoodGenLep[1]++;
-        if(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Pt() <= 10 ||
-           TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])->Eta()) >= 2.5) continue;
-        numberGoodGenLep[2]++;
-      }
-      vector<int> isGenLep; unsigned int goodIsGenLep = 0;
-      for(unsigned nl=0; nl<idLep.size(); nl++){
-        bool isGenLepton = false;
-        for(int ngen=0; ngen<eventMonteCarlo.p4->GetEntriesFast(); ngen++) {
-          if(isGenDupl[ngen] == 1) continue;
-          if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]) == TMath::Abs((int)(*eventMonteCarlo.pdgId)[ngen]) &&
-            ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->DeltaR(*((TLorentzVector*)(*eventMonteCarlo.p4)[ngen])) < 0.1) {
-            isGenLepton = true;
-            break;
-          }
-        }
-        if(isGenLepton == true) {isGenLep.push_back(1); goodIsGenLep++;}
-        else                    {isGenLep.push_back(0);}
-      }
+      // Deleted code for the generator leptons. There is some support in PLA using the generator dressed leptons, if we want to use those for the fake rate study. ~DGH
 
       // trigger efficiency
       double trigEff = 1.0;
@@ -1771,18 +1702,20 @@ void zhAnalysis(
       //                                                   TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
       //}
       // luminosity
-      double theLumi  = 1.0; if(infilecatv[ifile] != 0) theLumi  = lumi;
+      double theLumi  = 1.0; if(infilecatv[ifile] != 0) theLumi  = lumi*1000.;
       // pile-up
-      double puWeight     = 1.0; if(infilecatv[ifile] != 0) puWeight     = nPUScaleFactor(fhDPU    , (double)eventMonteCarlo.puTrueInt);
-      double puWeightUp   = 1.0; if(infilecatv[ifile] != 0) puWeightUp   = nPUScaleFactor(fhDPUUp  , (double)eventMonteCarlo.puTrueInt);
-      double puWeightDown = 1.0; if(infilecatv[ifile] != 0) puWeightDown = nPUScaleFactor(fhDPUDown, (double)eventMonteCarlo.puTrueInt);
+      double puWeight     = 1.0; if(infilecatv[ifile] != 0) puWeight     = gltEvent.sf_pu; 
+      double puWeightUp   = 1.0; if(infilecatv[ifile] != 0) puWeightUp   = gltEvent.sf_puUp;
+      double puWeightDown = 1.0; if(infilecatv[ifile] != 0) puWeightDown = gltEvent.sf_puDown;
       // lepton efficiency
       double effSF = 1.0;
       if(infilecatv[ifile] != 0){
         for(unsigned int nl=0; nl<idLep.size(); nl++){
-          effSF = effSF * effhDScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),
-                ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),
-                typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF,fhDVeryTightSF,true);
+          effSF *= (*idLepTrkSfs[idLep[nl]]) * (*idLepIdSfs[idLep[nl]]); // too many asterisks :(
+
+          //effSF * effhDScaleFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),
+          //      ((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta(),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),
+          //      typeLepSel.Data(),fhDMuMediumSF,fhDElMediumSF,fhDElTightSF,fhDmutrksfptg10,fhDeltrksf,eventVertex.npv,true,fhDMuIsoSF,fhDVeryTightSF,true);
         }
       }
 
@@ -1824,37 +1757,22 @@ void zhAnalysis(
         //  assert(0);
         //}
       }
-      double mcWeight = eventMonteCarlo.mcWeight;
-      if(infilecatv[ifile] == 0) mcWeight = 1.0;
-      double totalWeight = mcWeight*theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff;
+                          
+                          
+      double totalWeight = (infilecatv[ifile] == 0) ? 1.0 : normalizedWeight;
+      totalWeight *= theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff;
       //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,totalWeight);
       
       // Btag scale factor
       // I think this is already handled by PandaLeptonicAnalyzer ~DGH
-      totalWeight *= gltEvent.sf_btag0;
-      if(totalWeight == 0) continue;
+      totalWeight *= gltEvent.sf_btag0; if(totalWeight == 0) continue;
 
       // ZH EWK correction (only for SM case)
       if(theCategory==6 && nModel==0) totalWeight *= gltEvent.sf_zh;
 
-      // ZZ
-      double the_rho = 0.0; if(the_rhoP4.P() > 0) the_rho = the_rhoP4.Pt()/the_rhoP4.P();
-      double theZZCorr[2] {1,1};
-      if(theCategory == 4 && infilenamev[ifile].Contains("GluGlu") == kFALSE) {
-        theZZCorr[0] = weightEWKCorr(bosonPtMin,1);
-
-        //float GENdPhiZZ = 5;
-        //if(zBoson.size() >= 2) GENdPhiZZ = TMath::Abs(((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->DeltaPhi(*((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[1]])));
-        //theZZCorr[1] = kfactor_qqZZ_qcd_dPhi(GENdPhiZZ);
-        float GENmZZ = 0.0;
-        if(zBoson.size() >= 2) GENmZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).M();
-        theZZCorr[1] = kfactor_qqZZ_qcd_M(GENmZZ);
-        //float GENptZZ = 0.0;
-        //if(zBoson.size() >= 2) GENptZZ = ( ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[0])) ) + ( *(TLorentzVector*)(eventMonteCarlo.p4->At(zBoson[1])) ) ).Pt();
-        //theZZCorr[1] = kfactor_qqZZ_qcd_M(GENptZZ);
-
-        totalWeight = totalWeight * (theZZCorr[0]*theZZCorr[1]);
-      }
+      // ZZ corrections
+      // WARNING: sf_zz is computed in PandaLeptonicAnalyzer without checking whether the ZZ production was gluon induced. Need to fix. ~DGH
+      if(theCategory==4) totalWeight *= gltEvent.sf_zz;
 
       // WZ
       if(theCategory == 3 && wBoson.size() >= 1 && zBoson.size() >= 1) {

@@ -17,11 +17,10 @@
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
 #include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
 
-#include "MitAnalysisRunII/macros/80x/factors.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
 Double_t lumi = 3.8;
-bool isMIT = true
+bool isMIT = true;
 // File instances on EOS
 // These paths are OUT OF DATE! ~DGH Aug 1 2017
 TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";

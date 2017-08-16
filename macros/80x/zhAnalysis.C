@@ -38,337 +38,9 @@ void zhAnalysis::Run(
   Int_t period = 1;
   TString processTag = "";
 
-  //*******************************************************
-  //Input Files
-  //*******************************************************
-  vector<TString> infilenamev, signalName_;
-  vector<Int_t> infilecatv, signalIndex_;  
 
-  TString puPath = "";
   TString zjetsTemplatesPath = "";
 
-  puPath = "MitAnalysisRunII/data/80x/puWeights_80x_37ifb.root";
-
-  // Data files - Macro Category 0
-  infilenamev.push_back(Form("%sdata.root",filesPathDA.Data())); infilecatv.push_back(0);
-
-  // Begin MC backgrounds 
-    // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
-    infilenamev.push_back(Form("%sggWW.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sTT2L.root",filesPathMC.Data()));infilecatv.push_back(1);
-    // Previously counted TTZToLLNuNu as VVV background? ~DGH
-    infilenamev.push_back(Form("%sTTV.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sTW.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sqqWW.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sWGstar.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sWWdps.root",filesPathMC.Data()));infilecatv.push_back(1);
-    // Include this one? Does it include (WGToLNuG) ? ~DGH
-    infilenamev.push_back(Form("%sVG.root",filesPathMC.Data()));infilecatv.push_back(1);
-    infilenamev.push_back(Form("%sH125.root",filesPathMC.Data()));infilecatv.push_back(1);
-    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
-    // Missing WWW or included in VVV ? ~DGH
-    
-    // Drell-Yan / Z backgrounds - Macro Category 2
-    if(useDYPT==false){
-      infilenamev.push_back(Form("%sDYJetsToLL_M-10to50.root",filesPathMC.Data()));      infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_M-50_LO.root",filesPathMC.Data()));          infilecatv.push_back(2);
-    }
-    else {
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt0To50.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt50To100.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt100To250.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt250To400.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt400To650.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      infilenamev.push_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()));   infilecatv.push_back(2);
-      //infilenamev.push_back(Form("%s",filesPathMC.Data()));   infilecatv.push_back(2);
-    }
-    // Include Z->tau tau ? ~DGH
-    infilenamev.push_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()));  infilecatv.push_back(2);
-    
-    // WZ backgrounds - Macro Category 3
-    infilenamev.push_back(Form("%sWZ.root",filesPathMC.Data()));                              infilecatv.push_back(3);
-
-    // ZZ Backgrounds - Macro Category 4
-    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
-    infilenamev.push_back(Form("%sZZ.root",filesPathMC.Data()));                              infilecatv.push_back(4);
-
-    // Triboson / VVV Backgrounds - Macro Category 5
-    // Does this include tZq? ~DGH
-    infilenamev.push_back(Form("%sVVV.root",filesPathMC.Data()));                               infilecatv.push_back(5);
-  // End MC backgrounds
-  
-  for(int ifile=0; ifile<(int)infilenamev.size(); ifile++) {
-    signalIndex_.push_back(-1); // Populate vector of signal indices with -1 for the non-MC-signal files
-  }
-
-  // Monte Carlo signals
-  if(false){ // Model 0: standard model Higgs (125) with glu-glu
-    int mH=125;
-    signalName_.push_back("sm");
-    infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
-    infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); infilecatv.push_back(6); signalIndex_.push_back(0);
-    infilenamev.push_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()));       infilecatv.push_back(7); signalIndex_.push_back(0);
-  }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
-
-  if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
-    signalName_.push_back(Form("mh%d", mH));
-    infilenamev.push_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH)); 
-    infilenamev.push_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH));
-    infilecatv.push_back(6); signalIndex_.push_back(iH+1);
-    infilecatv.push_back(6); signalIndex_.push_back(iH+1);
-    iH++;
-  }}
-
-  if(false){ // ls -l ~/eos/cms/store/caf/user/ceballos/Nero/output_80x/|grep -e DarkMatter -e Unpart -e ADD|awk '{printf("    signalName_.push_back(\"%s\"); infilenamev.push_back(Form(\"%s\", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;\n",$9,$9)}'
-    int i=signalName_.size();
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); infilenamev.push_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); infilenamev.push_back(Form("%sUnpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data())); infilecatv.push_back(6); signalIndex_.push_back(i); i++;
-  }
-
-  if(infilenamev.size() != infilecatv.size()) {assert(0); return;}
-  
-  int nSigModels=signalName_.size();
   
   char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
   sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
@@ -414,12 +86,6 @@ void zhAnalysis::Run(
   BTagCalibration2Reader btagReaderLMEDIUMDOWN(btagCalib,BTagEntry::OP_MEDIUM,"incl","down");
 
   LeptonScaleLookup trigLookup(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
-
-  TFile *fPUFile = TFile::Open(Form("%s",puPath.Data()));
-  TH1D *fhDPU     = (TH1D*)(fPUFile->Get("puWeights"));     assert(fhDPU);    fhDPU    ->SetDirectory(0);
-  TH1D *fhDPUUp   = (TH1D*)(fPUFile->Get("puWeightsUp"));   assert(fhDPUUp);  fhDPUUp  ->SetDirectory(0);
-  TH1D *fhDPUDown = (TH1D*)(fPUFile->Get("puWeightsDown")); assert(fhDPUDown);fhDPUDown->SetDirectory(0);
-  delete fPUFile;
 
   TFile *fTrackElectronReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_37ifb.root"));
   TH2D *fhDeltrksf= (TH2D*)(fTrackElectronReco_SF->Get("scalefactors_Reco_Electron")); assert(fhDeltrksf); fhDeltrksf->SetDirectory(0);
@@ -1203,19 +869,18 @@ void zhAnalysis::Run(
   unsigned int numberOfLeptons = 2;
   TString signalName="";
   double totalEventsProcess[50];
-  std::vector<double> sumEventsProcess(infilenamev.size(), 0.0);
 
   //*******************************************************
   // Chain Loop
   //*******************************************************
-  for(UInt_t ifile=0; ifile<infilenamev.size(); ifile++) {
-    printf("sampleNames(%d): %s\n",ifile,infilenamev[ifile].Data());
-
-    TFile *the_input_file = TFile::Open(infilenamev[ifile].Data());
-    int nModel = (infilecatv[ifile]==6 || infilecatv[ifile]==7) ? signalIndex_[ifile] : -1;
+  for(unsigned ifile=0; ifile<nInputFiles; ifile++) {
+    FlatFile inputFlatFile = inputFlatFiles[ifile];
+    printf("sampleNames(%d): %s\n",ifile, inputFlatFile.name.Data());
+    TFile *inputTFile = inputFlatFile.Open();
+    int nModel = (inputFlatFile.category==6 || inputFlatFile.category==7) ? inputFlatFile.signalIndex:-1;
     if(nModel>=0) signalName=signalName_[nModel];
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
-    TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
+    TTree *the_input_tree = (TTree*)inputTFile->FindObjectAny("events");
 
     GeneralLeptonicTree gltEvent;
     float normalizedWeight, sf_btag0, sf_btag0BUp, sf_btag0BDown, sf_btag0MUp, sf_btag0MDown;
@@ -1307,7 +972,7 @@ void zhAnalysis::Run(
       the_input_tree->SetBranchAddress("loosePho1Pt", &gltEvent.loosePho1Pt);
       the_input_tree->SetBranchAddress("loosePho1Eta", &gltEvent.loosePho1Eta);
       the_input_tree->SetBranchAddress("loosePho1Phi", &gltEvent.loosePho1Phi);
-      if(infilecatv[ifile] == 0) the_input_tree->SetBranchAddress("trigger", &gltEvent.trigger);
+      if(inputFlatFile.category == 0) the_input_tree->SetBranchAddress("trigger", &gltEvent.trigger);
       else {
         the_input_tree->SetBranchAddress("looseGenLep1PdgId", &gltEvent.looseGenLep1PdgId);
         the_input_tree->SetBranchAddress("looseGenLep2PdgId", &gltEvent.looseGenLep2PdgId);
@@ -1367,7 +1032,7 @@ void zhAnalysis::Run(
     histoZHSEL[2]->Scale(0.0);
     histoZHSEL[3]->Scale(0.0);
     double theMCPrescale = mcPrescale;
-    if(infilecatv[ifile] == 0) theMCPrescale = 1.0;
+    if(inputFlatFile.category == 0) theMCPrescale = 1.0;
     for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
       if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
       the_input_tree->GetEntry(i);
@@ -1376,7 +1041,7 @@ void zhAnalysis::Run(
       if(gltEvent.looseLep1Pt>20 && gltEvent.looseLep2Pt>10) passFilter[0] = kTRUE;
       if(passFilter[0] == kFALSE) continue;
       
-      passFilter[1] = (infilecatv[ifile] != 0) || ( 
+      passFilter[1] = (inputFlatFile.category != 0) || ( 
         (gltEvent.trigger & zhAnalysis::TriggerBits::kEGTrig  ) != 0 ||
         (gltEvent.trigger & zhAnalysis::TriggerBits::kMuTrig  ) != 0 ||
         (gltEvent.trigger & zhAnalysis::TriggerBits::kEGEGTrig) != 0 ||
@@ -1479,22 +1144,22 @@ void zhAnalysis::Run(
         jetPts.push_back(&gltEvent.jet1Pt); jetEtas.push_back(&gltEvent.jet1Eta); jetPhis.push_back(&gltEvent.jet1Phi); jetBTags.push_back(&gltEvent.jet1BTag); jetSelBits.push_back(&gltEvent.jet1SelBit);
         jetPtsUp.push_back(&gltEvent.jet1PtUp); jetPtsDown.push_back(&gltEvent.jet1PtDown); jetEtasUp.push_back(&gltEvent.jet1EtaUp); jetEtasDown.push_back(&gltEvent.jet1EtaDown);
         idJet.push_back((int)idJet.size());
-        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet1GenPt); jetFlavs.push_back(&gltEvent.jet1Flav); }
+        if(inputFlatFile.category != 0) { jetGenPts.push_back(&gltEvent.jet1GenPt); jetFlavs.push_back(&gltEvent.jet1Flav); }
       } if(gltEvent.jet2Pt>=30) {
         jetPts.push_back(&gltEvent.jet2Pt); jetEtas.push_back(&gltEvent.jet2Eta); jetPhis.push_back(&gltEvent.jet2Phi); jetBTags.push_back(&gltEvent.jet2BTag); jetSelBits.push_back(&gltEvent.jet2SelBit);
         jetPtsUp.push_back(&gltEvent.jet2PtUp); jetPtsDown.push_back(&gltEvent.jet2PtDown); jetEtasUp.push_back(&gltEvent.jet2EtaUp); jetEtasDown.push_back(&gltEvent.jet2EtaDown);
         idJet.push_back((int)idJet.size());
-        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet2GenPt); jetFlavs.push_back(&gltEvent.jet2Flav); }
+        if(inputFlatFile.category != 0) { jetGenPts.push_back(&gltEvent.jet2GenPt); jetFlavs.push_back(&gltEvent.jet2Flav); }
       } if(gltEvent.jet3Pt>=30) {
         jetPts.push_back(&gltEvent.jet3Pt); jetEtas.push_back(&gltEvent.jet3Eta); jetPhis.push_back(&gltEvent.jet3Phi); jetBTags.push_back(&gltEvent.jet3BTag); jetSelBits.push_back(&gltEvent.jet3SelBit);
         jetPtsUp.push_back(&gltEvent.jet3PtUp); jetPtsDown.push_back(&gltEvent.jet3PtDown); jetEtasUp.push_back(&gltEvent.jet3EtaUp); jetEtasDown.push_back(&gltEvent.jet3EtaDown);
         idJet.push_back((int)idJet.size());
-        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet3GenPt); jetFlavs.push_back(&gltEvent.jet3Flav); }
+        if(inputFlatFile.category != 0) { jetGenPts.push_back(&gltEvent.jet3GenPt); jetFlavs.push_back(&gltEvent.jet3Flav); }
       } if(gltEvent.jet4Pt>=30) {
         jetPts.push_back(&gltEvent.jet4Pt); jetEtas.push_back(&gltEvent.jet4Eta); jetPhis.push_back(&gltEvent.jet4Phi); jetBTags.push_back(&gltEvent.jet4BTag); jetSelBits.push_back(&gltEvent.jet4SelBit);
         jetPtsUp.push_back(&gltEvent.jet4PtUp); jetPtsDown.push_back(&gltEvent.jet4PtDown); jetEtasUp.push_back(&gltEvent.jet4EtaUp); jetEtasDown.push_back(&gltEvent.jet4EtaDown);
         idJet.push_back((int)idJet.size());
-        if(infilecatv[ifile] != 0) { jetGenPts.push_back(&gltEvent.jet4GenPt); jetFlavs.push_back(&gltEvent.jet4Flav); }
+        if(inputFlatFile.category != 0) { jetGenPts.push_back(&gltEvent.jet4GenPt); jetFlavs.push_back(&gltEvent.jet4Flav); }
       }  
       // End create jet container
 
@@ -1508,7 +1173,7 @@ void zhAnalysis::Run(
       for(unsigned nj=0; nj<(unsigned)jetPts.size(); nj++){
         if(*jetPts[nj]<20) continue;
 
-        if(infilecatv[ifile] != 0) {
+        if(inputFlatFile.category != 0) {
           // Determine the enumerated jet flavor based on the PDG from gen-jet matching in PandaLeptonicAnalyzer
           BTagEntry::JetFlavor jetFlavor;
           switch (*jetFlavs[nj]) {
@@ -1598,7 +1263,7 @@ void zhAnalysis::Run(
       else if(MVAVarType ==3) { metMIN = 80; mtMIN = 0;}
       bool passMET = metP4.Pt() > metMIN;
       bool passMT = mtW > mtMIN || !passMETTight;
-      if(infilecatv[ifile] == 0 && isBlinded) passMET = passMET && metP4.Pt() < 100;
+      if(inputFlatFile.category == 0 && isBlinded) passMET = passMET && metP4.Pt() < 100;
 
       bool passPTFracG    = ptFracG < 0.5;
       bool passDPhiZGMET  = dPhiDiLepGMET > 2.6;
@@ -1699,20 +1364,20 @@ void zhAnalysis::Run(
 
       // trigger efficiency
       double trigEff = 1.0;
-      //if(infilecatv[ifile] != 0) {
+      //if(inputFlatFile.category != 0) {
       //  trigEff = trigLookup.GetExpectedTriggerEfficiency(idLep1P4.Eta(),idLep1P4.Pt(),
       //                                                    idLep2P4.Eta(),idLep2P4.Pt(),
       //                                                   TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
       //}
       // luminosity
-      double theLumi  = 1.0; if(infilecatv[ifile] != 0) theLumi  = lumi*1000.;
+      double theLumi  = 1.0; if(inputFlatFile.category != 0) theLumi  = lumi*1000.;
       // pile-up
-      double puWeight     = 1.0; if(infilecatv[ifile] != 0) puWeight     = gltEvent.sf_pu; 
-      double puWeightUp   = 1.0; if(infilecatv[ifile] != 0) puWeightUp   = gltEvent.sf_puUp;
-      double puWeightDown = 1.0; if(infilecatv[ifile] != 0) puWeightDown = gltEvent.sf_puDown;
+      double puWeight     = 1.0; if(inputFlatFile.category != 0) puWeight     = gltEvent.sf_pu; 
+      double puWeightUp   = 1.0; if(inputFlatFile.category != 0) puWeightUp   = gltEvent.sf_puUp;
+      double puWeightDown = 1.0; if(inputFlatFile.category != 0) puWeightDown = gltEvent.sf_puDown;
       // lepton efficiency
       double effSF = 1.0;
-      if(infilecatv[ifile] != 0){
+      if(inputFlatFile.category != 0){
         for(unsigned int nl=0; nl<idLep.size(); nl++){
           effSF *= (*idLepTrkSfs[idLep[nl]]) * (*idLepIdSfs[idLep[nl]]); // too many asterisks :(
 
@@ -1723,7 +1388,7 @@ void zhAnalysis::Run(
       }
 
       // fake rate
-      int theCategory = infilecatv[ifile];
+      int theCategory = inputFlatFile.category;
       double fakeSF = 1.0;
       if(usePureMC == false){
         printf("NEED TO WORK ON IT IF WE WANT TO USE IT\n");return;
@@ -1735,34 +1400,34 @@ void zhAnalysis::Run(
         //else if(theCategory == 2 && goodIsTight != idTight.size()){ // remove Z+jets from MC as fakeable objects
         //  fakeSF = 0.0;
         //}
-        //else if((infilecatv[ifile] == 0 || infilecatv[ifile] == 6 || goodIsGenLep == isGenLep.size()) && goodIsTight != idTight.size()){ // add W+jets from data
+        //else if((inputFlatFile.category == 0 || inputFlatFile.category == 6 || goodIsGenLep == isGenLep.size()) && goodIsTight != idTight.size()){ // add W+jets from data
         //  for(unsigned int nl=0; nl<idLep.size(); nl++){
         //    if(idTight[nl] == 1) continue;
         //    effSF = effSF * fakeRateFactor(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Pt(),TMath::Abs(((TLorentzVector*)(*eventLeptons.p4)[idLep[nl]])->Eta()),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[nl]]),period,typeLepSel.Data());
         //    theCategory = 5;
         //  }
-        //  if     (infilecatv[ifile] != 0 && goodIsTight == idTight.size()-2) effSF =  1.0 * effSF; // double fake, MC
-        //  else if(infilecatv[ifile] != 0 && goodIsTight == idTight.size()-1) effSF = -1.0 * effSF; // single fake, MC
-        //  else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-2) effSF = -1.0 * effSF; // double fake, data
-        //  else if(infilecatv[ifile] == 0 && goodIsTight == idTight.size()-1) effSF =  1.0 * effSF; // single fake, data
+        //  if     (inputFlatFile.category != 0 && goodIsTight == idTight.size()-2) effSF =  1.0 * effSF; // double fake, MC
+        //  else if(inputFlatFile.category != 0 && goodIsTight == idTight.size()-1) effSF = -1.0 * effSF; // single fake, MC
+        //  else if(inputFlatFile.category == 0 && goodIsTight == idTight.size()-2) effSF = -1.0 * effSF; // double fake, data
+        //  else if(inputFlatFile.category == 0 && goodIsTight == idTight.size()-1) effSF =  1.0 * effSF; // single fake, data
         //}
-        //else if(infilecatv[ifile] != 0 && infilecatv[ifile] != 6 && goodIsGenLep != isGenLep.size()){ // remove MC dilepton fakes from ll events
+        //else if(inputFlatFile.category != 0 && inputFlatFile.category != 6 && goodIsGenLep != isGenLep.size()){ // remove MC dilepton fakes from ll events
         //  fakeSF = 0.0;
         //}
-        //else if(infilecatv[ifile] != 0 && goodIsGenLep == isGenLep.size()){ // MC with all good leptons
+        //else if(inputFlatFile.category != 0 && goodIsGenLep == isGenLep.size()){ // MC with all good leptons
         //  fakeSF = 1.0;
         //}
-        //else if(infilecatv[ifile] == 0 || infilecatv[ifile] == 6){ // data or W+gamma with all good leptons
+        //else if(inputFlatFile.category == 0 || inputFlatFile.category == 6){ // data or W+gamma with all good leptons
         //  fakeSF = 1.0;
         //}
         //else {
-        //  printf("PROBLEM: %d %d %d %d %d\n",infilecatv[ifile],goodIsGenLep,(int)isGenLep.size(),goodIsTight,(int)idTight.size());
+        //  printf("PROBLEM: %d %d %d %d %d\n",inputFlatFile.category,goodIsGenLep,(int)isGenLep.size(),goodIsTight,(int)idTight.size());
         //  assert(0);
         //}
       }
                           
                           
-      double totalWeight = (infilecatv[ifile] == 0) ? 1.0 : normalizedWeight;
+      double totalWeight = (inputFlatFile.category == 0) ? 1.0 : normalizedWeight;
       totalWeight *= theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff;
       //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,totalWeight);
       
@@ -1890,8 +1555,7 @@ void zhAnalysis::Run(
              histo_ZZ              ->Fill(MVAVar,totalWeight);
              histo_ZZNoW           ->Fill(MVAVar,1.);
              histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*gltEvent.sf_zzUnc);
-             if(infilenamev[ifile].Contains("GluGlu") == kFALSE) histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight);
-             else                                                histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight*1.30);
+             if(true)  histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight*1.30); // WARNING: Check that this is only for the gluon induced ZZ samples! ~DGH
              histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*(1.+gltEvent.scale[0]));
              histo_ZZ_CMS_QCDScaleBounding[1]  ->Fill(MVAVar,totalWeight*(1.+gltEvent.scale[1]));
              histo_ZZ_CMS_QCDScaleBounding[2]  ->Fill(MVAVar,totalWeight*(1.+gltEvent.scale[2]));
@@ -2012,11 +1676,7 @@ void zhAnalysis::Run(
         }
       }
     }
-    printf("eff_cuts: %f\n",sumEventsProcess[ifile]);
-    for(int nc=0; nc<numberCuts+1; nc++){
-      printf("(%20s): %10.2f %10.2f %10.2f %10.2f\n",cutName[nc].Data(),histoZHSEL[0]->GetBinContent(nc+1),histoZHSEL[1]->GetBinContent(nc+1),histoZHSEL[2]->GetBinContent(nc+1),histoZHSEL[3]->GetBinContent(nc+1));
-    }
-    the_input_file->Close();
+    inputFlatFile.Close();
   } // end of chain
 
   // "-1" to remove the Higgs contribution
@@ -3027,4 +2687,322 @@ void zhAnalysis::Run(
 
   } // end loop over models
   
+}
+
+void zhAnalysis::loadFlatFiles(bool doDM) {
+  printf("Begin loading flat input files (zhAnalysis::loadFlatFiles)\n");
+  //*******************************************************
+  //Input Files
+  //*******************************************************
+  // Data files - Macro Category 0
+  inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
+
+  // Begin MC backgrounds 
+    // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
+    inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sTT2L.root",filesPathMC.Data()),1,-1);
+    // Previously counted TTZToLLNuNu as VVV background? ~DGH
+    inputFlatFiles.emplace_back(Form("%sTTV.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sTW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sqqWW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sWGstar.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sWWdps.root",filesPathMC.Data()),1,-1);
+    // Include this one? Does it include (WGToLNuG) ? ~DGH
+    inputFlatFiles.emplace_back(Form("%sVG.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sH125.root",filesPathMC.Data()),1,-1);
+    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
+    // Missing WWW or included in VVV ? ~DGH
+    
+    // Drell-Yan / Z backgrounds - Macro Category 2
+    if(useDYPT==false){
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-10to50.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-50_LO.root",filesPathMC.Data()),2,-1);
+    }
+    else {
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt0To50.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt50To100.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt100To250.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt250To400.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt400To650.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()),2,-1);
+      //inputFlatFiles.emplace_back(Form("%s",filesPathMC.Data()),2,-1);
+    }
+    // Include Z->tau tau ? ~DGH
+    inputFlatFiles.emplace_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()),2,-1);
+    // WZ backgrounds - Macro Category 3
+    inputFlatFiles.emplace_back(Form("%sWZ.root",filesPathMC.Data()),3,-1);
+    // ZZ Backgrounds - Macro Category 4
+    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
+    inputFlatFiles.emplace_back(Form("%sZZ.root",filesPathMC.Data()),4,-1);
+    // Triboson / VVV Backgrounds - Macro Category 5
+    // Does this include tZq? ~DGH
+    inputFlatFiles.emplace_back(Form("%sVVV.root",filesPathMC.Data()),5,-1);
+  // End MC backgrounds
+
+  // Monte Carlo signals
+  if(false){ // Model 0: standard model Higgs (125) with glu-glu
+    int mH=125;
+    signalName_.push_back("sm");
+    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
+    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
+    inputFlatFiles.emplace_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()),7,0);       
+  }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
+
+  if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
+    signalName_.push_back(Form("mh%d", mH));
+    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1); 
+    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1);
+    iH++;
+  }}
+
+  if(doDM){ 
+    int i=signalName_.size();
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+  }
+
+  nSigModels=(unsigned)signalName_.size();
+  nInputFiles=(unsigned)inputFlatFiles.size();
+  printf("Finished loading flat input files.\n");
 }

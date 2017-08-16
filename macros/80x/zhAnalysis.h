@@ -14,10 +14,10 @@
 #include <fstream>
 #include "TMVA/Reader.h"
 
-#include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
 //#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
+#include "MitZHAnalysis/macros/80x/FlatFile.h"
 
 class zhAnalysis {
   public:
@@ -92,4 +92,16 @@ class zhAnalysis {
     const unsigned int  num_bdt_toys = 1000;
     string subdirectory="";
     unsigned int randomToySeed=0;
+    int nSigModels;
+    unsigned nInputFiles;
+
+    // File prefixes
+    TString filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
+    TString filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
+    TString filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
+    TString filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
+
+    vector<FlatFile> inputFlatFiles; vector<TString> signalName_;
+
+    void loadFlatFiles(bool doDM=false);
 };

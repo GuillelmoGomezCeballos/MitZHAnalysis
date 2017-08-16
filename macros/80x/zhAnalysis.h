@@ -14,24 +14,82 @@
 #include <fstream>
 #include "TMVA/Reader.h"
 
+#include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
-#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
-
+//#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 
-Double_t lumi = 3.8;
-bool isMIT = true;
-// File instances on EOS
-// These paths are OUT OF DATE! ~DGH Aug 1 2017
-TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-TString filesPathMC   = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
-TString filesPathMC2  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
-TString filesPathDMMC = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
-// File instances on T3 hadoop
-if(isMIT){
-  filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
-  filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
-  filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
-  filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
-}
+class zhAnalysis {
+  public:
+    // Settings
+    bool       isMIT                   = true;
+    unsigned   nJetsType               = 1;
+    bool       isBlinded               = false;
+    int        typeSel                 = 3;
+    int        plotModel               = 0;
+    double     lumi                    = 3.8;
+    bool       isMINIAOD               = true;
+    bool       useZjetsTemplate        = false;
+    bool       usePureMC               = true; 
+    bool       useEMFromData           = true;
+    bool       useVVFromData           = true;
+    bool       useZZWZEWKUnc           = true;
+    double     mcPrescale              = 1.;
+    bool       useBDT                  = false;
+    bool       useCachedBDTSystematics = false;
+    string     the_BDT_weights         = "";
 
+    // kluge fix because aclic does not want to compile CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h
+    // which is included in PandaLeptonicAnalyzer.h
+    enum SelectionBit {
+      kLoose   =(1<<0),
+      kFake    =(1<<1),
+      kMedium  =(1<<2),
+      kTight   =(1<<3)
+    };
+
+    enum TriggerBits {
+      kMETTrig       =(1<<0),
+      kSinglePhoTrig =(1<<1),
+      kMuEGTrig      =(1<<2),
+      kMuMuTrig      =(1<<3),
+      kMuTrig        =(1<<4),
+      kEGEGTrig      =(1<<5),
+      kEGTrig        =(1<<6)
+    };
+    enum selType {
+      ZSEL=0,
+      SIGSEL,
+      ZHGSEL,
+      WWLOOSESEL,
+      BTAGSEL,
+      WZSEL,
+      PRESEL,
+      CR1SEL,
+      CR2SEL,
+      CR12SEL,
+      TIGHTSEL,
+      DYSANESEL1,
+      DYSANESEL2,
+      nSelTypes
+    };
+    enum systType {
+      JESUP=0,
+      JESDOWN,
+      METUP,
+      METDOWN,
+      nSystTypes
+    };
+    zhAnalysis(string subdirectory_="");
+    ~zhAnalysis();
+    void Run(bool verbose=true);
+  private:
+    TString selTypeName[nSelTypes]={"ZSEL",  "SIGSEL", "ZHGSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
+    TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
+    const TString typeLepSel = "medium";
+    const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
+    const bool useDYPT = true;
+    const unsigned int  num_bdt_toys = 1000;
+    string subdirectory="";
+    unsigned int randomToySeed=0;
+};

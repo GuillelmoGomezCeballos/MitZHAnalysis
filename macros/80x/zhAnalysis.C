@@ -1,44 +1,40 @@
 #include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
-#include "MitAnalysisRunII/macros/LeptonScaleLookup.h"
+#include "MitAnalysisRunII/macros/LeptonScaleLookup.cc"
 #include "MitZHAnalysis/macros/80x/zhAnalysis.h"
 
 // 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
 
-bool       isMINIAOD               = true;
-int        whichSkim               = 4;
-bool       useZjetsTemplate        = false;
-bool       usePureMC               = true; 
-bool       useEMFromData           = true;
-bool       useVVFromData           = true;
-bool       useZZWZEWKUnc           = true;
-const bool useDYPT                 = true;
-double     mcPrescale              = 1.;
-bool       useBDT                  = false;
-bool       useCachedBDTSystematics = false;
-const unsigned int    num_bdt_toys = 1000;
-enum selType                     {ZSEL=0,  SIGSEL,   ZHGSEL,   WWLOOSESEL,   BTAGSEL,   WZSEL,   PRESEL,   CR1SEL,   CR2SEL,   CR12SEL,   TIGHTSEL,   DYSANESEL1,   DYSANESEL2,  nSelTypes};
-TString selTypeName[nSelTypes]= {"ZSEL",  "SIGSEL", "ZHGSEL", "WWLOOSESEL", "BTAGSEL", "WZSEL", "PRESEL", "CR1SEL", "CR2SEL", "CR12SEL", "TIGHTSEL", "DYSANESEL1", "DYSANESEL2"};
-enum systType                     {JESUP=0, JESDOWN,  METUP,  METDOWN, nSystTypes};
-TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
-const TString typeLepSel = "medium";
-const double bTagCuts[1] = {0.8484}; // 0.5426/0.8484/0.9535 (check BTagCalibration2Reader!)
-
-void zhAnalysis(
- unsigned int nJetsType = 1,
- bool isBlinded = false,
- Int_t typeSel = 3,
- Int_t plotModel = 0,
- bool verbose = true,
- string the_BDT_weights="",
- string subdirectory=""
- ){
-  std::time_t t = std::time(0);
-  unsigned long int time_now = static_cast<unsigned long int>(time(NULL));
-  unsigned int randomToySeed=(time_now-731178000); // random seed based on Dylan's age in seconds
-
+// zhAnalysis Constructor
+// sets up the subdirectory output and the random toy seed
+zhAnalysis::zhAnalysis(string subdirectory_) {
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
+  // Initialize the random seed based on Dylan's age in seconds
+  std::time_t t = std::time(0);
+  unsigned long int time_now = static_cast<unsigned long int>(time(NULL));
+  randomToySeed=(time_now-731178000);
+}
+// Blank destructor
+zhAnalysis::~zhAnalysis() {}
+
+void zhAnalysis::Run(
+  bool verbose
+) {
+  // File instances on EOS
+  // These paths are OUT OF DATE! ~DGH Aug 1 2017
+  TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
+  TString filesPathMC   = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
+  TString filesPathMC2  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
+  TString filesPathDMMC = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
+  // File instances on T3 hadoop
+  if(isMIT){
+    filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
+    filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
+  }
+
   Int_t period = 1;
   TString processTag = "";
 
@@ -645,19 +641,20 @@ void zhAnalysis(
     histo_ZZ_CMS_QCDScaleBounding[nb]             = new TH1D(Form("histo_ZZ_QCDScale_f%d",nb),      Form("histo_ZZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_ZZ_CMS_QCDScaleBounding[nb]->Sumw2();
     histo_ggZH_hinv_CMS_QCDScaleBounding[nb] = new TH1D(Form("histo_ggZH_hinv_QCDScale_f%d",nb), Form("histo_ggZH_hinv_QCDScale_f%d",nb),nBinMVA, xbins); histo_ggZH_hinv_CMS_QCDScaleBounding[nb]->Sumw2();
   }
-  TH1D* histo_ZH_hinv_CMS_PDFUp[nSigModels], histo_ZH_hinv_CMS_PDFDown[nSigModels];
+  TH1D* histo_ZH_hinv_CMS_PDFUp[nSigModels];
+  TH1D* histo_ZH_hinv_CMS_PDFDown[nSigModels];
   for(int nModel=0; nModel<nSigModels; nModel++) {
     histo_ZH_hinv_CMS_PDFUp[nModel]   = new TH1D(Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFUp[nModel]->Sumw2();
     histo_ZH_hinv_CMS_PDFDown[nModel] = new TH1D(Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFDown[nModel]->Sumw2();
   }
-  TH1D* histo_VVV_CMS_PDFUp         = new TH1D( Form("histo_VVV_PDFUp"  ,finalStateName), Form("histo_VVV_PDFUp"  ,finalStateName), nBinMVA, xbins); histo_VVV_CMS_PDFUp  ->Sumw2();
-  TH1D* histo_VVV_CMS_PDFDown       = new TH1D( Form("histo_VVV_PDFDown",finalStateName), Form("histo_VVV_PDFDown",finalStateName), nBinMVA, xbins); histo_VVV_CMS_PDFDown->Sumw2();
-  TH1D* histo_WZ_CMS_PDFUp          = new TH1D( Form("histo_WZ_PDFUp"  ,finalStateName), Form("histo_WZ_PDFUp"  ,finalStateName), nBinMVA, xbins); histo_WZ_CMS_PDFUp  ->Sumw2();
-  TH1D* histo_WZ_CMS_PDFDown        = new TH1D( Form("histo_WZ_PDFDown",finalStateName), Form("histo_WZ_PDFDown",finalStateName), nBinMVA, xbins); histo_WZ_CMS_PDFDown->Sumw2();
-  TH1D* histo_ZZ_CMS_PDFUp          = new TH1D( Form("histo_ZZ_PDFUp"  ,finalStateName), Form("histo_ZZ_PDFUp"  ,finalStateName), nBinMVA, xbins); histo_ZZ_CMS_PDFUp  ->Sumw2();
-  TH1D* histo_ZZ_CMS_PDFDown        = new TH1D( Form("histo_ZZ_PDFDown",finalStateName), Form("histo_ZZ_PDFDown",finalStateName), nBinMVA, xbins); histo_ZZ_CMS_PDFDown->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_PDFUp   = new TH1D( Form("histo_ggZH_hinv_PDFUp"  ,finalStateName), Form("histo_ggZH_hinv_PDFUp"  ,finalStateName), nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFUp  ->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_PDFDown = new TH1D( Form("histo_ggZH_hinv_PDFDown",finalStateName), Form("histo_ggZH_hinv_PDFDown",finalStateName), nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFDown->Sumw2();
+  TH1D* histo_VVV_CMS_PDFUp         = new TH1D( "histo_VVV_PDFUp", "histo_VVV_PDFUp", nBinMVA, xbins); histo_VVV_CMS_PDFUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_PDFDown       = new TH1D( "histo_VVV_PDFDown", "histo_VVV_PDFDown", nBinMVA, xbins); histo_VVV_CMS_PDFDown->Sumw2();
+  TH1D* histo_WZ_CMS_PDFUp          = new TH1D( "histo_WZ_PDFUp", "histo_WZ_PDFUp", nBinMVA, xbins); histo_WZ_CMS_PDFUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_PDFDown        = new TH1D( "histo_WZ_PDFDown", "histo_WZ_PDFDown", nBinMVA, xbins); histo_WZ_CMS_PDFDown->Sumw2();
+  TH1D* histo_ZZ_CMS_PDFUp          = new TH1D( "histo_ZZ_PDFUp", "histo_ZZ_PDFUp", nBinMVA, xbins); histo_ZZ_CMS_PDFUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_PDFDown        = new TH1D( "histo_ZZ_PDFDown", "histo_ZZ_PDFDown", nBinMVA, xbins); histo_ZZ_CMS_PDFDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_PDFUp   = new TH1D( "histo_ggZH_hinv_PDFUp", "histo_ggZH_hinv_PDFUp", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_PDFDown = new TH1D( "histo_ggZH_hinv_PDFDown", "histo_ggZH_hinv_PDFDown", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFDown->Sumw2();
  
   TH1D* histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nSigModels][nBinMVA];
   TH1D* histo_ZH_hinv_CMS_MVAZHStatBoundingBinDown[nSigModels][nBinMVA];
@@ -1220,7 +1217,8 @@ void zhAnalysis(
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     TTree *the_input_tree = (TTree*)the_input_file->FindObjectAny("events");
 
-    GeneralLeptonicTree gltEvent; double normalizedWeight;
+    GeneralLeptonicTree gltEvent;
+    float normalizedWeight, sf_btag0, sf_btag0BUp, sf_btag0BDown, sf_btag0MUp, sf_btag0MDown;
     { // set branch addresses
       the_input_tree->SetBranchAddress("runNumber", &gltEvent.runNumber);
       the_input_tree->SetBranchAddress("lumiNumber", &gltEvent.lumiNumber);
@@ -1353,6 +1351,11 @@ void zhAnalysis(
         the_input_tree->SetBranchAddress("sf_unc2"          , &gltEvent.sf_unc2);
         the_input_tree->SetBranchAddress("sf_unc3"          , &gltEvent.sf_unc3);
         the_input_tree->SetBranchAddress("sf_unc4"          , &gltEvent.sf_unc4);
+        the_input_tree->SetBranchAddress("sf_btag0"         , &sf_btag0        );
+        the_input_tree->SetBranchAddress("sf_btag0BUp"      , &sf_btag0BUp     );
+        the_input_tree->SetBranchAddress("sf_btag0BDown"    , &sf_btag0BDown   );
+        the_input_tree->SetBranchAddress("sf_btag0MUp"      , &sf_btag0MUp     );
+        the_input_tree->SetBranchAddress("sf_btag0MDown"    , &sf_btag0MDown   );
         the_input_tree->SetBranchAddress("normalizedWeight" , &normalizedWeight);
       }
     }
@@ -1374,11 +1377,11 @@ void zhAnalysis(
       if(passFilter[0] == kFALSE) continue;
       
       passFilter[1] = (infilecatv[ifile] != 0) || ( 
-        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kEGTrig  ) != 0 ||
-        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuTrig  ) != 0 ||
-        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kEGEGTrig) != 0 ||
-        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuMuTrig) != 0 ||
-        (gltEvent.trigger & PandaLeptonicAnalyzer::TriggerBits::kMuEGTrig) != 0
+        (gltEvent.trigger & zhAnalysis::TriggerBits::kEGTrig  ) != 0 ||
+        (gltEvent.trigger & zhAnalysis::TriggerBits::kMuTrig  ) != 0 ||
+        (gltEvent.trigger & zhAnalysis::TriggerBits::kEGEGTrig) != 0 ||
+        (gltEvent.trigger & zhAnalysis::TriggerBits::kMuMuTrig) != 0 ||
+        (gltEvent.trigger & zhAnalysis::TriggerBits::kMuEGTrig) != 0
       ); // pass filter if it's a MC file or if it passes the trigger soup
       if(passFilter[1] == kFALSE) continue;
       
@@ -1393,10 +1396,10 @@ void zhAnalysis(
       // Implement the (flavor -> selection) correspondence as a map for now
       // Currently the ID working point is hardcoded, maybe there is a better solution ~DGH
       std::map<unsigned, unsigned> fsMap;
-      fsMap[-11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
-      fsMap[11] = PandaLeptonicAnalyzer::SelectionBit::kMedium;
-      fsMap[-13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
-      fsMap[13] = PandaLeptonicAnalyzer::SelectionBit::kTight;
+      fsMap[-11] = zhAnalysis::SelectionBit::kMedium;
+      fsMap[11] = zhAnalysis::SelectionBit::kMedium;
+      fsMap[-13] = zhAnalysis::SelectionBit::kTight;
+      fsMap[13] = zhAnalysis::SelectionBit::kTight;
 
       // Create the lepton container. Store "true" in idTight for the leptons that pass the selection.
       // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer ~DGH
@@ -1569,7 +1572,7 @@ void zhAnalysis(
       double ptFrac = TMath::Abs(dilep.Pt()-metP4.Pt())/dilep.Pt(); // TMath::Abs(dilepJet.Pt()-metP4.Pt())/dilepJet.Pt();
       double mtW = TMath::Sqrt(2.0*dilep.Pt()*metP4.Pt()*(1.0 - TMath::Cos(dPhiDiLepMET)));
 
-      double dPhiDiLepGMET = TMath::Abs(dilepg.DeltaPhi(metP4.));
+      double dPhiDiLepGMET = TMath::Abs(dilepg.DeltaPhi(metP4));
       double ptFracG = TMath::Abs(dilepg.Pt()-metP4.Pt())/dilepg.Pt();
 
       double caloMinusPFMETRel = TMath::Abs( gltEvent.calomet - gltEvent.pfmet ) / gltEvent.pfmet;
@@ -1634,7 +1637,7 @@ void zhAnalysis(
       bool passAllCuts[nSelTypes] = {                   
                              passZMass && passNjets                                                                                && pass3rdLVeto                                                   ,         // ZSEL
                              passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // SIGSEL
-        idPho.size() >= 1 && passZMass && passNjetsG&& passMETTight      && passPTFracG&& passDPhiZGMET&& passBtagVeto && passPTLL && pass3rdLVeto &&             passDPhiJetNoPhMET && passTauVeto,         // ZHGSEL
+        isGoodPhoton      && passZMass && passNjetsG&& passMETTight      && passPTFracG&& passDPhiZGMET&& passBtagVeto && passPTLL && pass3rdLVeto &&             passDPhiJetNoPhMET && passTauVeto,         // ZHGSEL
         passZMassSB       &&!passZMass && passNjets && passMET                                         &&!passBtagVeto             && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // WWLOOSESEL
                              passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET &&!passBtagVeto && passPTLL && pass3rdLVeto && passDelphiLL && passDPhiJetMET && passTauVeto,         // BTAGSEL
                              passZMass && passNjets && passMT && passMET && passPTFrac && passDPhiZMET && passBtagVeto && passPTLL &&!pass3rdLVeto,                                                         // WZSEL
@@ -1650,7 +1653,7 @@ void zhAnalysis(
      double bdt_value=-1;
      TLorentzVector jet1P4(0,0,0,0);
      if(useBDT) {
-       idJet.size()>0? jet1P4.SetPtEtaPhiM(*jetPts[0], *jetEtas[0], *jetPhis[0], 0); // Wrong jet energy, need to fix ~DGH
+       if(idJet.size()>0) jet1P4.SetPtEtaPhiM(*jetPts[0], *jetEtas[0], *jetPhis[0], 0); // Wrong jet energy, need to fix ~DGH
        TLorentzVector lepton1 = idLep1P4,
                       lepton2 = idLep2P4,
                       MET     = metP4,
@@ -1764,8 +1767,7 @@ void zhAnalysis(
       //printf("totalWeight: %f * %f * %f * %f * %f * %f * %f = %f\n",mcWeight,theLumi,puWeight,effSF,fakeSF,theMCPrescale,trigEff,totalWeight);
       
       // Btag scale factor
-      // I think this is already handled by PandaLeptonicAnalyzer ~DGH
-      totalWeight *= gltEvent.sf_btag0; if(totalWeight == 0) continue;
+      totalWeight *= sf_btag0; if(totalWeight == 0) continue;
 
       // ZH EWK correction (only for SM case)
       if(theCategory==6 && nModel==0) totalWeight *= gltEvent.sf_zh;
@@ -1781,18 +1783,8 @@ void zhAnalysis(
         double MVAVar = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_value, xbins[nBinMVA]);
         double MVAVarMETSyst[2] = {MVAVar, MVAVar};        
         if(MVAVarType==1) {
-          MVAVarMETSyst[0] = TMath::Min(gltEvent.pfmetUp,xbins[nBinMVA]-0.001);
-          MVAVarMETSyst[1] = TMath::Min(gltEvent.pfmetDown,xbins[nBinMVA]-0.001);
-        }
-
-        // Avoid QCD scale weights that are anomalous high
-        double maxQCDscale = (TMath::Abs((double)eventMonteCarlo.r1f2)+TMath::Abs((double)eventMonteCarlo.r1f5)+TMath::Abs((double)eventMonteCarlo.r2f1)+
-                              TMath::Abs((double)eventMonteCarlo.r2f2)+TMath::Abs((double)eventMonteCarlo.r5f1)+TMath::Abs((double)eventMonteCarlo.r5f5))/6.0;
-        double PDFAvg = 0.0;
-        if(infilecatv[ifile] != 0 && passAllCuts[SIGSEL]){
-          if(initPDFTag != -1)
-          for(int npdf=0; npdf<100; npdf++) PDFAvg = PDFAvg + TMath::Abs((double)(*eventMonteCarlo.pdfRwgt)[npdf+initPDFTag]);
-          PDFAvg = PDFAvg/100.0;
+          MVAVarMETSyst[0] = TMath::Min((double)gltEvent.pfmetUp,xbins[nBinMVA]-0.001);
+          MVAVarMETSyst[1] = TMath::Min((double)gltEvent.pfmetDown,xbins[nBinMVA]-0.001);
         }
 
         // Throw O(1000) toys for the BDT nuisance evaluations
@@ -1803,20 +1795,22 @@ void zhAnalysis(
                          MET     = metP4,
                          jet1    = jet1P4;
           double lepton1_scale_variation, lepton2_scale_variation;
+          bool lep1IsMuon=(*idLepPdgIds[idLep[0]])==13 || (*idLepPdgIds[idLep[0]])==-13;
+          bool lep2IsMuon=(*idLepPdgIds[idLep[1]])==13 || (*idLepPdgIds[idLep[1]])==-13;
           for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
             // BDT variation with the muon scale variation (flat 1%)
             bdt_toy_value_muonScale = bdt_value; MVAVar_toy_muonScale = MVAVar;
-            if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==13 || TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==13) { // don't perform expensive BDT evaluation unless there is a muon
-              lepton1_scale_variation = TMath::Abs((int)(*lepPdgIds[idLep[0]]))==13 ? 0.01 * bdt_toy_scale[i_toy] : 0;
-              lepton2_scale_variation = TMath::Abs((int)(*lepPdgIds[idLep[1]]))==13 ? 0.01 * bdt_toy_scale[i_toy] : 0;
+            if(lep1IsMuon||lep2IsMuon) { // don't perform expensive BDT evaluation unless there is a muon
+              lepton1_scale_variation = lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
+              lepton2_scale_variation = lep2IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
               bdt_toy_value_muonScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
                 MVAVar_toy_muonScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_muonScale, xbins[nBinMVA]);
             }
             // BDT variation with the electron scale variation (flat 1%)
             bdt_toy_value_electronScale = bdt_value; MVAVar_toy_electronScale = MVAVar;
-            if(TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]])==11 || TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]])==11) { // don't perform expensive BDT evaluation unless there is an electron
-              lepton1_scale_variation = TMath::Abs((int)(*lepPdgIds[idLep[0]]))==11 ? 0.01 * bdt_toy_scale[i_toy] : 0;
-              lepton2_scale_variation = TMath::Abs((int)(*lepPdgIds[idLep[1]]))==11 ? 0.01 * bdt_toy_scale[i_toy] : 0;
+            if(!lep1IsMuon || !lep2IsMuon) { // don't perform expensive BDT evaluation unless there is an electron
+              lepton1_scale_variation = !lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
+              lepton2_scale_variation = !lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
               bdt_toy_value_electronScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
                   MVAVar_toy_electronScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_electronScale, xbins[nBinMVA]);
             }
@@ -1826,10 +1820,6 @@ void zhAnalysis(
             else
               bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (gltEvent.pfmetDown / MET.Pt() - 1.), 0);
                   MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
-            // debug
-            //if(passAllCuts[SIGSEL] && theCategory == 4 && typePair!=3) printf("ZZ event METscale toy %d changes BDT value / MVA var (%f, %f) => (%f, %f)\n", i_toy, bdt_value, MVAVar, bdt_toy_value_METScale, MVAVar_toy_METScale);
-
-
 
             if(theCategory == 3)      { histo_bdt_toys_muonScale_WZ       ->Fill(MVAVar_toy_muonScale, i_toy, totalWeight); histo_bdt_toys_electronScale_WZ       ->Fill(MVAVar_toy_electronScale, i_toy, totalWeight); histo_bdt_toys_METScale_WZ       ->Fill(MVAVar_toy_METScale, i_toy, totalWeight); }
             else if(theCategory == 4) { histo_bdt_toys_muonScale_ZZ       ->Fill(MVAVar_toy_muonScale, i_toy, totalWeight); histo_bdt_toys_electronScale_ZZ       ->Fill(MVAVar_toy_electronScale, i_toy, totalWeight); histo_bdt_toys_METScale_ZZ       ->Fill(MVAVar_toy_METScale, i_toy, totalWeight); }
@@ -1846,9 +1836,9 @@ void zhAnalysis(
             else if (typePair==2) printf("ee data event: " );
             else if (typePair==3) printf("em data event: " );
             printf("runnumber %d lumisection %d eventnumber %lld ptll %f MET %f njets %d l1_pt %f l1_eta %f l2_pt %f l2_eta %f balance %f\n",
-              eventEvent.runNum,
-              eventEvent.lumiNum,
-              eventEvent.eventNum,
+              gltEvent.runNumber,
+              gltEvent.lumiNumber,
+              gltEvent.eventNumber,
               dilep.Pt(),
               metP4.Pt(),
               (int)idJet.size(),
@@ -1887,8 +1877,8 @@ void zhAnalysis(
              else if(typePair == 2) histo_WZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_WZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_WZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
-             histo_WZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*gltEvent.sf_btag0MUp/gltEvent.sf_btag0);
-             histo_WZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*gltEvent.sf_btag0MDown/gltEvent.sf_btag0);
+             histo_WZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*sf_btag0MUp  /sf_btag0);
+             histo_WZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*sf_btag0MDown/sf_btag0);
           }
           if(passSystCuts[JESUP])  histo_WZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_WZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1899,12 +1889,7 @@ void zhAnalysis(
           if(passAllCuts[SIGSEL]) {
              histo_ZZ              ->Fill(MVAVar,totalWeight);
              histo_ZZNoW           ->Fill(MVAVar,1.);
-             if(infilenamev[ifile].Contains("GluGlu") == kFALSE) {
-               if(the_rho <= 0.3) histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*(1.0+TMath::Abs((theZZCorr[0]-1)*(15.99/9.89-1))));
-               else               histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*(1.0+TMath::Abs((theZZCorr[0]-1)               )));
-             } else {
-               histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight);
-             }
+             histo_ZZ_CMS_EWKCorrUp->Fill(MVAVar,totalWeight*gltEvent.sf_zzUnc);
              if(infilenamev[ifile].Contains("GluGlu") == kFALSE) histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight);
              else                                                histo_ZZ_CMS_ggCorrUp->Fill(MVAVar,totalWeight*1.30);
              histo_ZZ_CMS_QCDScaleBounding[0]  ->Fill(MVAVar,totalWeight*(1.+gltEvent.scale[0]));
@@ -1923,8 +1908,8 @@ void zhAnalysis(
              else if(typePair == 2) histo_ZZ_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_ZZ_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZZ_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
-             histo_ZZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
-             histo_ZZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
+             histo_ZZ_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*sf_btag0MUp/sf_btag0);
+             histo_ZZ_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*sf_btag0MDown/sf_btag0);
           }
           if(passSystCuts[JESUP])  histo_ZZ_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ZZ_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1951,8 +1936,8 @@ void zhAnalysis(
              else if(typePair == 2) histo_VVV_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_VVV_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_VVV_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
-             histo_VVV_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
-             histo_VVV_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
+             histo_VVV_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*sf_btag0MUp/sf_btag0);
+             histo_VVV_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*sf_btag0MDown/sf_btag0);
           }
           if(passSystCuts[JESUP])  histo_VVV_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_VVV_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -1963,9 +1948,9 @@ void zhAnalysis(
           if(passAllCuts[SIGSEL]) {
              histo_ZH_hinv[nModel]   ->Fill(MVAVar,totalWeight);
              histo_ZH_hinvNoW[nModel]->Fill(MVAVar,1.);
-             if(zBoson.size() >= 1 && nModel == 0) {
-               histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Fill(MVAVar,totalWeight*weightZHEWKCorr(fhDZHEwkCorrUp,   ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt())/weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt()));
-               histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Fill(MVAVar,totalWeight*weightZHEWKCorr(fhDZHEwkCorrDown, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt())/weightZHEWKCorr(fhDZHEwkCorr, ((TLorentzVector*)(*eventMonteCarlo.p4)[zBoson[0]])->Pt()));
+             if(nModel == 0) {
+               histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Fill(MVAVar,totalWeight*gltEvent.sf_zhUp);
+               histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Fill(MVAVar,totalWeight*gltEvent.sf_zhDown);
              } else {
                histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Fill(MVAVar,totalWeight);
                histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Fill(MVAVar,totalWeight);
@@ -1986,8 +1971,8 @@ void zhAnalysis(
              else if(typePair == 2) histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Fill(MVAVar,totalWeight*0.98);
              histo_ZH_hinv_CMS_PUBoundingUp  [nModel]->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
-             histo_ZH_hinv_CMS_MVABTAGBoundingUp[nModel]  ->Fill(MVAVar,totalWeight*btagCorr[0]);
-             histo_ZH_hinv_CMS_MVABTAGBoundingDown[nModel]->Fill(MVAVar,totalWeight*btagCorr[1]);
+             histo_ZH_hinv_CMS_MVABTAGBoundingUp[nModel]  ->Fill(MVAVar,totalWeight*sf_btag0MUp/sf_btag0);
+             histo_ZH_hinv_CMS_MVABTAGBoundingDown[nModel]->Fill(MVAVar,totalWeight*sf_btag0MDown/sf_btag0);
           }
           if(passSystCuts[JESUP])  histo_ZH_hinv_CMS_MVAJESBoundingUp  [nModel]->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Fill(MVAVar,totalWeight);
@@ -2014,8 +1999,8 @@ void zhAnalysis(
              else if(typePair == 2) histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Fill(MVAVar,totalWeight*0.98);
              histo_ggZH_hinv_CMS_PUBoundingUp  ->Fill(MVAVar,totalWeight*puWeightUp  /puWeight);
              histo_ggZH_hinv_CMS_PUBoundingDown->Fill(MVAVar,totalWeight*puWeightDown/puWeight);
-             histo_ggZH_hinv_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*btagCorr[0]);
-             histo_ggZH_hinv_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*btagCorr[1]);
+             histo_ggZH_hinv_CMS_MVABTAGBoundingUp  ->Fill(MVAVar,totalWeight*sf_btag0MUp/sf_btag0);
+             histo_ggZH_hinv_CMS_MVABTAGBoundingDown->Fill(MVAVar,totalWeight*sf_btag0MDown/sf_btag0);
           }
           if(passSystCuts[JESUP])  histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->Fill(MVAVar,totalWeight);
           if(passSystCuts[JESDOWN])histo_ggZH_hinv_CMS_MVAJESBoundingDown->Fill(MVAVar,totalWeight);
@@ -2767,26 +2752,22 @@ void zhAnalysis(
       if(verbose) printf("%f/%f %f/%f\n",systQCDScale[0],qcdScaleTotal[0],systQCDScale[4],qcdScaleTotal[1]);
 
       // PDF study
-      double systPDF[5];
-      histo_Diff->Reset();
-      for(int npdf=0; npdf<100; npdf++) histo_Diff->Fill((histo_ZH_hinv_CMS_PDFBounding[nModel][npdf]->GetBinContent(nb)-histo_ZH_hinv[nModel]->GetBinContent(nb))/histo_ZH_hinv[nModel]->GetBinContent(nb));
-      systPDF[0] = 1.0+sqrt(TMath::Max(histo_Diff->GetRMS()*histo_Diff->GetRMS()-pdfTotal[0]*pdfTotal[0],0.0));
-      histo_Diff->Reset();
-      for(int npdf=0; npdf<100; npdf++) histo_Diff->Fill((histo_VVV_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_VVV->GetBinContent(nb))/histo_VVV->GetBinContent(nb));
-      systPDF[1] = 1.0+histo_Diff->GetRMS();
-      histo_Diff->Reset();
-      for(int npdf=0; npdf<100; npdf++) histo_Diff->Fill((histo_WZ_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_WZ->GetBinContent(nb))/histo_WZ->GetBinContent(nb));
-      systPDF[2] = 1.0+histo_Diff->GetRMS();
-      histo_Diff->Reset();
-      for(int npdf=0; npdf<100; npdf++) histo_Diff->Fill((histo_ZZ_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_ZZ->GetBinContent(nb))/histo_ZZ->GetBinContent(nb));
-      systPDF[3] = 1.0+histo_Diff->GetRMS();
-      histo_Diff->Reset();
-      for(int npdf=0; npdf<100; npdf++) {
-        double aux=0;
-        if(histo_ggZH_hinv->GetBinContent(nb) > 0) histo_Diff->Fill((histo_ggZH_hinv_CMS_PDFBounding[npdf]->GetBinContent(nb)-histo_ggZH_hinv->GetBinContent(nb))/histo_ggZH_hinv->GetBinContent(nb));
-      }
-      systPDF[4] = 1.0+sqrt(TMath::Max(histo_Diff->GetRMS()*histo_Diff->GetRMS()-pdfTotal[1]*pdfTotal[1],0.0));
-      if(verbose) printf("PDF(%d): %f %f %f %f %f\n",nb,systPDF[0],systPDF[1],systPDF[2],systPDF[3],systPDF[4]); // ZH, VVV, WZ, ZZ, ggZH
+      double systPDFUp[5], systPDFDown[5];
+      systPDFUp  [0] = (histo_ZH_hinv[nModel]  ->GetBinContent(nb)>0)?
+        1.+sqrt(TMath::Max( pow((histo_ZH_hinv_CMS_PDFUp[nModel]->GetBinContent(nb) - histo_ZH_hinv[nModel]->GetBinContent(nb))/histo_ZH_hinv[nModel]->GetBinContent(nb),2) - pdfTotal[0]*pdfTotal[0], 0.)): 1.;
+      systPDFUp  [0] = (histo_ZH_hinv[nModel]  ->GetBinContent(nb)>0)?
+        1.-sqrt(TMath::Max( pow((histo_ZH_hinv[nModel]->GetBinContent(nb) - histo_ZH_hinv_CMS_PDFUp[nModel]->GetBinContent(nb) )/histo_ZH_hinv[nModel]->GetBinContent(nb),2) - pdfTotal[0]*pdfTotal[0], 0.)): 1.;
+      systPDFUp  [1] = (histo_VVV      ->GetBinContent(nb)>0)? 1.+(histo_VVV_CMS_PDFUp      ->GetBinContent(nb) - histo_VVV    ->GetBinContent(nb))/histo_VVV    ->GetBinContent(nb):1.;
+      systPDFDown[1] = (histo_VVV      ->GetBinContent(nb)>0)? 1.+(histo_VVV_CMS_PDFDown    ->GetBinContent(nb) - histo_VVV    ->GetBinContent(nb))/histo_VVV    ->GetBinContent(nb):1.;
+      systPDFUp  [2] = (histo_WZ       ->GetBinContent(nb)>0)? 1.+(histo_WZ_CMS_PDFUp       ->GetBinContent(nb) - histo_WZ     ->GetBinContent(nb))/histo_WZ     ->GetBinContent(nb):1.;
+      systPDFDown[2] = (histo_WZ       ->GetBinContent(nb)>0)? 1.+(histo_WZ_CMS_PDFDown     ->GetBinContent(nb) - histo_WZ     ->GetBinContent(nb))/histo_WZ     ->GetBinContent(nb):1.;
+      systPDFUp  [3] = (histo_ZZ       ->GetBinContent(nb)>0)? 1.+(histo_ZZ_CMS_PDFUp       ->GetBinContent(nb) - histo_ZZ     ->GetBinContent(nb))/histo_ZZ     ->GetBinContent(nb):1.;
+      systPDFDown[3] = (histo_ZZ       ->GetBinContent(nb)>0)? 1.+(histo_ZZ_CMS_PDFDown     ->GetBinContent(nb) - histo_ZZ     ->GetBinContent(nb))/histo_ZZ     ->GetBinContent(nb):1.;
+      systPDFUp  [4] = (histo_ggZH_hinv  ->GetBinContent(nb)>0)?
+        1.+sqrt(TMath::Max( pow((histo_ggZH_hinv_CMS_PDFUp->GetBinContent(nb) - histo_ggZH_hinv->GetBinContent(nb))/histo_ggZH_hinv->GetBinContent(nb),2) - pdfTotal[1]*pdfTotal[1], 0.)): 1.;
+      systPDFUp  [4] = (histo_ggZH_hinv  ->GetBinContent(nb)>0)?
+        1.-sqrt(TMath::Max( pow((histo_ggZH_hinv->GetBinContent(nb) - histo_ggZH_hinv_CMS_PDFUp->GetBinContent(nb) )/histo_ggZH_hinv->GetBinContent(nb),2) - pdfTotal[1]*pdfTotal[1], 0.)): 1.;
+      if(verbose) printf("PDF(%d): %f/%f %f/%f %f/%f %f/%f %f/%f\n",nb,systPDFUp[0],systPDFDown[0],systPDFUp[1],systPDFDown[1],systPDFUp[2],systPDFDown[2],systPDFUp[3],systPDFDown[3],systPDFUp[4],systPDFDown[4]); // ZH, VVV, WZ, ZZ, ggZH
   
       double systLepEffM[5] = {1.0,1.0,1.0,1.0,1.0};
       if     (histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]->GetBinContent(nb)    > 0 && histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]     ->GetBinContent(nb) > 0) systLepEffM[0] = histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]->GetBinContent(nb)/histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]->GetBinContent(nb);
@@ -2942,8 +2923,9 @@ void zhAnalysis(
       // If VV normalization is from data
       double systVV[2] = {0,0};
       if(useVVFromData){
-        systVV[0] = sqrt(TMath::Power(syst_EWKCorrUp[0]-1,2)+TMath::Power(systQCDScale[2]-1,2)+TMath::Power(systPDF[2]-1,2));
-        systVV[1] = sqrt(TMath::Power(syst_EWKCorrUp[1]-1,2)+TMath::Power(systQCDScale[3]-1,2)+TMath::Power(systPDF[3]-1,2));
+        systVV[0] = sqrt(TMath::Power(syst_EWKCorrUp[0]-1,2)+TMath::Power(systQCDScale[2]-1,2)+TMath::Power((systPDFUp[2]-systPDFDown[2])/2.,2));
+        systVV[1] = sqrt(TMath::Power(syst_EWKCorrUp[1]-1,2)+TMath::Power(systQCDScale[3]-1,2)+TMath::Power((systPDFUp[3]-systPDFDown[3])/2.,2));
+        // this commented stuff is not right
         //printf("systVV_theo = %f(%f/%f/%f) %f(%f/%f/%f)\n",systVV[0],syst_EWKCorrUp[0]-1,systQCDScale[2]-1,systPDF[2]-1,
         //                                                   systVV[1],syst_EWKCorrUp[1]-1,systQCDScale[3]-1,systPDF[3]-1);
       }
@@ -2973,9 +2955,8 @@ void zhAnalysis(
       newcardShape << Form("CMS_trigger2016                        lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",1.01,1.01,1.01,1.01,1.01);
       newcardShape << Form("UEPS                                   lnN  1.030   -     -     -     -     -   1.030\n");
       newcardShape << Form("CMS_eff_b_2016                         lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systBtagUp[0],systBtagDown[0],systBtagUp[1],systBtagDown[1],systBtagUp[2],systBtagDown[2],systBtagUp[3],systBtagDown[3],systBtagUp[0],systBtagDown[0]); // 0 --> 4
-      newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  %7.5f   -   %7.5f %7.5f %7.5f   -     -  \n",TMath::Max(systPDF[0],1.01),TMath::Max(systPDF[1],1.01),TMath::Max(systPDF[2],1.01),TMath::Max(systPDF[3],1.01));
-      if(systPDF[4] != 1.0)
-      newcardShape << Form("pdf_gg_ACCEPT                          lnN    -     -     -     -     -     -   %7.5f\n",systPDF[4]);
+      newcardShape << Form("pdf_qqbar_ACCEPT                       lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -     -  \n",systPDFUp[0],systPDFDown[0],systPDFUp[1],systPDFDown[1],systPDFUp[2],systPDFDown[2],systPDFUp[3],systPDFDown[3]);
+      newcardShape << Form("pdf_gg_ACCEPT                          lnN    -     -     -     -     -     -   %7.5f/%7.5f\n",systPDFUp[4],systPDFDown[4]);
       newcardShape << Form("pdf_qqbar                              lnN  %7.5f   -     -     -     -     -     -  \n",1.0+pdfTotal[0]);
       if(histo_ggZH_hinv->GetBinContent(nb) > 0)
       newcardShape << Form("pdf_gg                                 lnN    -     -     -     -     -     -   %7.5f\n",1.0+pdfTotal[1]);

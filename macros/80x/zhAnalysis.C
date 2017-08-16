@@ -19,136 +19,17 @@ zhAnalysis::zhAnalysis(string subdirectory_) {
 zhAnalysis::~zhAnalysis() {}
 
 void zhAnalysis::Run(
-  bool verbose
+  bool verbose, int nJetsType_/*=1*/, int typeSel_/*=3*/
 ) {
-  // File instances on EOS
-  // These paths are OUT OF DATE! ~DGH Aug 1 2017
-  TString filesPathDA   = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/met_";
-  TString filesPathMC   = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/met_";
-  TString filesPathMC2  = "root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/ceballos/Nero/output_80x/mc/met_";
-  TString filesPathDMMC = "root://eoscms.cern.ch//eos/cms/store/caf/user/ceballos/Nero/output_80x/";
-  // File instances on T3 hadoop
-  if(isMIT){
-    filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
-    filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
-  }
-
+  if(nInputFiles==0) { printf("Error in zhAnalysis::Run: no input files loaded (call zhAnalysis::LoadFlatFiles first)\n"); return; }
+  
   Int_t period = 1;
   TString processTag = "";
-
-
   TString zjetsTemplatesPath = "";
-
-  
-  char finalStateName[2],effMName[10],effEName[10],momMName[10],momEName[10];
-  sprintf(effMName,"CMS_eff2016_m");sprintf(momMName,"CMS_scale2016_m");
-  sprintf(effEName,"CMS_eff2016_e");sprintf(momEName,"CMS_scale2016_e");
-  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
-  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
-  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
-  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
-  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
-  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
-  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
-  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
-  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
-  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
-  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
-  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
-  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
-  
-  // Comment out this B-tagging stuff for now? Not sure what we need it for, maybe we are covered already by PandaLeptonicAnalyzer? ~DGH
-  //double denBTagging[5][5][3],jetEpsBtagMEDIUM[5][5][3];
-  //double numBTaggingMEDIUM[5][5][3];
-  //for(int i0=0; i0<5; i0++) {
-  //  for(int i1=0; i1<5; i1++) {
-  //    for(int i2=0; i2<3; i2++) {
-  //      denBTagging[i0][i1][i2] = 0.0;
-  //      numBTaggingMEDIUM[i0][i1][i2] = 0.0;
-  //  if     (i2==BTagEntry::FLAV_B)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagBMEDIUM[i0][i1];
-  //  else if(i2==BTagEntry::FLAV_C)    jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagCMEDIUM[i0][i1];
-  //  else if(i2==BTagEntry::FLAV_UDSG) jetEpsBtagMEDIUM[i0][i1][i2] = jetEpsBtagLMEDIUM[i0][i1];
-  //    }
-  //  }
-  //}
-
-  //Float_t fMVACut[4][4];
-  //InitializeJetIdCuts(fMVACut);
-  
-  BTagCalibration2 *btagCalib = new BTagCalibration2("csvv2","MitAnalysisRunII/data/80x/CSVv2_Moriond17_B_H.csv");
-  BTagCalibration2Reader btagReaderBCMEDIUM(btagCalib,BTagEntry::OP_MEDIUM,"comb","central");
-  BTagCalibration2Reader btagReaderLMEDIUM(btagCalib,BTagEntry::OP_MEDIUM,"incl","central");
-  BTagCalibration2Reader btagReaderBCMEDIUMUP(btagCalib,BTagEntry::OP_MEDIUM,"comb","up");
-  BTagCalibration2Reader btagReaderLMEDIUMUP(btagCalib,BTagEntry::OP_MEDIUM,"incl","up");
-  BTagCalibration2Reader btagReaderBCMEDIUMDOWN(btagCalib,BTagEntry::OP_MEDIUM,"comb","down");
-  BTagCalibration2Reader btagReaderLMEDIUMDOWN(btagCalib,BTagEntry::OP_MEDIUM,"incl","down");
-
   LeptonScaleLookup trigLookup(Form("MitAnalysisRunII/data/76x/scalefactors_hww.root"));
-
-  TFile *fTrackElectronReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_37ifb.root"));
-  TH2D *fhDeltrksf= (TH2D*)(fTrackElectronReco_SF->Get("scalefactors_Reco_Electron")); assert(fhDeltrksf); fhDeltrksf->SetDirectory(0);
-  delete fTrackElectronReco_SF;
-
-  TFile *fElSF = TFile::Open(Form("MitAnalysisRunII/data/80x/scalefactors_80x_egpog_37ifb.root"));
-  TH2D *fhDElMediumSF = (TH2D*)(fElSF->Get("scalefactors_Medium_Electron"));
-  TH2D *fhDElTightSF = (TH2D*)(fElSF->Get("scalefactors_Tight_Electron"));
-  assert(fhDElMediumSF);
-  assert(fhDElTightSF);
-  fhDElMediumSF->SetDirectory(0);
-  fhDElTightSF->SetDirectory(0);
-  delete fElSF;
-
-  TFile *fElVeryTightSF = TFile::Open(Form("MitAnalysisRunII/data/80x/veryTightSF_37ifb.root"));
-  TH1D *fhDVeryTightSF = (TH1D*)(fElVeryTightSF->Get("veryTightSF"));
-  assert(fhDVeryTightSF);
-  fhDVeryTightSF->SetDirectory(0);
-  delete fElVeryTightSF;
-
-  TFile *fTrackMuonReco_SF = TFile::Open(Form("MitAnalysisRunII/data/80x/Tracking_EfficienciesAndSF_BCDEFGH.root"));
-  TH1D *fhDmutrksfptg10 = (TH1D*)(fTrackMuonReco_SF->Get("ratio_eff_eta3_dr030e030_corr")); assert(fhDmutrksfptg10); fhDmutrksfptg10->SetDirectory(0);
-  delete fTrackMuonReco_SF;
-
-  TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/muon_scalefactors_37ifb.root"));
-  TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("scalefactors_TightId_Muon")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
-  //TFile *fMuSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonID_Z_RunBCD_prompt80X_7p65.root"));
-  //TH2D *fhDMuMediumSF = (TH2D*)(fMuSF->Get("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuMediumSF); fhDMuMediumSF->SetDirectory(0);
-  delete fMuSF;
-
-  TFile *fMuIsoSF = TFile::Open(Form("MitAnalysisRunII/data/80x/muon_scalefactors_37ifb.root"));
-  TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("scalefactors_Iso_MuonTightId")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
-  //TFile *fMuIsoSF = TFile::Open(Form("MitAnalysisRunII/data/80x/MuonIso_Z_RunBCD_prompt80X_7p65.root"));
-  //TH2D *fhDMuIsoSF = (TH2D*)(fMuIsoSF->Get("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio")); assert(fhDMuIsoSF); fhDMuIsoSF->SetDirectory(0);
-  delete fMuIsoSF;
-
-  TFile *fZHEwkCorr = TFile::Open(Form("MitAnalysisRunII/data/80x/Zll_nloEWK_weight_unnormalized.root"));
-  TH1D *fhDZHEwkCorr     = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_rebin"));      assert(fhDZHEwkCorr);     fhDZHEwkCorr    ->SetDirectory(0);
-  TH1D *fhDZHEwkCorrUp   = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_up_rebin"));   assert(fhDZHEwkCorrUp);   fhDZHEwkCorrUp  ->SetDirectory(0);
-  TH1D *fhDZHEwkCorrDown = (TH1D*)(fZHEwkCorr->Get("SignalWeight_nloEWK_down_rebin")); assert(fhDZHEwkCorrDown); fhDZHEwkCorrDown->SetDirectory(0);
-  delete fZHEwkCorr;
-
   TString ECMsb  = "13TeV2016";
   
-  // MVA variable types:
-  // 1: MET only
-  // 2: MET x mll
-  // 3: classifier only
-  // 4: MET x classifier
-
-  //const int MVAVarType = 0; const int nBinMVA = 8; Double_t xbins[nBinMVA+1] = {0, 50, 200, 250, 300, 400, 600, 800, 1000}; TString addChan = "";
-  const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600}; TString addChan = "1";
-  //const int MVAVarType = 2; const int nBinMVA = 20; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-  //                                                                                         1125,1150,1175,1200,1250,1350,
-  //                                                                                             2125,2150,2175,2200,2250,2350}; TString addChan = "2";
-  //const int MVAVarType = 3; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] =  {-2, -1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; TString addChan = "3";
-  //const int MVAVarType = 4; const int nBinMVA = 26; Double_t xbins[nBinMVA+1] = {0, 50, 100, 125, 150, 175, 200, 250, 350,
-  //                                                                                         1125,1150,1175,1200,1250,1350,
-  //                                                                                         2125,2150,2175,2200,2250,2350,
-  //                                                                                         3125,3150,3175,3200,3250,3350}; TString addChan = "4";
-  
   if (MVAVarType==3 || MVAVarType==4) useBDT=true;
-
   TH1D* histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins);
   histoMVA->Sumw2();
 
@@ -369,38 +250,38 @@ void zhAnalysis::Run(
     histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[nb] ->Sumw2();
   }
 
-  TH1D* histo_VVV_CMS_MVALepEffMBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effMName)  , Form("histo_VVV_%sUp",effMName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  TH1D* histo_VVV_CMS_MVALepEffMBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effMName), Form("histo_VVV_%sDown",effMName), nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingDown->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effMName)  , Form("histo_WZ_%sUp",effMName)  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effMName), Form("histo_WZ_%sDown",effMName), nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingDown->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effMName)  , Form("histo_ZZ_%sUp",effMName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effMName), Form("histo_ZZ_%sDown",effMName), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingDown->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effMName)  , Form("histo_ggZH_hinv_%sUp",effMName)  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effMName), Form("histo_ggZH_hinv_%sDown",effMName), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effMName.Data())  , Form("histo_VVV_%sUp",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effMName.Data()), Form("histo_VVV_%sDown",effMName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effMName.Data())  , Form("histo_WZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effMName.Data()), Form("histo_WZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effMName.Data())  , Form("histo_ZZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effMName.Data()), Form("histo_ZZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effMName.Data())  , Form("histo_ggZH_hinv_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effMName.Data()), Form("histo_ggZH_hinv_%sDown",effMName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingDown->Sumw2();
   TH1D* histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nSigModels]; 
   TH1D* histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nSigModels];
 
-  TH1D* histo_VVV_CMS_MVALepEffMBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effMName)  , Form("histo_VVV_%sAvg",effMName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effMName)  , Form("histo_WZ_%sAvg",effMName)  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effMName)  , Form("histo_ZZ_%sAvg",effMName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effMName)  , Form("histo_ggZH_hinv_%sAvg",effMName)  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffMBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effMName.Data())  , Form("histo_VVV_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effMName.Data())  , Form("histo_WZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effMName.Data())  , Form("histo_ZZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  ->Sumw2();
   TH1D* histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nSigModels];
 
-  TH1D* histo_VVV_CMS_MVALepEffEBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effEName)  , Form("histo_VVV_%sUp",effEName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  TH1D* histo_VVV_CMS_MVALepEffEBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effEName), Form("histo_VVV_%sDown",effEName), nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingDown->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effEName)  , Form("histo_WZ_%sUp",effEName)  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effEName), Form("histo_WZ_%sDown",effEName), nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingDown->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effEName)  , Form("histo_ZZ_%sUp",effEName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effEName), Form("histo_ZZ_%sDown",effEName), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingDown->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effEName)  , Form("histo_ggZH_hinv_%sUp",effEName)  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effEName), Form("histo_ggZH_hinv_%sDown",effEName), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effEName.Data())  , Form("histo_VVV_%sUp",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effEName.Data()), Form("histo_VVV_%sDown",effEName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effEName.Data())  , Form("histo_WZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effEName.Data()), Form("histo_WZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effEName.Data())  , Form("histo_ZZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effEName.Data()), Form("histo_ZZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingDown->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effEName.Data())  , Form("histo_ggZH_hinv_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effEName.Data()), Form("histo_ggZH_hinv_%sDown",effEName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Sumw2();
   TH1D* histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nSigModels];  
   TH1D* histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nSigModels];
 
-  TH1D* histo_VVV_CMS_MVALepEffEBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effEName)  , Form("histo_VVV_%sAvg",effEName)  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  TH1D* histo_WZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effEName)  , Form("histo_WZ_%sAvg",effEName)  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  TH1D* histo_ZZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effEName)  , Form("histo_ZZ_%sAvg",effEName)  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effEName)  , Form("histo_ggZH_hinv_%sAvg",effEName)  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_VVV_CMS_MVALepEffEBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effEName.Data())  , Form("histo_VVV_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_WZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effEName.Data())  , Form("histo_WZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_ZZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effEName.Data())  , Form("histo_ZZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  TH1D* histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  ->Sumw2();
   TH1D* histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nSigModels];
 
   TH1D* histo_VVV_CMS_MVAMETBoundingUp           = new TH1D( Form("histo_VVV_CMS_scale_metUp")  , Form("histo_VVV_CMS_scale_metUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
@@ -503,12 +384,12 @@ void zhAnalysis::Run(
   TH1D* histo_Zjets_CMS_ZjetsSystDown           = new TH1D( Form("histo_Zjets_ZjetsSystDown"), Form("histo_Zjets_ZjetsSystDown"), nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystDown->Sumw2();
 
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effMName), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effMName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]         = new TH1D( Form("histo_ZH_hinv_%s_%sUp",                   signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sUp"  ,           signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_%sDown",            signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sDown",           signalName_[nModel].Data(), effEName), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effEName), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effEName)  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effMName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]         = new TH1D( Form("histo_ZH_hinv_%s_%sUp",                   signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sUp"  ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_%sDown",            signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sDown",           signalName_[nModel].Data(), effEName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
     histo_ZH_hinv_CMS_MVAMETBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]  ->Sumw2();
     histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
     histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
@@ -2603,11 +2484,11 @@ void zhAnalysis::Run(
       newcardShape << Form("process 0 1 2 3 4 5 -1\n");
       newcardShape << Form("rate %8.5f %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n",histo_ZH_hinv[nModel]->GetBinContent(nb),histo_Zjets->GetBinContent(nb),TMath::Max(histo_VVV->GetBinContent(nb),0.0),histo_WZ->GetBinContent(nb),histo_ZZ->GetBinContent(nb),histo_EM->GetBinContent(nb),nggZHEvt);
       newcardShape << Form("lumi_%4s                               lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",ECMsb.Data(),lumiE,lumiE,lumiE,lumiE,lumiE);                     
-      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName,systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
-      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName,systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
+      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effMName.Data(),systLepEffM[0],systLepEffM[1],systLepEffM[2],systLepEffM[3],systLepEffM[4]);
+      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",effEName.Data(),systLepEffE[0],systLepEffE[1],systLepEffE[2],systLepEffE[3],systLepEffE[4]);
       if(MVAVarType != 3) {
-      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momMName,systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
-      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momEName,systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
+      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momMName.Data(),systLepResM[0],systLepResM[1],systLepResM[2],systLepResM[3],systLepResM[4]);
+      newcardShape << Form("%s                                     lnN  %7.5f   -   %7.5f %7.5f %7.5f   -   %7.5f\n",momEName.Data(),systLepResE[0],systLepResE[1],systLepResE[2],systLepResE[3],systLepResE[4]);
       }
       newcardShape << Form("CMS_pu2016                             lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systPUUp[0],systPUDown[0],systPUUp[1],systPUDown[1],systPUUp[2],systPUDown[2],systPUUp[3],systPUDown[3],systPUUp[0],systPUDown[0]); // 0 --> 4
       newcardShape << Form("CMS_scale_met                          lnN  %7.5f/%7.5f   -   %7.5f/%7.5f %7.5f/%7.5f %7.5f/%7.5f   -   %7.5f/%7.5f\n",systMetUp[0],systMetDown[0],systMetUp[1],systMetDown[1],systMetUp[2],systMetDown[2],systMetUp[3],systMetDown[3],systMetUp[0],systMetDown[0]); // 0 --> 4
@@ -2688,8 +2569,23 @@ void zhAnalysis::Run(
   } // end loop over models
   
 }
+void zhAnalysis::SetFinalStateName() {
+  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
+  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
+  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
+  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
+  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
+  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
+  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
+  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
+  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
+  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
+  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
+  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
+  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
+}
 
-void zhAnalysis::loadFlatFiles(bool doDM) {
+void zhAnalysis::LoadFlatFiles(bool doDM) {
   printf("Begin loading flat input files (zhAnalysis::loadFlatFiles)\n");
   //*******************************************************
   //Input Files
@@ -3006,3 +2902,5 @@ void zhAnalysis::loadFlatFiles(bool doDM) {
   nInputFiles=(unsigned)inputFlatFiles.size();
   printf("Finished loading flat input files.\n");
 }
+
+

@@ -1,8 +1,5 @@
-//#include "MitAnalysisRunII/macros/80x/BTagCalibrationStandalone.cc"
 #include "MitAnalysisRunII/macros/LeptonScaleLookup.cc"
 #include "MitZHAnalysis/macros/80x/zhAnalysis.h"
-
-// 0 == sm, 7 == mh500, 24 = A_Mx-150_Mv-500, 55 == V_Mx-150_Mv-500
 
 // zhAnalysis Constructor
 // sets up the subdirectory output and the random toy seed
@@ -20,14 +17,23 @@ zhAnalysis::zhAnalysis(string subdirectory_) {
   return;                                                                                                             
 }
 
-// Blank destructor
-zhAnalysis::~zhAnalysis() {}
 
 void zhAnalysis::Run(
-  bool verbose, int nJetsType_/*=1*/, int typeSel_/*=3*/
+  bool verbose_/*=false*/, int nJetsType_/*=1*/, int typeSel_/*=3*/, int plotModel_/*=0*/
 ) {
-  if(nInputFiles==0) { printf("Error in zhAnalysis::Run: no input files loaded (call zhAnalysis::LoadFlatFiles first)\n"); return; }
+  printf("zhAnalysis::Run : Begin running the whole analysis\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
   
+  verbose=verbose_;
+  nJetsType=nJetsType_;
+  typeSel=typeSel_;
+  plotModel=plotModel_;
+
+  if(nInputFiles==0) assert(LoadFlatFiles());
+  assert(MakeHistos());
+  if(nInputFiles==0) { printf("Error in zhAnalysis::Run: no input files loaded (problem with zhAnalysis::LoadFlatFiles)\n"); return; }
+  SetFinalStateName();
+
   TString processTag = "";
 
   TH1D *fhDZjets;
@@ -138,242 +144,12 @@ void zhAnalysis::Run(
     reader->BookMVA("BDT", the_BDT_weights);
   }
   
-  float bdt_toy_scale[num_bdt_toys];
-  TRandom3 toy_machine(randomToySeed); // Random seed is Dylan's birthday :-)
-  TFile* cached_BDT_systematics;
+  // Either set up the random BDT toys or load the cached systematics here
   if (useBDT) { 
-    char inputCachedBDTSysts[200]; // Filename for the cached bdt systematics, we will either read them from here or write fresh ones to here
-    sprintf(inputCachedBDTSysts,"MitZHAnalysis/plots%s/zll%shinv%s_%s_BDTsyst_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[plotModel].Data(), ECMsb.Data());
-    if(useCachedBDTSystematics) {
-      printf("Opening file with cached BDT systematics: \"%s\"\n", inputCachedBDTSysts);
-      cached_BDT_systematics = new TFile(inputCachedBDTSysts,"read"); assert(cached_BDT_systematics->IsOpen());
-      bdt_syst_electronScaleUp_VVV       = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_VVV"      );
-      bdt_syst_electronScaleUp_WZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_WZ"       );
-      bdt_syst_electronScaleUp_ZZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_ZZ"       );
-      bdt_syst_electronScaleUp_ggZH_hinv = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleUp_ggZH_hinv");
-      bdt_syst_electronScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_muonScaleUp_VVV           = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_VVV"          );
-      bdt_syst_muonScaleUp_WZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_WZ"           );
-      bdt_syst_muonScaleUp_ZZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_ZZ"           );
-      bdt_syst_muonScaleUp_ggZH_hinv     = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleUp_ggZH_hinv"    );
-      bdt_syst_muonScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_METScaleUp_VVV            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_VVV"           );
-      bdt_syst_METScaleUp_WZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_WZ"            );
-      bdt_syst_METScaleUp_ZZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_ZZ"            );
-      bdt_syst_METScaleUp_ggZH_hinv      = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleUp_ggZH_hinv"     );
-      bdt_syst_METScaleUp_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_electronScaleDown_VVV       = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_VVV"      );
-      bdt_syst_electronScaleDown_WZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_WZ"       );
-      bdt_syst_electronScaleDown_ZZ        = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_ZZ"       );
-      bdt_syst_electronScaleDown_ggZH_hinv = (TH1F*) cached_BDT_systematics->Get("bdt_syst_electronScaleDown_ggZH_hinv");
-      bdt_syst_electronScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_muonScaleDown_VVV           = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_VVV"          );
-      bdt_syst_muonScaleDown_WZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_WZ"           );
-      bdt_syst_muonScaleDown_ZZ            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_ZZ"           );
-      bdt_syst_muonScaleDown_ggZH_hinv     = (TH1F*) cached_BDT_systematics->Get("bdt_syst_muonScaleDown_ggZH_hinv"    );
-      bdt_syst_muonScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_METScaleDown_VVV            = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_VVV"           );
-      bdt_syst_METScaleDown_WZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_WZ"            );
-      bdt_syst_METScaleDown_ZZ             = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_ZZ"            );
-      bdt_syst_METScaleDown_ggZH_hinv      = (TH1F*) cached_BDT_systematics->Get("bdt_syst_METScaleDown_ggZH_hinv"     );
-      bdt_syst_METScaleDown_ZH_hinv[plotModel] = (TH1F*) cached_BDT_systematics->Get(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
-      bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
-      bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
-      bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
-      bdt_syst_electronScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
-      bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
-      bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
-      bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
-      bdt_syst_muonScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
-      bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
-      bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
-      bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
-      bdt_syst_METScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
-      bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
-      bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
-      bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
-      bdt_syst_electronScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
-      bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
-      bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
-      bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
-      bdt_syst_muonScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
-      bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
-      bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
-      bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
-      bdt_syst_METScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
-      cached_BDT_systematics->Close();
-      bdt_toy_envelope_electronScale_VVV       = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_VVV"      );
-      bdt_toy_envelope_electronScale_WZ        = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_WZ"       );
-      bdt_toy_envelope_electronScale_ZZ        = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_ZZ"       );
-      bdt_toy_envelope_electronScale_ggZH_hinv = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_electronScale_ggZH_hinv");
-      bdt_toy_envelope_electronScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_toy_envelope_muonScale_VVV           = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_VVV"          );
-      bdt_toy_envelope_muonScale_WZ            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_WZ"           );
-      bdt_toy_envelope_muonScale_ZZ            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_ZZ"           );
-      bdt_toy_envelope_muonScale_ggZH_hinv     = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_muonScale_ggZH_hinv"    );
-      bdt_toy_envelope_muonScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_toy_envelope_METScale_VVV            = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_VVV"           );
-      bdt_toy_envelope_METScale_WZ             = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_WZ"            );
-      bdt_toy_envelope_METScale_ZZ             = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_ZZ"            );
-      bdt_toy_envelope_METScale_ggZH_hinv      = (TH2F*) cached_BDT_systematics->Get("bdt_toy_envelope_METScale_ggZH_hinv"     );
-      bdt_toy_envelope_METScale_ZH_hinv[plotModel] = (TH2F*) cached_BDT_systematics->Get(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[plotModel].Data()));
-      bdt_toy_envelope_electronScale_VVV       ->SetDirectory(0);
-      bdt_toy_envelope_electronScale_WZ        ->SetDirectory(0);
-      bdt_toy_envelope_electronScale_ZZ        ->SetDirectory(0);
-      bdt_toy_envelope_electronScale_ggZH_hinv ->SetDirectory(0);
-      bdt_toy_envelope_electronScale_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_toy_envelope_muonScale_VVV           ->SetDirectory(0);
-      bdt_toy_envelope_muonScale_WZ            ->SetDirectory(0);
-      bdt_toy_envelope_muonScale_ZZ            ->SetDirectory(0);
-      bdt_toy_envelope_muonScale_ggZH_hinv     ->SetDirectory(0);
-      bdt_toy_envelope_muonScale_ZH_hinv[plotModel] ->SetDirectory(0);
-      bdt_toy_envelope_METScale_VVV            ->SetDirectory(0);
-      bdt_toy_envelope_METScale_WZ             ->SetDirectory(0);
-      bdt_toy_envelope_METScale_ZZ             ->SetDirectory(0);
-      bdt_toy_envelope_METScale_ggZH_hinv      ->SetDirectory(0);
-      bdt_toy_envelope_METScale_ZH_hinv[plotModel] ->SetDirectory(0);
-      cached_BDT_systematics->Close();
-    } else { // If not using cached BDT systematics, construct all of the histos we are going to use to compute them
-      cached_BDT_systematics = new TFile(inputCachedBDTSysts,"recreate");
-      assert(cached_BDT_systematics->IsOpen());
-      bdt_toy_envelope_electronScale_VVV        = new TH2F("bdt_toy_envelope_electronScale_VVV"       , "bdt_toy_envelope_electronScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_electronScale_WZ         = new TH2F("bdt_toy_envelope_electronScale_WZ"        , "bdt_toy_envelope_electronScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_electronScale_ZZ         = new TH2F("bdt_toy_envelope_electronScale_ZZ"        , "bdt_toy_envelope_electronScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_electronScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_electronScale_ggZH_hinv" , "bdt_toy_envelope_electronScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_muonScale_VVV        = new TH2F("bdt_toy_envelope_muonScale_VVV"       , "bdt_toy_envelope_muonScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_muonScale_WZ         = new TH2F("bdt_toy_envelope_muonScale_WZ"        , "bdt_toy_envelope_muonScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_muonScale_ZZ         = new TH2F("bdt_toy_envelope_muonScale_ZZ"        , "bdt_toy_envelope_muonScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_muonScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_muonScale_ggZH_hinv" , "bdt_toy_envelope_muonScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_METScale_VVV        = new TH2F("bdt_toy_envelope_METScale_VVV"       , "bdt_toy_envelope_METScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_METScale_WZ         = new TH2F("bdt_toy_envelope_METScale_WZ"        , "bdt_toy_envelope_METScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_METScale_ZZ         = new TH2F("bdt_toy_envelope_METScale_ZZ"        , "bdt_toy_envelope_METScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
-      bdt_toy_envelope_METScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_METScale_ggZH_hinv" , "bdt_toy_envelope_METScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
-      histo_bdt_toys_electronScale_VVV       = new TH2F("histo_bdt_toys_electronScale_VVV"      , "histo_bdt_toys_electronScale_VVV"       , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_VVV->Sumw2();
-      histo_bdt_toys_electronScale_WZ        = new TH2F("histo_bdt_toys_electronScale_WZ"       , "histo_bdt_toys_electronScale_WZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_WZ->Sumw2();
-      histo_bdt_toys_electronScale_ZZ        = new TH2F("histo_bdt_toys_electronScale_ZZ"       , "histo_bdt_toys_electronScale_ZZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZZ->Sumw2();
-      histo_bdt_toys_electronScale_ggZH_hinv = new TH2F("histo_bdt_toys_electronScale_ggZH_hinv", "histo_bdt_toys_electronScale_ggZH_hinv" , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ggZH_hinv->Sumw2();
-      histo_bdt_toys_muonScale_VVV           = new TH2F("histo_bdt_toys_muonScale_VVV"          , "histo_bdt_toys_muonScale_VVV"           , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_VVV->Sumw2();
-      histo_bdt_toys_muonScale_WZ            = new TH2F("histo_bdt_toys_muonScale_WZ"           , "histo_bdt_toys_muonScale_WZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_WZ->Sumw2();
-      histo_bdt_toys_muonScale_ZZ            = new TH2F("histo_bdt_toys_muonScale_ZZ"           , "histo_bdt_toys_muonScale_ZZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZZ->Sumw2();
-      histo_bdt_toys_muonScale_ggZH_hinv     = new TH2F("histo_bdt_toys_muonScale_ggZH_hinv"    , "histo_bdt_toys_muonScale_ggZH_hinv"     , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ggZH_hinv->Sumw2();
-      histo_bdt_toys_METScale_VVV            = new TH2F("histo_bdt_toys_METScale_VVV"           , "histo_bdt_toys_METScale_VVV"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_VVV->Sumw2();
-      histo_bdt_toys_METScale_WZ             = new TH2F("histo_bdt_toys_METScale_WZ"            , "histo_bdt_toys_METScale_WZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_WZ->Sumw2();
-      histo_bdt_toys_METScale_ZZ             = new TH2F("histo_bdt_toys_METScale_ZZ"            , "histo_bdt_toys_METScale_ZZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZZ->Sumw2();
-      histo_bdt_toys_METScale_ggZH_hinv      = new TH2F("histo_bdt_toys_METScale_ggZH_hinv"     , "histo_bdt_toys_METScale_ggZH_hinv"      , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ggZH_hinv->Sumw2();
-      bdt_syst_electronScaleUp_VVV       = new TH1F("bdt_syst_electronScaleUp_VVV", "bdt_syst_electronScaleUp_VVV", nBinMVA, xbins);
-      bdt_syst_electronScaleUp_WZ        = new TH1F("bdt_syst_electronScaleUp_WZ", "bdt_syst_electronScaleUp_WZ", nBinMVA, xbins);
-      bdt_syst_electronScaleUp_ZZ        = new TH1F("bdt_syst_electronScaleUp_ZZ", "bdt_syst_electronScaleUp_ZZ", nBinMVA, xbins);
-      bdt_syst_electronScaleUp_ggZH_hinv = new TH1F("bdt_syst_electronScaleUp_ggZH_hinv", "bdt_syst_electronScaleUp_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_muonScaleUp_VVV           = new TH1F("bdt_syst_muonScaleUp_VVV", "bdt_syst_muonScaleUp_VVV", nBinMVA, xbins);
-      bdt_syst_muonScaleUp_WZ            = new TH1F("bdt_syst_muonScaleUp_WZ", "bdt_syst_muonScaleUp_WZ", nBinMVA, xbins);
-      bdt_syst_muonScaleUp_ZZ            = new TH1F("bdt_syst_muonScaleUp_ZZ", "bdt_syst_muonScaleUp_ZZ", nBinMVA, xbins);
-      bdt_syst_muonScaleUp_ggZH_hinv     = new TH1F("bdt_syst_muonScaleUp_ggZH_hinv", "bdt_syst_muonScaleUp_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_METScaleUp_VVV            = new TH1F("bdt_syst_METScaleUp_VVV", "bdt_syst_METScaleUp_VVV", nBinMVA, xbins);
-      bdt_syst_METScaleUp_WZ             = new TH1F("bdt_syst_METScaleUp_WZ", "bdt_syst_METScaleUp_WZ", nBinMVA, xbins);
-      bdt_syst_METScaleUp_ZZ             = new TH1F("bdt_syst_METScaleUp_ZZ", "bdt_syst_METScaleUp_ZZ", nBinMVA, xbins);
-      bdt_syst_METScaleUp_ggZH_hinv      = new TH1F("bdt_syst_METScaleUp_ggZH_hinv", "bdt_syst_METScaleUp_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_electronScaleDown_VVV       = new TH1F("bdt_syst_electronScaleDown_VVV", "bdt_syst_electronScaleDown_VVV", nBinMVA, xbins);
-      bdt_syst_electronScaleDown_WZ        = new TH1F("bdt_syst_electronScaleDown_WZ", "bdt_syst_electronScaleDown_WZ", nBinMVA, xbins);
-      bdt_syst_electronScaleDown_ZZ        = new TH1F("bdt_syst_electronScaleDown_ZZ", "bdt_syst_electronScaleDown_ZZ", nBinMVA, xbins);
-      bdt_syst_electronScaleDown_ggZH_hinv = new TH1F("bdt_syst_electronScaleDown_ggZH_hinv", "bdt_syst_electronScaleDown_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_muonScaleDown_VVV           = new TH1F("bdt_syst_muonScaleDown_VVV", "bdt_syst_muonScaleDown_VVV", nBinMVA, xbins);
-      bdt_syst_muonScaleDown_WZ            = new TH1F("bdt_syst_muonScaleDown_WZ", "bdt_syst_muonScaleDown_WZ", nBinMVA, xbins);
-      bdt_syst_muonScaleDown_ZZ            = new TH1F("bdt_syst_muonScaleDown_ZZ", "bdt_syst_muonScaleDown_ZZ", nBinMVA, xbins);
-      bdt_syst_muonScaleDown_ggZH_hinv     = new TH1F("bdt_syst_muonScaleDown_ggZH_hinv", "bdt_syst_muonScaleDown_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_METScaleDown_VVV            = new TH1F("bdt_syst_METScaleDown_VVV", "bdt_syst_METScaleDown_VVV", nBinMVA, xbins);
-      bdt_syst_METScaleDown_WZ             = new TH1F("bdt_syst_METScaleDown_WZ", "bdt_syst_METScaleDown_WZ", nBinMVA, xbins);
-      bdt_syst_METScaleDown_ZZ             = new TH1F("bdt_syst_METScaleDown_ZZ", "bdt_syst_METScaleDown_ZZ", nBinMVA, xbins);
-      bdt_syst_METScaleDown_ggZH_hinv      = new TH1F("bdt_syst_METScaleDown_ggZH_hinv", "bdt_syst_METScaleDown_ggZH_hinv", nBinMVA, xbins);
-      bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
-      bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
-      bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
-      bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
-      bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
-      bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
-      bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
-      bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
-      bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
-      bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
-      bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
-      bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
-      bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
-      bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
-      bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
-      bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
-      bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
-      bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
-      bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
-      bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
-      bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
-      bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
-      bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
-      bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
-      for(int nModel=0; nModel<nSigModels; nModel++) { 
-        bdt_toy_envelope_electronScale_ZH_hinv[nModel] = new TH2F(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
-        bdt_toy_envelope_muonScale_ZH_hinv[nModel]     = new TH2F(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
-        bdt_toy_envelope_METScale_ZH_hinv[nModel]      = new TH2F(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
-        histo_bdt_toys_electronScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZH_hinv[nModel]->Sumw2();
-        histo_bdt_toys_muonScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZH_hinv[nModel]->Sumw2();
-        histo_bdt_toys_METScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZH_hinv[nModel]->Sumw2();
-        bdt_syst_electronScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_muonScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_METScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_electronScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_muonScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_METScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
-        bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
-        bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
-        bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
-        bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
-        bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
-        bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
-      }
-      for(int nb=1; nb<nBinMVA; nb++) {  
-        bdt_syst_electronScaleUp_VVV       ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleUp_WZ        ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleUp_ZZ        ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleUp_ggZH_hinv ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleUp_VVV           ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleUp_WZ            ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleUp_ZZ            ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleUp_ggZH_hinv     ->SetBinContent(nb,1.);
-        bdt_syst_METScaleUp_VVV            ->SetBinContent(nb,1.);
-        bdt_syst_METScaleUp_WZ             ->SetBinContent(nb,1.);
-        bdt_syst_METScaleUp_ZZ             ->SetBinContent(nb,1.);
-        bdt_syst_METScaleUp_ggZH_hinv      ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleDown_VVV       ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleDown_WZ        ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleDown_ZZ        ->SetBinContent(nb,1.);
-        bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleDown_VVV           ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleDown_WZ            ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleDown_ZZ            ->SetBinContent(nb,1.);
-        bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb,1.);
-        bdt_syst_METScaleDown_VVV            ->SetBinContent(nb,1.);
-        bdt_syst_METScaleDown_WZ             ->SetBinContent(nb,1.);
-        bdt_syst_METScaleDown_ZZ             ->SetBinContent(nb,1.);
-        bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb,1.);
-        for(int nModel=0; nModel<nSigModels; nModel++) {
-          bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-          bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-          bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-          bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-          bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-          bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
-        }
-      }
-      // Store a value from Gaussian distribution with mean=0, sigma=1
-      // These values will get multiplied by the individual nuisance sizes
-      for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
-        bdt_toy_scale[i_toy]=toy_machine.Gaus(0,1);
-      }
-    }
+    // Filename for the cached bdt systematics, we will either read them from here or write fresh ones to here 
+    sprintf(filenameBDTSysts,"MitZHAnalysis/plots%s/zll%shinv%s_%s_BDTsyst_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[plotModel].Data(), ECMsb.Data());
+    if(useCachedBDTSystematics) LoadCachedBDTSystematics();
+    else                        SetupBDTSystematics();
   }
 
   unsigned int numberOfLeptons = 2;
@@ -1321,7 +1097,6 @@ void zhAnalysis::Run(
          bgdDecay[0][SIGSEL+nSelTypes*3][1],sqrt(weiDecay[0][SIGSEL+nSelTypes*3][4]),
          bgdDecay[0][SIGSEL][1]*NemFact[2]  ,sqrt(weiDecay[0][SIGSEL][4])*NemFact[2],bgdDecay[0][SIGSEL][0],EMbkg,EMSystTotal[2],EMSyst[0][2],EMSyst[1][2],sqrt(EMSystTotal[2]*EMSystTotal[2] - EMSyst[0][2]*EMSyst[0][2] - EMSyst[1][2]*EMSyst[1][2]));
 
-  double systEM[2] = {1.0, 1.0};
   if(histo_EM->GetSumOfWeights() > 1) systEM[0] = 1. + 1./sqrt(histo_EM->GetSumOfWeights());
   else                                systEM[0] = 2.;
   if(useEMFromData == true && histo_Data->GetSumOfWeights() > 0.0){
@@ -1440,17 +1215,7 @@ void zhAnalysis::Run(
   histo[allPlots-1][6]->Add(histo_ZH_hinv[plotModel]);
   histo[allPlots-1][7]->Add(histo_ggZH_hinv);
   
-  double qcdScaleTotal[2] = {0.035, 0.231};
-  double pdfTotal[2] = {0.016, 0.051};
   
-  for(int thePlot=0; thePlot<allPlots; thePlot++){
-    char output[200];
-    sprintf(output,"MitZHAnalysis/plots%s/histo%szh%s_nice_%s_%d.root",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);          
-    TFile* outFilePlotsNote = new TFile(output,"recreate");
-    outFilePlotsNote->cd();
-    for(int np=0; np<processTypes; np++) histo[thePlot][np]->Write();
-    outFilePlotsNote->Close();
-  }
 
   for(int i=1; i<=histo_ZH_hinv[0]->GetNbinsX(); i++) {
     double factorUp = +1.0; double factorDown = -1.0;
@@ -1487,15 +1252,680 @@ void zhAnalysis::Run(
     }
 
   }
+  assert(SaveHistos());  
+  unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
+  printf("zhAnalysis::Run : Finished running the whole analysis (%lu seconds)\n", t2-t1);
+}
+void zhAnalysis::SetFinalStateName() {
+  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
+  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
+  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
+  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
+  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
+  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
+  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
+  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
+  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
+  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
+  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
+  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
+  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
+}
 
-  double process_syst[nSigModels][7];
-  double yield_processTypes[nSigModels][processTypes+1];
-  double stat_processTypes[nSigModels][processTypes+1];
-  double syst_processTypes[nSigModels][processTypes+1];
-  double syst_types_allBackground[28];
-  char outputLimits[200];
-  // Output the limits for all the models
+bool zhAnalysis::LoadFlatFiles(bool doDM) {
+  printf("zhAnalysis::LoadFlatFiles : Begin loading flat input files\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
+  //*******************************************************
+  //Input Files
+  //*******************************************************
+  // Data files - Macro Category 0
+  inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
+
+  // Begin MC backgrounds 
+    // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
+    inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sTT2L.root",filesPathMC.Data()),1,-1);
+    // Previously counted TTZToLLNuNu as VVV background? ~DGH
+    inputFlatFiles.emplace_back(Form("%sTTV.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sTW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sqqWW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sWGstar.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sWWdps.root",filesPathMC.Data()),1,-1);
+    // Include this one? Does it include (WGToLNuG) ? ~DGH
+    inputFlatFiles.emplace_back(Form("%sVG.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sH125.root",filesPathMC.Data()),1,-1);
+    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
+    // Missing WWW or included in VVV ? ~DGH
+    
+    // Drell-Yan / Z backgrounds - Macro Category 2
+    if(useDYPT==false){
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-10to50.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-50_LO.root",filesPathMC.Data()),2,-1);
+    }
+    else {
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt0To50.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt50To100.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt100To250.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt250To400.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt400To650.root",filesPathMC.Data()),2,-1);
+      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()),2,-1);
+      //inputFlatFiles.emplace_back(Form("%s",filesPathMC.Data()),2,-1);
+    }
+    // Include Z->tau tau ? ~DGH
+    inputFlatFiles.emplace_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()),2,-1);
+    // WZ backgrounds - Macro Category 3
+    inputFlatFiles.emplace_back(Form("%sWZ.root",filesPathMC.Data()),3,-1);
+    // ZZ Backgrounds - Macro Category 4
+    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
+    inputFlatFiles.emplace_back(Form("%sZZ.root",filesPathMC.Data()),4,-1);
+    // Triboson / VVV Backgrounds - Macro Category 5
+    // Does this include tZq? ~DGH
+    inputFlatFiles.emplace_back(Form("%sVVV.root",filesPathMC.Data()),5,-1);
+  // End MC backgrounds
+
+  // Monte Carlo signals
+  if(false){ // Model 0: standard model Higgs (125) with glu-glu
+    int mH=125;
+    signalName_.push_back("sm");
+    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
+    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
+    inputFlatFiles.emplace_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()),7,0);       
+  }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
+
+  if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
+    signalName_.push_back(Form("mh%d", mH));
+    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1); 
+    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1);
+    iH++;
+  }}
+
+  if(doDM){ 
+    int i=signalName_.size();
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
+  }
+
+  nSigModels=(unsigned)signalName_.size();
+  nInputFiles=(unsigned)inputFlatFiles.size();
+  assert(nSigModels<=500);
+  unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
+  printf("zhAnalysis::LoadFlatFiles : Finished getting list of flat input files (%lu seconds)\n", t2-t1);
+  return true;
+}
+
+bool zhAnalysis::MakeHistos() {
+  printf("zhAnalysis::MakeHistos start making histograms...\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
+  // Make plotting histos
+  TString plotName;
+  for(int thePlot=0; thePlot<allPlots; thePlot++) {
+    TH1D* histos = MakeHisto(thePlot, plotName);
+    plotName_[thePlot]=plotName;
+    for(int iType=0; iType<processTypes; iType++) histo[thePlot][iType] = (TH1D*) histos->Clone(Form("histo %s %s",categoryName_[iType].Data(), plotName.Data()));
+    histos->Reset();histos->Clear();
+  }
+  // Make MVA shape histos
+  histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins); histoMVA->Sumw2();
+  histo_Data     = (TH1D*) histoMVA->Clone("histo_Data");
+  histo_Zjets    = (TH1D*) histoMVA->Clone("histo_Zjets");         
+  histo_VVV      = (TH1D*) histoMVA->Clone("histo_VVV");         
+  histo_WZ       = (TH1D*) histoMVA->Clone("histo_WZ");         
+  histo_ZZ       = (TH1D*) histoMVA->Clone("histo_ZZ");
+  histo_EM       = (TH1D*) histoMVA->Clone("histo_EM");         
+  histo_ggZH_hinv= (TH1D*) histoMVA->Clone("histo_ggZH_hinv"); 
+  histo_ZjetsNoW    = (TH1D*) histoMVA->Clone("histo_Zjets");         
+  histo_VVVNoW      = (TH1D*) histoMVA->Clone("histo_VVV");         
+  histo_WZNoW       = (TH1D*) histoMVA->Clone("histo_WZ");         
+  histo_ZZNoW       = (TH1D*) histoMVA->Clone("histo_ZZ");
+  histo_EMNoW       = (TH1D*) histoMVA->Clone("histo_EM");         
+  histo_ggZH_hinvNoW= (TH1D*) histoMVA->Clone("histo_ggZH_hinv"); 
+  for(int nModel=0; nModel<nSigModels; nModel++) {
+    histo_ZH_hinv[nModel]     = (TH1D*) histoMVA->Clone(Form("histo_ZH_hinv_%s",   signalName_[nModel].Data())); 
+    histo_ZH_hinvNoW[nModel]  = (TH1D*) histoMVA->Clone(Form("histo_ZH_hinvNoW_%s",signalName_[nModel].Data())); 
+  }
+
+  // Make stat. bounding histos
+  for(int nModel=0; nModel<nSigModels; nModel++) {
+    histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]      = new TH1D( Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sUp"  ,finalStateName, signalName_[nModel].Data(), ECMsb.Data()), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sUp"  ,finalStateName, signalName_[nModel].Data(), ECMsb.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]    = new TH1D( Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sDown",finalStateName, signalName_[nModel].Data(), ECMsb.Data()), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sDown",finalStateName, signalName_[nModel].Data(), ECMsb.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]->Sumw2();
+  }
+  histo_Zjets_CMS_MVAZjetsStatBoundingUp     = new TH1D( Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Zjets_CMS_MVAZjetsStatBoundingUp  ->Sumw2();
+  histo_Zjets_CMS_MVAZjetsStatBoundingDown   = new TH1D( Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Zjets_CMS_MVAZjetsStatBoundingDown->Sumw2();
+  histo_VVV_CMS_MVAVVVStatBoundingUp         = new TH1D( Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVAVVVStatBoundingDown       = new TH1D( Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingDown->Sumw2();
+  histo_WZ_CMS_MVAWZStatBoundingUp           = new TH1D( Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_WZ_CMS_MVAWZStatBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVAWZStatBoundingDown         = new TH1D( Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_WZ_CMS_MVAWZStatBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVAZZStatBoundingUp           = new TH1D( Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVAZZStatBoundingDown         = new TH1D( Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingDown->Sumw2();
+  histo_EM_CMS_MVAEMStatBoundingUp           = new TH1D( Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_EM_CMS_MVAEMStatBoundingUp  ->Sumw2();
+  histo_EM_CMS_MVAEMStatBoundingDown         = new TH1D( Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_EM_CMS_MVAEMStatBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp  = new TH1D( Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown= new TH1D( Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown->Sumw2();
+
+  // Make QCD scale bounding histos
+  for(int nb=0; nb<6; nb++){
+    for(int nModel=0; nModel<nSigModels; nModel++) {
+      histo_ZH_hinv_CMS_QCDScaleBounding[nModel][nb]   = new TH1D(Form("histo_ZH_hinv_%s_QCDScale_f%d", signalName_[nModel].Data(), nb), Form("histo_ZH_hinv_%s_QCDScale_f%d", signalName_[nModel].Data(), nb),nBinMVA, xbins); histo_ZH_hinv_CMS_QCDScaleBounding[nModel][nb]->Sumw2();
+    }
+    histo_VVV_CMS_QCDScaleBounding[nb]       = new TH1D(Form("histo_VVV_QCDScale_f%d",nb),     Form("histo_VVV_QCDScale_f%d",nb),nBinMVA, xbins);     histo_VVV_CMS_QCDScaleBounding[nb]->Sumw2();
+    histo_WZ_CMS_QCDScaleBounding[nb]             = new TH1D(Form("histo_WZ_QCDScale_f%d",nb),      Form("histo_WZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_WZ_CMS_QCDScaleBounding[nb]->Sumw2();
+    histo_ZZ_CMS_QCDScaleBounding[nb]             = new TH1D(Form("histo_ZZ_QCDScale_f%d",nb),      Form("histo_ZZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_ZZ_CMS_QCDScaleBounding[nb]->Sumw2();
+    histo_ggZH_hinv_CMS_QCDScaleBounding[nb] = new TH1D(Form("histo_ggZH_hinv_QCDScale_f%d",nb), Form("histo_ggZH_hinv_QCDScale_f%d",nb),nBinMVA, xbins); histo_ggZH_hinv_CMS_QCDScaleBounding[nb]->Sumw2();
+  }
+  
+  // Make PDF bounding histos
+  for(int nModel=0; nModel<nSigModels; nModel++) {
+    histo_ZH_hinv_CMS_PDFUp[nModel]   = new TH1D(Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFUp[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_PDFDown[nModel] = new TH1D(Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFDown[nModel]->Sumw2();
+  }
+  histo_VVV_CMS_PDFUp         = new TH1D( "histo_VVV_PDFUp", "histo_VVV_PDFUp", nBinMVA, xbins); histo_VVV_CMS_PDFUp  ->Sumw2();
+  histo_VVV_CMS_PDFDown       = new TH1D( "histo_VVV_PDFDown", "histo_VVV_PDFDown", nBinMVA, xbins); histo_VVV_CMS_PDFDown->Sumw2();
+  histo_WZ_CMS_PDFUp          = new TH1D( "histo_WZ_PDFUp", "histo_WZ_PDFUp", nBinMVA, xbins); histo_WZ_CMS_PDFUp  ->Sumw2();
+  histo_WZ_CMS_PDFDown        = new TH1D( "histo_WZ_PDFDown", "histo_WZ_PDFDown", nBinMVA, xbins); histo_WZ_CMS_PDFDown->Sumw2();
+  histo_ZZ_CMS_PDFUp          = new TH1D( "histo_ZZ_PDFUp", "histo_ZZ_PDFUp", nBinMVA, xbins); histo_ZZ_CMS_PDFUp  ->Sumw2();
+  histo_ZZ_CMS_PDFDown        = new TH1D( "histo_ZZ_PDFDown", "histo_ZZ_PDFDown", nBinMVA, xbins); histo_ZZ_CMS_PDFDown->Sumw2();
+  histo_ggZH_hinv_CMS_PDFUp   = new TH1D( "histo_ggZH_hinv_PDFUp", "histo_ggZH_hinv_PDFUp", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_PDFDown = new TH1D( "histo_ggZH_hinv_PDFDown", "histo_ggZH_hinv_PDFDown", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFDown->Sumw2();
+  
+  // Make stat bounding bin histos 
+  for(int nb=0; nb<nBinMVA; nb++) {
+    for(int nModel=0; nModel<nSigModels; nModel++) { 
+      histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][nb]        = new TH1D(Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dUp"       ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dUp"       ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb),nBinMVA, xbins); 
+      histo_ZH_hinv_CMS_MVAZHStatBoundingBinDown[nModel][nb]      = new TH1D(Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dDown"     ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dDown"     ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb),nBinMVA, xbins); 
+      histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][nb]   ->Sumw2();
+      histo_ZH_hinv_CMS_MVAZHStatBoundingBinDown[nModel][nb] ->Sumw2();
+    }
+    histo_Zjets_CMS_MVAZjetsStatBoundingBinUp[nb]       = new TH1D(Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dUp"      ,finalStateName,  ECMsb.Data(),nb), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dUp"      ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_Zjets_CMS_MVAZjetsStatBoundingBinDown[nb]     = new TH1D(Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dDown"    ,finalStateName,  ECMsb.Data(),nb), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dDown"    ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]            = new TH1D(Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dUp"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dUp"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]            = new TH1D(Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dDown"        ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dDown"        ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_WZ_CMS_MVAWZStatBoundingBinUp[nb]                = new TH1D(Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_WZ_CMS_MVAWZStatBoundingBinDown[nb]            = new TH1D(Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]                = new TH1D(Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]            = new TH1D(Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_EM_CMS_MVAEMStatBoundingBinUp[nb]                = new TH1D(Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
+    histo_EM_CMS_MVAEMStatBoundingBinDown[nb]            = new TH1D(Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinUp[nb]    = new TH1D(Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dUp"   ,finalStateName,  ECMsb.Data(),nb), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dUp"   ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[nb]  = new TH1D(Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dDown" ,finalStateName,  ECMsb.Data(),nb), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dDown" ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
+    histo_Zjets_CMS_MVAZjetsStatBoundingBinUp[nb]  ->Sumw2();
+    histo_Zjets_CMS_MVAZjetsStatBoundingBinDown[nb]->Sumw2();
+    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]      ->Sumw2();
+    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]    ->Sumw2();
+    histo_WZ_CMS_MVAWZStatBoundingBinUp[nb]              ->Sumw2();
+    histo_WZ_CMS_MVAWZStatBoundingBinDown[nb]      ->Sumw2();
+    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]              ->Sumw2();
+    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]      ->Sumw2();
+    histo_EM_CMS_MVAEMStatBoundingBinUp[nb]              ->Sumw2();
+    histo_EM_CMS_MVAEMStatBoundingBinDown[nb]          ->Sumw2();
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinUp[nb]   ->Sumw2();
+    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[nb] ->Sumw2();
+  }
+
+  // Make lepton efficiency bounding histos
+  histo_VVV_CMS_MVALepEffMBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effMName.Data())  , Form("histo_VVV_%sUp",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVALepEffMBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effMName.Data()), Form("histo_VVV_%sDown",effMName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingDown->Sumw2();
+  histo_WZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effMName.Data())  , Form("histo_WZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effMName.Data()), Form("histo_WZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effMName.Data())  , Form("histo_ZZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effMName.Data()), Form("histo_ZZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffMBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effMName.Data())  , Form("histo_ggZH_hinv_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffMBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effMName.Data()), Form("histo_ggZH_hinv_%sDown",effMName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingDown->Sumw2();
+
+  histo_VVV_CMS_MVALepEffMBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effMName.Data())  , Form("histo_VVV_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  histo_WZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effMName.Data())  , Form("histo_WZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  histo_ZZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effMName.Data())  , Form("histo_ZZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  ->Sumw2();
+
+  histo_VVV_CMS_MVALepEffEBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effEName.Data())  , Form("histo_VVV_%sUp",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVALepEffEBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effEName.Data()), Form("histo_VVV_%sDown",effEName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingDown->Sumw2();
+  histo_WZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effEName.Data())  , Form("histo_WZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effEName.Data()), Form("histo_WZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effEName.Data())  , Form("histo_ZZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effEName.Data()), Form("histo_ZZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffEBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effEName.Data())  , Form("histo_ggZH_hinv_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffEBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effEName.Data()), Form("histo_ggZH_hinv_%sDown",effEName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Sumw2();
+
+  histo_VVV_CMS_MVALepEffEBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effEName.Data())  , Form("histo_VVV_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  histo_WZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effEName.Data())  , Form("histo_WZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  histo_ZZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effEName.Data())  , Form("histo_ZZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  ->Sumw2();
+
+  // Make MET scale bounding histos
+  histo_VVV_CMS_MVAMETBoundingUp           = new TH1D( Form("histo_VVV_CMS_scale_metUp")  , Form("histo_VVV_CMS_scale_metUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVAMETBoundingDown         = new TH1D( Form("histo_VVV_CMS_scale_metDown"), Form("histo_VVV_CMS_scale_metDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
+  histo_WZ_CMS_MVAMETBoundingUp            = new TH1D( Form("histo_WZ_CMS_scale_metUp")  , Form("histo_WZ_CMS_scale_metUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVAMETBoundingDown          = new TH1D( Form("histo_WZ_CMS_scale_metDown"), Form("histo_WZ_CMS_scale_metDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVAMETBoundingUp            = new TH1D( Form("histo_ZZ_CMS_scale_metUp")  , Form("histo_ZZ_CMS_scale_metUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVAMETBoundingDown          = new TH1D( Form("histo_ZZ_CMS_scale_metDown"), Form("histo_ZZ_CMS_scale_metDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVAMETBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_scale_metUp")  , Form("histo_ggZH_hinv_CMS_scale_metUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVAMETBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_scale_metDown"), Form("histo_ggZH_hinv_CMS_scale_metDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
+
+  // Make JES bounding histos
+  histo_VVV_CMS_MVAJESBoundingUp              = new TH1D( Form("histo_VVV_CMS_eff_b_2016Up")  , Form("histo_VVV_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVAJESBoundingDown            = new TH1D( Form("histo_VVV_CMS_eff_b_2016Down"), Form("histo_VVV_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingDown->Sumw2();
+  histo_WZ_CMS_MVAJESBoundingUp               = new TH1D( Form("histo_WZ_CMS_eff_b_2016Up")  , Form("histo_WZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_WZ_CMS_MVAJESBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVAJESBoundingDown             = new TH1D( Form("histo_WZ_CMS_eff_b_2016Down"), Form("histo_WZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_WZ_CMS_MVAJESBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVAJESBoundingUp               = new TH1D( Form("histo_ZZ_CMS_eff_b_2016Up")  , Form("histo_ZZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVAJESBoundingDown             = new TH1D( Form("histo_ZZ_CMS_eff_b_2016Down"), Form("histo_ZZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVAJESBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_eff_b_2016Up")  , Form("histo_ggZH_hinv_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVAJESBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_eff_b_2016Down"), Form("histo_ggZH_hinv_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAJESBoundingDown->Sumw2();
+
+  // Make Btag bounding histos
+  histo_VVV_CMS_MVABTAGBoundingUp              = new TH1D( Form("histo_VVV_CMS_scale_jUp")  , Form("histo_VVV_CMS_scale_jUp")  , nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingUp  ->Sumw2();
+  histo_VVV_CMS_MVABTAGBoundingDown            = new TH1D( Form("histo_VVV_CMS_scale_jDown"), Form("histo_VVV_CMS_scale_jDown"), nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingDown->Sumw2();
+  histo_WZ_CMS_MVABTAGBoundingUp               = new TH1D( Form("histo_WZ_CMS_scale_jUp")  , Form("histo_WZ_CMS_scale_jUp")  , nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingUp  ->Sumw2();
+  histo_WZ_CMS_MVABTAGBoundingDown             = new TH1D( Form("histo_WZ_CMS_scale_jDown"), Form("histo_WZ_CMS_scale_jDown"), nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingDown->Sumw2();
+  histo_ZZ_CMS_MVABTAGBoundingUp               = new TH1D( Form("histo_ZZ_CMS_scale_jUp")  , Form("histo_ZZ_CMS_scale_jUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_MVABTAGBoundingDown             = new TH1D( Form("histo_ZZ_CMS_scale_jDown"), Form("histo_ZZ_CMS_scale_jDown"), nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_MVABTAGBoundingUp   = new TH1D( Form("histo_ggZH_hinv_CMS_scale_jUp")  , Form("histo_ggZH_hinv_CMS_scale_jUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVABTAGBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_MVABTAGBoundingDown = new TH1D( Form("histo_ggZH_hinv_CMS_scale_jDown"), Form("histo_ggZH_hinv_CMS_scale_jDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVABTAGBoundingDown->Sumw2();
+
+  // Make BDT muons scale bounding histos
+  histo_VVV_CMS_BDTMuonScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_muonUp")  , Form("histo_VVV_CMS_bdt_muonUp")  , nBinMVA, xbins);histo_VVV_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
+  histo_VVV_CMS_BDTMuonScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_muonDown"), Form("histo_VVV_CMS_bdt_muonDown"), nBinMVA, xbins);histo_VVV_CMS_BDTMuonScaleBoundingDown->Sumw2();
+  histo_WZ_CMS_BDTMuonScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_muonUp")  , Form("histo_WZ_CMS_bdt_muonUp")  , nBinMVA, xbins);  histo_WZ_CMS_BDTMuonScaleBoundingUp   ->Sumw2();
+  histo_WZ_CMS_BDTMuonScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_muonDown"), Form("histo_WZ_CMS_bdt_muonDown"), nBinMVA, xbins);  histo_WZ_CMS_BDTMuonScaleBoundingDown ->Sumw2();
+  histo_ZZ_CMS_BDTMuonScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_muonUp")  , Form("histo_ZZ_CMS_bdt_muonUp")  , nBinMVA, xbins);  histo_ZZ_CMS_BDTMuonScaleBoundingUp   ->Sumw2();
+  histo_ZZ_CMS_BDTMuonScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_muonDown"), Form("histo_ZZ_CMS_bdt_muonDown"), nBinMVA, xbins);  histo_ZZ_CMS_BDTMuonScaleBoundingDown ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonDown"), Form("histo_ggZH_hinv_CMS_bdt_muonDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown->Sumw2();
+
+  // Make BDT electron scale bounding histos
+  histo_VVV_CMS_BDTElectronScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_electronUp")  , Form("histo_VVV_CMS_bdt_electronUp")  , nBinMVA, xbins);             histo_VVV_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
+  histo_VVV_CMS_BDTElectronScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_electronDown"), Form("histo_VVV_CMS_bdt_electronDown"), nBinMVA, xbins);             histo_VVV_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
+  histo_WZ_CMS_BDTElectronScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_electronUp")  , Form("histo_WZ_CMS_bdt_electronUp")  , nBinMVA, xbins);               histo_WZ_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
+  histo_WZ_CMS_BDTElectronScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_electronDown"), Form("histo_WZ_CMS_bdt_electronDown"), nBinMVA, xbins);               histo_WZ_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
+  histo_ZZ_CMS_BDTElectronScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_electronUp")  , Form("histo_ZZ_CMS_bdt_electronUp")  , nBinMVA, xbins);               histo_ZZ_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
+  histo_ZZ_CMS_BDTElectronScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_electronDown"), Form("histo_ZZ_CMS_bdt_electronDown"), nBinMVA, xbins);               histo_ZZ_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown= new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronDown"), Form("histo_ggZH_hinv_CMS_bdt_electronDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->Sumw2();
+
+  // Make BDT met scale bounding histos
+  histo_VVV_CMS_BDTMETScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_METUp")  , Form("histo_VVV_CMS_bdt_METUp")  , nBinMVA, xbins); histo_VVV_CMS_BDTMETScaleBoundingUp  ->Sumw2();
+  histo_VVV_CMS_BDTMETScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_METDown"), Form("histo_VVV_CMS_bdt_METDown"), nBinMVA, xbins); histo_VVV_CMS_BDTMETScaleBoundingDown->Sumw2();
+  histo_WZ_CMS_BDTMETScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_METUp")  , Form("histo_WZ_CMS_bdt_METUp")  , nBinMVA, xbins);   histo_WZ_CMS_BDTMETScaleBoundingUp        ->Sumw2();
+  histo_WZ_CMS_BDTMETScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_METDown"), Form("histo_WZ_CMS_bdt_METDown"), nBinMVA, xbins);   histo_WZ_CMS_BDTMETScaleBoundingDown ->Sumw2();
+  histo_ZZ_CMS_BDTMETScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_METUp")  , Form("histo_ZZ_CMS_bdt_METUp")  , nBinMVA, xbins);   histo_ZZ_CMS_BDTMETScaleBoundingUp        ->Sumw2();
+  histo_ZZ_CMS_BDTMETScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_METDown"), Form("histo_ZZ_CMS_bdt_METDown"), nBinMVA, xbins);   histo_ZZ_CMS_BDTMETScaleBoundingDown ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METUp")  , Form("histo_ggZH_hinv_CMS_bdt_METUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METDown"), Form("histo_ggZH_hinv_CMS_bdt_METDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown->Sumw2();
+
+  // Make BDT jet scale bounding histos
+  histo_VVV_CMS_BDTJetScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_JESUp")  , Form("histo_VVV_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_VVV_CMS_BDTJetScaleBoundingUp  ->Sumw2();
+  histo_VVV_CMS_BDTJetScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_JESDown"), Form("histo_VVV_CMS_bdt_JESDown"), nBinMVA, xbins); histo_VVV_CMS_BDTJetScaleBoundingDown->Sumw2();
+  histo_WZ_CMS_BDTJetScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_JESUp")  , Form("histo_WZ_CMS_bdt_JESUp")  , nBinMVA, xbins);   histo_WZ_CMS_BDTJetScaleBoundingUp        ->Sumw2();
+  histo_WZ_CMS_BDTJetScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_JESDown"), Form("histo_WZ_CMS_bdt_JESDown"), nBinMVA, xbins);   histo_WZ_CMS_BDTJetScaleBoundingDown ->Sumw2();
+  histo_ZZ_CMS_BDTJetScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_JESUp")  , Form("histo_ZZ_CMS_bdt_JESUp")  , nBinMVA, xbins);   histo_ZZ_CMS_BDTJetScaleBoundingUp        ->Sumw2();
+  histo_ZZ_CMS_BDTJetScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_JESDown"), Form("histo_ZZ_CMS_bdt_JESDown"), nBinMVA, xbins);   histo_ZZ_CMS_BDTJetScaleBoundingDown ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESDown"), Form("histo_ggZH_hinv_CMS_bdt_JESDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->Sumw2();
+
+  // Make pileup bounding histos
+  histo_VVV_CMS_PUBoundingUp                   = new TH1D( Form("histo_VVV_CMS_puUp")  , Form("histo_VVV_CMS_puUp")  , nBinMVA, xbins); histo_VVV_CMS_PUBoundingUp  ->Sumw2();
+  histo_VVV_CMS_PUBoundingDown                 = new TH1D( Form("histo_VVV_CMS_puDown"), Form("histo_VVV_CMS_puDown"), nBinMVA, xbins); histo_VVV_CMS_PUBoundingDown->Sumw2();
+  histo_WZ_CMS_PUBoundingUp                    = new TH1D( Form("histo_WZ_CMS_puUp")  , Form("histo_WZ_CMS_puUp")  , nBinMVA, xbins); histo_WZ_CMS_PUBoundingUp  ->Sumw2();
+  histo_WZ_CMS_PUBoundingDown                  = new TH1D( Form("histo_WZ_CMS_puDown"), Form("histo_WZ_CMS_puDown"), nBinMVA, xbins); histo_WZ_CMS_PUBoundingDown->Sumw2();
+  histo_ZZ_CMS_PUBoundingUp                    = new TH1D( Form("histo_ZZ_CMS_puUp")  , Form("histo_ZZ_CMS_puUp")  , nBinMVA, xbins); histo_ZZ_CMS_PUBoundingUp  ->Sumw2();
+  histo_ZZ_CMS_PUBoundingDown                  = new TH1D( Form("histo_ZZ_CMS_puDown"), Form("histo_ZZ_CMS_puDown"), nBinMVA, xbins); histo_ZZ_CMS_PUBoundingDown->Sumw2();
+  histo_ggZH_hinv_CMS_PUBoundingUp        = new TH1D( Form("histo_ggZH_hinv_CMS_puUp")  , Form("histo_ggZH_hinv_CMS_puUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_PUBoundingUp  ->Sumw2();
+  histo_ggZH_hinv_CMS_PUBoundingDown      = new TH1D( Form("histo_ggZH_hinv_CMS_puDown"), Form("histo_ggZH_hinv_CMS_puDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_PUBoundingDown->Sumw2();
+  
+  // Make electroweak correction bounding histos
+  histo_WZ_CMS_EWKCorrUp                    = new TH1D( Form("histo_WZ_EWKCorrUp")  , Form("histo_WZ_EWKCorrUp")  , nBinMVA, xbins); histo_WZ_CMS_EWKCorrUp  ->Sumw2();
+  histo_WZ_CMS_EWKCorrDown                = new TH1D( Form("histo_WZ_EWKCorrDown"), Form("histo_WZ_EWKCorrDown"), nBinMVA, xbins); histo_WZ_CMS_EWKCorrDown->Sumw2();
+  histo_ZZ_CMS_EWKCorrUp                  = new TH1D( Form("histo_ZZ_EWKCorrUp")  , Form("histo_ZZ_EWKCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_EWKCorrUp  ->Sumw2();
+  histo_ZZ_CMS_EWKCorrDown                = new TH1D( Form("histo_ZZ_EWKCorrDown"), Form("histo_ZZ_EWKCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_EWKCorrDown->Sumw2();
+  histo_ZZ_CMS_ggCorrUp                   = new TH1D( Form("histo_ZZ_ggCorrUp")  , Form("histo_ZZ_ggCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_ggCorrUp  ->Sumw2();
+  histo_ZZ_CMS_ggCorrDown                 = new TH1D( Form("histo_ZZ_ggCorrDown"), Form("histo_ZZ_ggCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_ggCorrDown->Sumw2();
+  histo_Zjets_CMS_ZjetsSystUp                    = new TH1D( Form("histo_Zjets_ZjetsSystUp")  , Form("histo_Zjets_ZjetsSystUp")  , nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystUp  ->Sumw2();
+  histo_Zjets_CMS_ZjetsSystDown           = new TH1D( Form("histo_Zjets_ZjetsSystDown"), Form("histo_Zjets_ZjetsSystDown"), nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystDown->Sumw2();
+  
+  // Make the above bounding histos for each uncertainty for each signal model
   for(int nModel=0; nModel<nSigModels; nModel++) { 
+    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effMName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]         = new TH1D( Form("histo_ZH_hinv_%s_%sUp",                   signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sUp"  ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_%sDown",            signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sDown",           signalName_[nModel].Data(), effEName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAMETBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVAJESBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_MVABTAGBoundingUp [nModel]            = new TH1D( Form("histo_ZH_hinv_%s_CMS_eff_b_2016Up"        , signalName_[nModel].Data()),  Form("histo_ZH_hinv_%s_CMS_eff_b_2016Up"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVABTAGBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_MVABTAGBoundingDown [nModel]          = new TH1D( Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()),          Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVABTAGBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown [nModel]     = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp [nModel]   = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown [nModel] = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_BDTJetScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_PUBoundingUp [nModel]                 = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puUp"           , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_PUBoundingDown [nModel]               = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puDown"           , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
+    histo_ZH_hinv_CMS_EWKCorrUp[nModel]                     = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Sumw2();
+    histo_ZH_hinv_CMS_EWKCorrDown[nModel]                   = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Sumw2();
+
+  }
+  unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
+  printf("zhAnalysis::MakeHistos complete! (%lu seconds)\n", t2-t1);
+  madeHistos=true;
+  return true;
+}
+
+TH1D* zhAnalysis::MakeHisto(unsigned int thePlot, TString &plotName) {
+  TH1D *theHisto; unsigned nBinPlot; float xminPlot, xmaxPlot, pi=TMath::Pi();
+       if(thePlot== 0) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nJet";} 
+  else if(thePlot== 1) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nBJet";} 
+  else if(thePlot== 2) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nLep";} 
+  else if(thePlot== 3) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="passZMass dPhi dilep MET";} 
+  else if(thePlot== 4) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="PRESEL MET";}
+  else if(thePlot== 5) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="PRESEL MET balance";}
+  else if(thePlot== 6) {nBinPlot= 100; xminPlot=50.0; xmaxPlot= 250.0; plotName="PRESEL pTll";}
+  else if(thePlot== 7) {nBinPlot=   4; xminPlot=-0.5; xmaxPlot=   3.5; plotName="N-1 nTau";}
+  else if(thePlot== 8) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 jet ET balance";}
+  else if(thePlot== 9) {nBinPlot= 500; xminPlot= 0.0; xmaxPlot=1000.0; plotName="N-1 mT";}
+  else if(thePlot==10) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 100.0; plotName="N-1 dilep mass";}
+  else if(thePlot==11) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="N-1 nJet";}
+  else if(thePlot==12) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot= 400.0; plotName="N-1 MET";}
+  else if(thePlot==13) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 MET balance";}
+  else if(thePlot==14) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi dilep MET";}
+  else if(thePlot==15) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 max CSV2";}
+  else if(thePlot==16) {nBinPlot= 100; xminPlot=50.0; xmaxPlot= 250.0; plotName="N-1 dilep pT";}
+  else if(thePlot==17) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi jet1 MET";}
+  else if(thePlot==18) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi lep1 lep2";}
+  else if(thePlot==19) {nBinPlot=  60; xminPlot=40.0; xmaxPlot= 100.0; plotName="N-1 MET";}
+  else if(thePlot==20) {nBinPlot=  60; xminPlot= 0.0; xmaxPlot=   3.0; plotName="N-1 dR lep1 lep2";}
+  else if(thePlot==21) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=1000.0; plotName="TIGHTSEL mTll";}
+  else if(thePlot==22) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="TIGHTSEL lep1 pT";}
+  else if(thePlot==23) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="TIGHTSEL lep2 pT";}
+  else if(thePlot==24) {nBinPlot=  40; xminPlot=-0.5; xmaxPlot=  39.5; plotName="TIGHTSEL NPV";}
+  else if(thePlot==25) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="TIGHTSEL pTll/mTll";}
+  else if(thePlot==26) {nBinPlot= 100; xminPlot=-1.0; xmaxPlot=   1.0; plotName="TIGHTSEL MET150 BDT";}
+  else if(thePlot==27) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="TIGHTSEL min dPhi lep MET";}
+  else if(thePlot==28) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   2.5; plotName="TIGHTSEL dilep eta";}
+  else if(thePlot==29) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="DYSANESEL1 dPhi jet1 MET";} 
+  else if(thePlot==30) {nBinPlot=  40; xminPlot= 0.0; xmaxPlot=   2.0; plotName="DYSANESEL1 calo PF balance";} 
+  else if(thePlot==31) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 500.0; plotName="DYSANESEL1 MET";} 
+  else if(thePlot==32) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="DYSANESEL2 dPhi jet1 MET";} 
+  else if(thePlot==33) {nBinPlot=  40; xminPlot= 0.0; xmaxPlot=   2.0; plotName="DYSANESEL2 calo PF balance";} 
+  else if(thePlot==34) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 500.0; plotName="DYSANESEL2 MET";} 
+  else if(thePlot==35) {nBinPlot=  50; xminPlot= 0.0; xmaxPlot=   2.5; plotName="ZHGSEL pho abs eta";}
+  else if(thePlot==allPlots-2) {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5; plotName="Cut flow";}
+  else if(thePlot==allPlots-1) plotName="Shape analysis";
+  else { printf("error with zhAnalysis::MakeHisto: thePlot out of bounds (%d). check allPlots in zhAnalysis.h\n", thePlot); assert(0); theHisto=new TH1D; return theHisto;}
+  if(thePlot != allPlots-1) theHisto = new TH1D("theHisto", "theHisto", nBinPlot, xminPlot, xmaxPlot);
+  else                      theHisto = new TH1D("theHisto", "theHisto", nBinMVA, xbins);
+  theHisto->Sumw2();
+  return theHisto;
+}
+bool zhAnalysis::SaveHistos() {
+  printf("zhAnalysis::SaveHistos : Begin writing the plot and shape histograms to files\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
+  char output[200];
+  
+  // Save plotting histos
+  for(int thePlot=0; thePlot<allPlots; thePlot++){
+    sprintf(output,"MitZHAnalysis/plots%s/histo%szh%s_nice_%s_%d.root",subdirectory.c_str(),addChan.Data(),finalStateName, signalName_[plotModel].Data(),thePlot);          
+    TFile* outFilePlotsNote = new TFile(output,"recreate");
+    if(!outFilePlotsNote || !outFilePlotsNote->IsOpen()) {
+      printf("Error in zhAnalysis::SaveHistos : could not open \"%s\" for writing\n", output);
+      return false;
+    }
+    outFilePlotsNote->cd();
+    for(int np=0; np<processTypes; np++) histo[thePlot][np]->Write();
+    outFilePlotsNote->Close();
+  }
+  
+  // Save the shapes and the datacards
+
+  double process_syst[nSigModels][7], yield_processTypes[nSigModels][processTypes+1],
+         stat_processTypes[nSigModels][processTypes+1], syst_processTypes[nSigModels][processTypes+1],
+         syst_types_allBackground[28];
+  char outputLimits[200];
+  for(int nModel=0; nModel<nSigModels; nModel++) { // Output the limits for all the models
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
     sprintf(outputLimits,"MitZHAnalysis/plots%s/zll%shinv%s_%s_input_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[nModel].Data(), ECMsb.Data());
     TFile* outFileLimits = new TFile(outputLimits,"recreate");
@@ -1847,77 +2277,15 @@ void zhAnalysis::Run(
       bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();   
     }
     outFileLimits->Close();
-    if(useBDT && !useCachedBDTSystematics) { // Record the BDT shape systs in a separate file for the caching
-      cached_BDT_systematics->cd();
-      histo_bdt_toys_electronScale_VVV       ->Write();
-      histo_bdt_toys_electronScale_WZ        ->Write();
-      histo_bdt_toys_electronScale_ZZ        ->Write();
-      histo_bdt_toys_electronScale_ggZH_hinv ->Write();
-      histo_bdt_toys_electronScale_ZH_hinv[nModel]->Write();
-      histo_bdt_toys_muonScale_VVV           ->Write();
-      histo_bdt_toys_muonScale_WZ            ->Write();
-      histo_bdt_toys_muonScale_ZZ            ->Write();
-      histo_bdt_toys_muonScale_ggZH_hinv     ->Write();
-      histo_bdt_toys_muonScale_ZH_hinv[nModel]    ->Write();
-      histo_bdt_toys_METScale_VVV            ->Write();
-      histo_bdt_toys_METScale_WZ             ->Write();
-      histo_bdt_toys_METScale_ZZ             ->Write();
-      histo_bdt_toys_METScale_ggZH_hinv      ->Write();
-      histo_bdt_toys_METScale_ZH_hinv[nModel]     ->Write();
-      bdt_toy_envelope_electronScale_VVV->Write();
-      bdt_toy_envelope_electronScale_WZ->Write();
-      bdt_toy_envelope_electronScale_ZZ->Write();
-      bdt_toy_envelope_electronScale_ZH_hinv[nModel]->Write();
-      bdt_toy_envelope_electronScale_ggZH_hinv->Write();
-      bdt_toy_envelope_muonScale_VVV->Write();
-      bdt_toy_envelope_muonScale_WZ->Write();
-      bdt_toy_envelope_muonScale_ZZ->Write();
-      bdt_toy_envelope_muonScale_ZH_hinv[nModel]->Write();
-      bdt_toy_envelope_muonScale_ggZH_hinv->Write();
-      bdt_toy_envelope_METScale_VVV->Write();
-      bdt_toy_envelope_METScale_WZ->Write();
-      bdt_toy_envelope_METScale_ZZ->Write();
-      bdt_toy_envelope_METScale_ZH_hinv[nModel]->Write();
-      bdt_toy_envelope_METScale_ggZH_hinv->Write();
-      bdt_syst_electronScaleUp_VVV       ->Write();
-      bdt_syst_electronScaleUp_WZ        ->Write();
-      bdt_syst_electronScaleUp_ZZ        ->Write();
-      bdt_syst_electronScaleUp_ggZH_hinv ->Write();
-      bdt_syst_electronScaleUp_ZH_hinv[nModel] ->Write();
-      bdt_syst_muonScaleUp_VVV           ->Write();
-      bdt_syst_muonScaleUp_WZ            ->Write();
-      bdt_syst_muonScaleUp_ZZ            ->Write();
-      bdt_syst_muonScaleUp_ggZH_hinv     ->Write();
-      bdt_syst_muonScaleUp_ZH_hinv[nModel] ->Write();
-      bdt_syst_METScaleUp_VVV            ->Write();
-      bdt_syst_METScaleUp_WZ             ->Write();
-      bdt_syst_METScaleUp_ZZ             ->Write();
-      bdt_syst_METScaleUp_ggZH_hinv      ->Write();
-      bdt_syst_METScaleUp_ZH_hinv[nModel] ->Write();
-      bdt_syst_electronScaleDown_VVV       ->Write();
-      bdt_syst_electronScaleDown_WZ        ->Write();
-      bdt_syst_electronScaleDown_ZZ        ->Write();
-      bdt_syst_electronScaleDown_ggZH_hinv ->Write();
-      bdt_syst_electronScaleDown_ZH_hinv[nModel] ->Write();
-      bdt_syst_muonScaleDown_VVV           ->Write();
-      bdt_syst_muonScaleDown_WZ            ->Write();
-      bdt_syst_muonScaleDown_ZZ            ->Write();
-      bdt_syst_muonScaleDown_ggZH_hinv     ->Write();
-      bdt_syst_muonScaleDown_ZH_hinv[nModel] ->Write();
-      bdt_syst_METScaleDown_VVV            ->Write();
-      bdt_syst_METScaleDown_WZ             ->Write();
-      bdt_syst_METScaleDown_ZZ             ->Write();
-      bdt_syst_METScaleDown_ggZH_hinv      ->Write();
-      bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();
-      cached_BDT_systematics->Close();
-    }
+    
+    // Record the BDT shape systs in a separate file for the caching (only save plotModel for now)
+    if(useBDT && !useCachedBDTSystematics) assert(SaveBDTSystematics(plotModel));
     double lumiE = 1.025;
     double systLepResE[5] = {1.01,1.01,1.01,1.01,1.01};
     double systLepResM[5] = {1.01,1.01,1.01,1.01,1.01};
     double syst_btag = 1.02;
     double syst_WZl[2] = {1.010, 1.003};
     if(nJetsType > 0) syst_WZl[1] = 1.012;
-    
     
     for(int nb=1; nb<=nBinMVA; nb++){
       double nggZHEvt = histo_ggZH_hinv->GetBinContent(nb);
@@ -2222,648 +2590,328 @@ void zhAnalysis::Run(
     }
 
   } // end loop over models
-  
-}
-void zhAnalysis::SetFinalStateName() {
-  if     (typeSel == 3 && nJetsType == 0) {sprintf(finalStateName,"ll0j");}
-  else if(typeSel == 1 && nJetsType == 0) {sprintf(finalStateName,"mm0j");}
-  else if(typeSel == 2 && nJetsType == 0) {sprintf(finalStateName,"ee0j");}
-  else if(typeSel == 3 && nJetsType == 1) {sprintf(finalStateName,"ll1j");}
-  else if(typeSel == 1 && nJetsType == 1) {sprintf(finalStateName,"mm1j");}
-  else if(typeSel == 2 && nJetsType == 1) {sprintf(finalStateName,"ee1j");}
-  else if(typeSel == 3 && nJetsType == 2) {sprintf(finalStateName,"ll2j");}
-  else if(typeSel == 1 && nJetsType == 2) {sprintf(finalStateName,"mm2j");}
-  else if(typeSel == 2 && nJetsType == 2) {sprintf(finalStateName,"ee2j");}
-  else if(typeSel == 0 && nJetsType == 0) {sprintf(finalStateName,"em0j");}
-  else if(typeSel == 0 && nJetsType == 1) {sprintf(finalStateName,"em1j");}
-  else if(typeSel == 0 && nJetsType == 2) {sprintf(finalStateName,"em2j");}
-  else {printf("Wrong lSel/nJetsType: %d/%d\n",typeSel,nJetsType); assert(0); return;}
-}
 
-void zhAnalysis::LoadFlatFiles(bool doDM) {
-  printf("zhAnalysis::LoadFlatFiles : Begin loading flat input files\n");
-  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
-  //*******************************************************
-  //Input Files
-  //*******************************************************
-  // Data files - Macro Category 0
-  inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
-
-  // Begin MC backgrounds 
-    // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
-    inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sTT2L.root",filesPathMC.Data()),1,-1);
-    // Previously counted TTZToLLNuNu as VVV background? ~DGH
-    inputFlatFiles.emplace_back(Form("%sTTV.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sTW.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sqqWW.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sWGstar.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sWWdps.root",filesPathMC.Data()),1,-1);
-    // Include this one? Does it include (WGToLNuG) ? ~DGH
-    inputFlatFiles.emplace_back(Form("%sVG.root",filesPathMC.Data()),1,-1);
-    inputFlatFiles.emplace_back(Form("%sH125.root",filesPathMC.Data()),1,-1);
-    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
-    // Missing WWW or included in VVV ? ~DGH
-    
-    // Drell-Yan / Z backgrounds - Macro Category 2
-    if(useDYPT==false){
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-10to50.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_M-50_LO.root",filesPathMC.Data()),2,-1);
-    }
-    else {
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt0To50.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt50To100.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt100To250.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt250To400.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt400To650.root",filesPathMC.Data()),2,-1);
-      inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()),2,-1);
-      //inputFlatFiles.emplace_back(Form("%s",filesPathMC.Data()),2,-1);
-    }
-    // Include Z->tau tau ? ~DGH
-    inputFlatFiles.emplace_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()),2,-1);
-    // WZ backgrounds - Macro Category 3
-    inputFlatFiles.emplace_back(Form("%sWZ.root",filesPathMC.Data()),3,-1);
-    // ZZ Backgrounds - Macro Category 4
-    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
-    inputFlatFiles.emplace_back(Form("%sZZ.root",filesPathMC.Data()),4,-1);
-    // Triboson / VVV Backgrounds - Macro Category 5
-    // Does this include tZq? ~DGH
-    inputFlatFiles.emplace_back(Form("%sVVV.root",filesPathMC.Data()),5,-1);
-  // End MC backgrounds
-
-  // Monte Carlo signals
-  if(false){ // Model 0: standard model Higgs (125) with glu-glu
-    int mH=125;
-    signalName_.push_back("sm");
-    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
-    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
-    inputFlatFiles.emplace_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()),7,0);       
-  }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
-
-  if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
-    signalName_.push_back(Form("mh%d", mH));
-    inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1); 
-    inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1);
-    iH++;
-  }}
-
-  if(doDM){ 
-    int i=signalName_.size();
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZToLL_MD-3_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-1_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-2_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-3_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-4_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-5_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-6_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("ADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sADDMonoZ_ZtoLL_MD-2_d-7_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_A_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1000_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-100_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-140_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-200_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-50_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Axial_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Pseudo_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-100_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-200_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-300_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_SMM_Mx-400_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-0_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-100_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-10_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-20_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-1_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-200_Mv-500_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-350_Mv-750_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-40_Mv-100_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-450_Mv-1000_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-10_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-200_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-300_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-350_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-400_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Scalar_Mx-50_Mv-50_gDM1_gQ1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-0_Mv-20_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1000_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-100_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-10_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-150_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-10_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-50_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-1_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-300_Mv-750_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-40_Mv-100_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-490_Mv-1000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-10000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-500_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-200_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-300_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-50_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-75_Mv-500_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_NLO_Vector_Mx-990_Mv-2000_gDM1_gQ0p25_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-1995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1000_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-10_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-295_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-150_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-1000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-100_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-10_1-gDMgQ_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-20_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-1_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-2000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-500_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-500_Mv-995_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-10_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-200_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-300_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-5000_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-50_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("DarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph"); inputFlatFiles.emplace_back(Form("%sDarkMatter_MonoZToLL_V_Mx-50_Mv-95_gDMgQ-1_TuneCUETP8M1_13TeV-madgraph.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p01_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p02_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p04_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p06_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p09_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p10_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p30_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p40_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p50_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p60_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p70_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p80_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-1p90_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p00_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-    signalName_.push_back("Unpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8"); inputFlatFiles.emplace_back(Form("%sUnpart_ZToLL_SU-0_dU-2p20_LU-15_TuneCUETP8M1_13TeV-pythia8.root", filesPathDMMC.Data()), 6, i); i++;
-  }
-
-  nSigModels=(unsigned)signalName_.size();
-  nInputFiles=(unsigned)inputFlatFiles.size();
-  assert(nSigModels<=500);
   unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
-  printf("zhAnalysis::LoadFlatFiles : Finished getting list of flat input files (%lu seconds)\n", t2-t1);
+  printf("zhAnalysis::SaveHistos : Saved plots to \"%s\" and wrote the shapes (%lu seconds)\n", output, t2-t1);
+  return true;
 }
-
-void zhAnalysis::MakeHistos() {
-  printf("zhAnalysis::MakeHistos start making histograms...\n");
+bool zhAnalysis::LoadCachedBDTSystematics() {
+  printf("zhAnalysis::LoadCachedBDTSystematics : Opening cached systematics in \"%s\"\n", filenameBDTSysts);
   unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
-  // Make plotting histos
-  TString plotName;
-  for(int thePlot=0; thePlot<allPlots; thePlot++) {
-    TH1D* histos = MakeHisto(thePlot, plotName);
-    plotName_[thePlot]=plotName;
-    for(int iType=0; iType<processTypes; iType++) histo[thePlot][iType] = (TH1D*) histos->Clone(Form("histo %s %s",categoryName_[iType].Data(), plotName.Data()));
-    histos->Reset();histos->Clear();
+  cachedSystFile = new TFile(filenameBDTSysts,"read");
+  if(!cachedSystFile || !cachedSystFile->IsOpen()) {
+    printf("Error in zhAnalysis::LoadCachedBDTSystematics : the file does not exist\n");
+    return false;
   }
-  // Make MVA shape histos
-  histoMVA = new TH1D("histoMVA", "histoMVA", nBinMVA, xbins); histoMVA->Sumw2();
-  histo_Data     = (TH1D*) histoMVA->Clone("histo_Data");
-  histo_Zjets    = (TH1D*) histoMVA->Clone("histo_Zjets");         
-  histo_VVV      = (TH1D*) histoMVA->Clone("histo_VVV");         
-  histo_WZ       = (TH1D*) histoMVA->Clone("histo_WZ");         
-  histo_ZZ       = (TH1D*) histoMVA->Clone("histo_ZZ");
-  histo_EM       = (TH1D*) histoMVA->Clone("histo_EM");         
-  histo_ggZH_hinv= (TH1D*) histoMVA->Clone("histo_ggZH_hinv"); 
-  histo_ZjetsNoW    = (TH1D*) histoMVA->Clone("histo_Zjets");         
-  histo_VVVNoW      = (TH1D*) histoMVA->Clone("histo_VVV");         
-  histo_WZNoW       = (TH1D*) histoMVA->Clone("histo_WZ");         
-  histo_ZZNoW       = (TH1D*) histoMVA->Clone("histo_ZZ");
-  histo_EMNoW       = (TH1D*) histoMVA->Clone("histo_EM");         
-  histo_ggZH_hinvNoW= (TH1D*) histoMVA->Clone("histo_ggZH_hinv"); 
-  for(int nModel=0; nModel<nSigModels; nModel++) {
-    histo_ZH_hinv[nModel]     = (TH1D*) histoMVA->Clone(Form("histo_ZH_hinv_%s",   signalName_[nModel].Data())); 
-    histo_ZH_hinvNoW[nModel]  = (TH1D*) histoMVA->Clone(Form("histo_ZH_hinvNoW_%s",signalName_[nModel].Data())); 
+  bdt_syst_electronScaleUp_VVV       = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleUp_VVV"      );
+  bdt_syst_electronScaleUp_WZ        = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleUp_WZ"       );
+  bdt_syst_electronScaleUp_ZZ        = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleUp_ZZ"       );
+  bdt_syst_electronScaleUp_ggZH_hinv = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleUp_ggZH_hinv");
+  bdt_syst_electronScaleUp_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_muonScaleUp_VVV           = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleUp_VVV"          );
+  bdt_syst_muonScaleUp_WZ            = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleUp_WZ"           );
+  bdt_syst_muonScaleUp_ZZ            = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleUp_ZZ"           );
+  bdt_syst_muonScaleUp_ggZH_hinv     = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleUp_ggZH_hinv"    );
+  bdt_syst_muonScaleUp_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_METScaleUp_VVV            = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleUp_VVV"           );
+  bdt_syst_METScaleUp_WZ             = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleUp_WZ"            );
+  bdt_syst_METScaleUp_ZZ             = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleUp_ZZ"            );
+  bdt_syst_METScaleUp_ggZH_hinv      = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleUp_ggZH_hinv"     );
+  bdt_syst_METScaleUp_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_electronScaleDown_VVV       = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleDown_VVV"      );
+  bdt_syst_electronScaleDown_WZ        = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleDown_WZ"       );
+  bdt_syst_electronScaleDown_ZZ        = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleDown_ZZ"       );
+  bdt_syst_electronScaleDown_ggZH_hinv = (TH1F*) cachedSystFile->Get("bdt_syst_electronScaleDown_ggZH_hinv");
+  bdt_syst_electronScaleDown_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_muonScaleDown_VVV           = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleDown_VVV"          );
+  bdt_syst_muonScaleDown_WZ            = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleDown_WZ"           );
+  bdt_syst_muonScaleDown_ZZ            = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleDown_ZZ"           );
+  bdt_syst_muonScaleDown_ggZH_hinv     = (TH1F*) cachedSystFile->Get("bdt_syst_muonScaleDown_ggZH_hinv"    );
+  bdt_syst_muonScaleDown_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_METScaleDown_VVV            = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleDown_VVV"           );
+  bdt_syst_METScaleDown_WZ             = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleDown_WZ"            );
+  bdt_syst_METScaleDown_ZZ             = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleDown_ZZ"            );
+  bdt_syst_METScaleDown_ggZH_hinv      = (TH1F*) cachedSystFile->Get("bdt_syst_METScaleDown_ggZH_hinv"     );
+  bdt_syst_METScaleDown_ZH_hinv[plotModel] = (TH1F*) cachedSystFile->Get(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
+  bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
+  bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
+  bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
+  bdt_syst_electronScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
+  bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
+  bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
+  bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
+  bdt_syst_muonScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
+  bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
+  bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
+  bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
+  bdt_syst_METScaleUp_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
+  bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
+  bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
+  bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
+  bdt_syst_electronScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
+  bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
+  bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
+  bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
+  bdt_syst_muonScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
+  bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
+  bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
+  bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
+  bdt_syst_METScaleDown_ZH_hinv[plotModel] ->SetDirectory(0);
+  cachedSystFile->Close();
+  bdt_toy_envelope_electronScale_VVV       = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_electronScale_VVV"      );
+  bdt_toy_envelope_electronScale_WZ        = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_electronScale_WZ"       );
+  bdt_toy_envelope_electronScale_ZZ        = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_electronScale_ZZ"       );
+  bdt_toy_envelope_electronScale_ggZH_hinv = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_electronScale_ggZH_hinv");
+  bdt_toy_envelope_electronScale_ZH_hinv[plotModel] = (TH2F*) cachedSystFile->Get(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_toy_envelope_muonScale_VVV           = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_muonScale_VVV"          );
+  bdt_toy_envelope_muonScale_WZ            = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_muonScale_WZ"           );
+  bdt_toy_envelope_muonScale_ZZ            = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_muonScale_ZZ"           );
+  bdt_toy_envelope_muonScale_ggZH_hinv     = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_muonScale_ggZH_hinv"    );
+  bdt_toy_envelope_muonScale_ZH_hinv[plotModel] = (TH2F*) cachedSystFile->Get(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_toy_envelope_METScale_VVV            = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_METScale_VVV"           );
+  bdt_toy_envelope_METScale_WZ             = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_METScale_WZ"            );
+  bdt_toy_envelope_METScale_ZZ             = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_METScale_ZZ"            );
+  bdt_toy_envelope_METScale_ggZH_hinv      = (TH2F*) cachedSystFile->Get("bdt_toy_envelope_METScale_ggZH_hinv"     );
+  bdt_toy_envelope_METScale_ZH_hinv[plotModel] = (TH2F*) cachedSystFile->Get(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[plotModel].Data()));
+  bdt_toy_envelope_electronScale_VVV       ->SetDirectory(0);
+  bdt_toy_envelope_electronScale_WZ        ->SetDirectory(0);
+  bdt_toy_envelope_electronScale_ZZ        ->SetDirectory(0);
+  bdt_toy_envelope_electronScale_ggZH_hinv ->SetDirectory(0);
+  bdt_toy_envelope_electronScale_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_toy_envelope_muonScale_VVV           ->SetDirectory(0);
+  bdt_toy_envelope_muonScale_WZ            ->SetDirectory(0);
+  bdt_toy_envelope_muonScale_ZZ            ->SetDirectory(0);
+  bdt_toy_envelope_muonScale_ggZH_hinv     ->SetDirectory(0);
+  bdt_toy_envelope_muonScale_ZH_hinv[plotModel] ->SetDirectory(0);
+  bdt_toy_envelope_METScale_VVV            ->SetDirectory(0);
+  bdt_toy_envelope_METScale_WZ             ->SetDirectory(0);
+  bdt_toy_envelope_METScale_ZZ             ->SetDirectory(0);
+  bdt_toy_envelope_METScale_ggZH_hinv      ->SetDirectory(0);
+  bdt_toy_envelope_METScale_ZH_hinv[plotModel] ->SetDirectory(0);
+  cachedSystFile->Close();
+  unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
+  printf("zhAnalysis::LoadCachedBDTSystematics : Complete (%lu seconds)\n", t2-t1);
+  return true;
+}
+bool zhAnalysis::SetupBDTSystematics() {
+  printf("zhAnalysis::SetupBDTSystematics : Starting the setup\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
+  cachedSystFile = new TFile(filenameBDTSysts,"recreate");
+  if(!cachedSystFile || !cachedSystFile->IsOpen()) {
+    printf("Error in zhAnalysis::SetupBDTSystematics : could not open file \"%s\" for writing\n", filenameBDTSysts);
+    return false;
   }
-
-  // Make stat. bounding histos
-  for(int nModel=0; nModel<nSigModels; nModel++) {
-    histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]      = new TH1D( Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sUp"  ,finalStateName, signalName_[nModel].Data(), ECMsb.Data()), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sUp"  ,finalStateName, signalName_[nModel].Data(), ECMsb.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAZHStatBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]    = new TH1D( Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sDown",finalStateName, signalName_[nModel].Data(), ECMsb.Data()), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%sDown",finalStateName, signalName_[nModel].Data(), ECMsb.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAZHStatBoundingDown[nModel]->Sumw2();
-  }
-  histo_Zjets_CMS_MVAZjetsStatBoundingUp     = new TH1D( Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Zjets_CMS_MVAZjetsStatBoundingUp  ->Sumw2();
-  histo_Zjets_CMS_MVAZjetsStatBoundingDown   = new TH1D( Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_Zjets_CMS_MVAZjetsStatBoundingDown->Sumw2();
-  histo_VVV_CMS_MVAVVVStatBoundingUp         = new TH1D( Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVAVVVStatBoundingDown       = new TH1D( Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_VVV_CMS_MVAVVVStatBoundingDown->Sumw2();
-  histo_WZ_CMS_MVAWZStatBoundingUp           = new TH1D( Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_WZ_CMS_MVAWZStatBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVAWZStatBoundingDown         = new TH1D( Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_WZ_CMS_MVAWZStatBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVAZZStatBoundingUp           = new TH1D( Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVAZZStatBoundingDown         = new TH1D( Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVAZZStatBoundingDown->Sumw2();
-  histo_EM_CMS_MVAEMStatBoundingUp           = new TH1D( Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_EM_CMS_MVAEMStatBoundingUp  ->Sumw2();
-  histo_EM_CMS_MVAEMStatBoundingDown         = new TH1D( Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_EM_CMS_MVAEMStatBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp  = new TH1D( Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sUp"  ,finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAggZHStatBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown= new TH1D( Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sDown",finalStateName,ECMsb.Data()), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%sDown",finalStateName,ECMsb.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAggZHStatBoundingDown->Sumw2();
-
-  // Make QCD scale bounding histos
-  for(int nb=0; nb<6; nb++){
-    for(int nModel=0; nModel<nSigModels; nModel++) {
-      histo_ZH_hinv_CMS_QCDScaleBounding[nModel][nb]   = new TH1D(Form("histo_ZH_hinv_%s_QCDScale_f%d", signalName_[nModel].Data(), nb), Form("histo_ZH_hinv_%s_QCDScale_f%d", signalName_[nModel].Data(), nb),nBinMVA, xbins); histo_ZH_hinv_CMS_QCDScaleBounding[nModel][nb]->Sumw2();
-    }
-    histo_VVV_CMS_QCDScaleBounding[nb]       = new TH1D(Form("histo_VVV_QCDScale_f%d",nb),     Form("histo_VVV_QCDScale_f%d",nb),nBinMVA, xbins);     histo_VVV_CMS_QCDScaleBounding[nb]->Sumw2();
-    histo_WZ_CMS_QCDScaleBounding[nb]             = new TH1D(Form("histo_WZ_QCDScale_f%d",nb),      Form("histo_WZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_WZ_CMS_QCDScaleBounding[nb]->Sumw2();
-    histo_ZZ_CMS_QCDScaleBounding[nb]             = new TH1D(Form("histo_ZZ_QCDScale_f%d",nb),      Form("histo_ZZ_QCDScale_f%d",nb),nBinMVA, xbins);      histo_ZZ_CMS_QCDScaleBounding[nb]->Sumw2();
-    histo_ggZH_hinv_CMS_QCDScaleBounding[nb] = new TH1D(Form("histo_ggZH_hinv_QCDScale_f%d",nb), Form("histo_ggZH_hinv_QCDScale_f%d",nb),nBinMVA, xbins); histo_ggZH_hinv_CMS_QCDScaleBounding[nb]->Sumw2();
-  }
-  
-  // Make PDF bounding histos
-  for(int nModel=0; nModel<nSigModels; nModel++) {
-    histo_ZH_hinv_CMS_PDFUp[nModel]   = new TH1D(Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFUp", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFUp[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_PDFDown[nModel] = new TH1D(Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()), Form("histo_ZH_hinv_%s_PDFDown", signalName_[nModel].Data()),nBinMVA, xbins); histo_ZH_hinv_CMS_PDFDown[nModel]->Sumw2();
-  }
-  histo_VVV_CMS_PDFUp         = new TH1D( "histo_VVV_PDFUp", "histo_VVV_PDFUp", nBinMVA, xbins); histo_VVV_CMS_PDFUp  ->Sumw2();
-  histo_VVV_CMS_PDFDown       = new TH1D( "histo_VVV_PDFDown", "histo_VVV_PDFDown", nBinMVA, xbins); histo_VVV_CMS_PDFDown->Sumw2();
-  histo_WZ_CMS_PDFUp          = new TH1D( "histo_WZ_PDFUp", "histo_WZ_PDFUp", nBinMVA, xbins); histo_WZ_CMS_PDFUp  ->Sumw2();
-  histo_WZ_CMS_PDFDown        = new TH1D( "histo_WZ_PDFDown", "histo_WZ_PDFDown", nBinMVA, xbins); histo_WZ_CMS_PDFDown->Sumw2();
-  histo_ZZ_CMS_PDFUp          = new TH1D( "histo_ZZ_PDFUp", "histo_ZZ_PDFUp", nBinMVA, xbins); histo_ZZ_CMS_PDFUp  ->Sumw2();
-  histo_ZZ_CMS_PDFDown        = new TH1D( "histo_ZZ_PDFDown", "histo_ZZ_PDFDown", nBinMVA, xbins); histo_ZZ_CMS_PDFDown->Sumw2();
-  histo_ggZH_hinv_CMS_PDFUp   = new TH1D( "histo_ggZH_hinv_PDFUp", "histo_ggZH_hinv_PDFUp", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_PDFDown = new TH1D( "histo_ggZH_hinv_PDFDown", "histo_ggZH_hinv_PDFDown", nBinMVA, xbins); histo_ggZH_hinv_CMS_PDFDown->Sumw2();
-  
-  // Make stat bounding bin histos 
-  for(int nb=0; nb<nBinMVA; nb++) {
-    for(int nModel=0; nModel<nSigModels; nModel++) { 
-      histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][nb]        = new TH1D(Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dUp"       ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dUp"       ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb),nBinMVA, xbins); 
-      histo_ZH_hinv_CMS_MVAZHStatBoundingBinDown[nModel][nb]      = new TH1D(Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dDown"     ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb), Form("histo_ZH_hinv_CMS_zllhinv%s_%s_MVAZHStatBounding_%s_Bin%dDown"     ,finalStateName, signalName_[nModel].Data(), ECMsb.Data(),nb),nBinMVA, xbins); 
-      histo_ZH_hinv_CMS_MVAZHStatBoundingBinUp[nModel][nb]   ->Sumw2();
-      histo_ZH_hinv_CMS_MVAZHStatBoundingBinDown[nModel][nb] ->Sumw2();
-    }
-    histo_Zjets_CMS_MVAZjetsStatBoundingBinUp[nb]       = new TH1D(Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dUp"      ,finalStateName,  ECMsb.Data(),nb), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dUp"      ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_Zjets_CMS_MVAZjetsStatBoundingBinDown[nb]     = new TH1D(Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dDown"    ,finalStateName,  ECMsb.Data(),nb), Form("histo_Zjets_CMS_zllhinv%s_MVAZjetsStatBounding_%s_Bin%dDown"    ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]            = new TH1D(Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dUp"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dUp"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]            = new TH1D(Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dDown"        ,finalStateName,  ECMsb.Data(),nb), Form("histo_VVV_CMS_zllhinv%s_MVAVVVStatBounding_%s_Bin%dDown"        ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_WZ_CMS_MVAWZStatBoundingBinUp[nb]                = new TH1D(Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
-    histo_WZ_CMS_MVAWZStatBoundingBinDown[nb]            = new TH1D(Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_WZ_CMS_zllhinv%s_MVAWZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]                = new TH1D(Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
-    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]            = new TH1D(Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_ZZ_CMS_zllhinv%s_MVAZZStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_EM_CMS_MVAEMStatBoundingBinUp[nb]                = new TH1D(Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dUp"            ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins);
-    histo_EM_CMS_MVAEMStatBoundingBinDown[nb]            = new TH1D(Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb), Form("histo_EM_CMS_zllhinv%s_MVAEMStatBounding_%s_Bin%dDown"          ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinUp[nb]    = new TH1D(Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dUp"   ,finalStateName,  ECMsb.Data(),nb), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dUp"   ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[nb]  = new TH1D(Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dDown" ,finalStateName,  ECMsb.Data(),nb), Form("histo_ggZH_hinv_CMS_zllhinv%s_MVAggZHStatBounding_%s_Bin%dDown" ,finalStateName,  ECMsb.Data(),nb),nBinMVA, xbins); 
-    histo_Zjets_CMS_MVAZjetsStatBoundingBinUp[nb]  ->Sumw2();
-    histo_Zjets_CMS_MVAZjetsStatBoundingBinDown[nb]->Sumw2();
-    histo_VVV_CMS_MVAVVVStatBoundingBinUp[nb]      ->Sumw2();
-    histo_VVV_CMS_MVAVVVStatBoundingBinDown[nb]    ->Sumw2();
-    histo_WZ_CMS_MVAWZStatBoundingBinUp[nb]              ->Sumw2();
-    histo_WZ_CMS_MVAWZStatBoundingBinDown[nb]      ->Sumw2();
-    histo_ZZ_CMS_MVAZZStatBoundingBinUp[nb]              ->Sumw2();
-    histo_ZZ_CMS_MVAZZStatBoundingBinDown[nb]      ->Sumw2();
-    histo_EM_CMS_MVAEMStatBoundingBinUp[nb]              ->Sumw2();
-    histo_EM_CMS_MVAEMStatBoundingBinDown[nb]          ->Sumw2();
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinUp[nb]   ->Sumw2();
-    histo_ggZH_hinv_CMS_MVAggZHStatBoundingBinDown[nb] ->Sumw2();
-  }
-
-  // Make lepton efficiency bounding histos
-  histo_VVV_CMS_MVALepEffMBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effMName.Data())  , Form("histo_VVV_%sUp",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVALepEffMBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effMName.Data()), Form("histo_VVV_%sDown",effMName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingDown->Sumw2();
-  histo_WZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effMName.Data())  , Form("histo_WZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effMName.Data()), Form("histo_WZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVALepEffMBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effMName.Data())  , Form("histo_ZZ_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVALepEffMBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effMName.Data()), Form("histo_ZZ_%sDown",effMName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffMBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effMName.Data())  , Form("histo_ggZH_hinv_%sUp",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffMBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effMName.Data()), Form("histo_ggZH_hinv_%sDown",effMName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingDown->Sumw2();
-
-  histo_VVV_CMS_MVALepEffMBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effMName.Data())  , Form("histo_VVV_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  histo_WZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effMName.Data())  , Form("histo_WZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  histo_ZZ_CMS_MVALepEffMBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effMName.Data())  , Form("histo_ZZ_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , Form("histo_ggZH_hinv_%sAvg",effMName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffMBoundingAvg  ->Sumw2();
-
-  histo_VVV_CMS_MVALepEffEBoundingUp              = new TH1D( Form("histo_VVV_%sUp",effEName.Data())  , Form("histo_VVV_%sUp",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVALepEffEBoundingDown            = new TH1D( Form("histo_VVV_%sDown",effEName.Data()), Form("histo_VVV_%sDown",effEName.Data()), nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingDown->Sumw2();
-  histo_WZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_WZ_%sUp",effEName.Data())  , Form("histo_WZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_WZ_%sDown",effEName.Data()), Form("histo_WZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVALepEffEBoundingUp               = new TH1D( Form("histo_ZZ_%sUp",effEName.Data())  , Form("histo_ZZ_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVALepEffEBoundingDown             = new TH1D( Form("histo_ZZ_%sDown",effEName.Data()), Form("histo_ZZ_%sDown",effEName.Data()), nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffEBoundingUp   = new TH1D( Form("histo_ggZH_hinv_%sUp",effEName.Data())  , Form("histo_ggZH_hinv_%sUp",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffEBoundingDown = new TH1D( Form("histo_ggZH_hinv_%sDown",effEName.Data()), Form("histo_ggZH_hinv_%sDown",effEName.Data()), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingDown->Sumw2();
-
-  histo_VVV_CMS_MVALepEffEBoundingAvg              = new TH1D( Form("histo_VVV_%sAvg",effEName.Data())  , Form("histo_VVV_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_VVV_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  histo_WZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_WZ_%sAvg",effEName.Data())  , Form("histo_WZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_WZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  histo_ZZ_CMS_MVALepEffEBoundingAvg               = new TH1D( Form("histo_ZZ_%sAvg",effEName.Data())  , Form("histo_ZZ_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ZZ_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  = new TH1D( Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , Form("histo_ggZH_hinv_%sAvg",effEName.Data())  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVALepEffEBoundingAvg  ->Sumw2();
-
-  // Make MET scale bounding histos
-  histo_VVV_CMS_MVAMETBoundingUp           = new TH1D( Form("histo_VVV_CMS_scale_metUp")  , Form("histo_VVV_CMS_scale_metUp")  , nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVAMETBoundingDown         = new TH1D( Form("histo_VVV_CMS_scale_metDown"), Form("histo_VVV_CMS_scale_metDown"), nBinMVA, xbins); histo_VVV_CMS_MVAMETBoundingDown->Sumw2();
-  histo_WZ_CMS_MVAMETBoundingUp            = new TH1D( Form("histo_WZ_CMS_scale_metUp")  , Form("histo_WZ_CMS_scale_metUp")  , nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVAMETBoundingDown          = new TH1D( Form("histo_WZ_CMS_scale_metDown"), Form("histo_WZ_CMS_scale_metDown"), nBinMVA, xbins); histo_WZ_CMS_MVAMETBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVAMETBoundingUp            = new TH1D( Form("histo_ZZ_CMS_scale_metUp")  , Form("histo_ZZ_CMS_scale_metUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVAMETBoundingDown          = new TH1D( Form("histo_ZZ_CMS_scale_metDown"), Form("histo_ZZ_CMS_scale_metDown"), nBinMVA, xbins); histo_ZZ_CMS_MVAMETBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVAMETBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_scale_metUp")  , Form("histo_ggZH_hinv_CMS_scale_metUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVAMETBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_scale_metDown"), Form("histo_ggZH_hinv_CMS_scale_metDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAMETBoundingDown->Sumw2();
-
-  // Make JES bounding histos
-  histo_VVV_CMS_MVAJESBoundingUp              = new TH1D( Form("histo_VVV_CMS_eff_b_2016Up")  , Form("histo_VVV_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVAJESBoundingDown            = new TH1D( Form("histo_VVV_CMS_eff_b_2016Down"), Form("histo_VVV_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_VVV_CMS_MVAJESBoundingDown->Sumw2();
-  histo_WZ_CMS_MVAJESBoundingUp               = new TH1D( Form("histo_WZ_CMS_eff_b_2016Up")  , Form("histo_WZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_WZ_CMS_MVAJESBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVAJESBoundingDown             = new TH1D( Form("histo_WZ_CMS_eff_b_2016Down"), Form("histo_WZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_WZ_CMS_MVAJESBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVAJESBoundingUp               = new TH1D( Form("histo_ZZ_CMS_eff_b_2016Up")  , Form("histo_ZZ_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVAJESBoundingDown             = new TH1D( Form("histo_ZZ_CMS_eff_b_2016Down"), Form("histo_ZZ_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_ZZ_CMS_MVAJESBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVAJESBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_eff_b_2016Up")  , Form("histo_ggZH_hinv_CMS_eff_b_2016Up")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAJESBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVAJESBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_eff_b_2016Down"), Form("histo_ggZH_hinv_CMS_eff_b_2016Down"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVAJESBoundingDown->Sumw2();
-
-  // Make Btag bounding histos
-  histo_VVV_CMS_MVABTAGBoundingUp              = new TH1D( Form("histo_VVV_CMS_scale_jUp")  , Form("histo_VVV_CMS_scale_jUp")  , nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingUp  ->Sumw2();
-  histo_VVV_CMS_MVABTAGBoundingDown            = new TH1D( Form("histo_VVV_CMS_scale_jDown"), Form("histo_VVV_CMS_scale_jDown"), nBinMVA, xbins); histo_VVV_CMS_MVABTAGBoundingDown->Sumw2();
-  histo_WZ_CMS_MVABTAGBoundingUp               = new TH1D( Form("histo_WZ_CMS_scale_jUp")  , Form("histo_WZ_CMS_scale_jUp")  , nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingUp  ->Sumw2();
-  histo_WZ_CMS_MVABTAGBoundingDown             = new TH1D( Form("histo_WZ_CMS_scale_jDown"), Form("histo_WZ_CMS_scale_jDown"), nBinMVA, xbins); histo_WZ_CMS_MVABTAGBoundingDown->Sumw2();
-  histo_ZZ_CMS_MVABTAGBoundingUp               = new TH1D( Form("histo_ZZ_CMS_scale_jUp")  , Form("histo_ZZ_CMS_scale_jUp")  , nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_MVABTAGBoundingDown             = new TH1D( Form("histo_ZZ_CMS_scale_jDown"), Form("histo_ZZ_CMS_scale_jDown"), nBinMVA, xbins); histo_ZZ_CMS_MVABTAGBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_MVABTAGBoundingUp   = new TH1D( Form("histo_ggZH_hinv_CMS_scale_jUp")  , Form("histo_ggZH_hinv_CMS_scale_jUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_MVABTAGBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_MVABTAGBoundingDown = new TH1D( Form("histo_ggZH_hinv_CMS_scale_jDown"), Form("histo_ggZH_hinv_CMS_scale_jDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_MVABTAGBoundingDown->Sumw2();
-
-  // Make BDT muons scale bounding histos
-  histo_VVV_CMS_BDTMuonScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_muonUp")  , Form("histo_VVV_CMS_bdt_muonUp")  , nBinMVA, xbins);histo_VVV_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
-  histo_VVV_CMS_BDTMuonScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_muonDown"), Form("histo_VVV_CMS_bdt_muonDown"), nBinMVA, xbins);histo_VVV_CMS_BDTMuonScaleBoundingDown->Sumw2();
-  histo_WZ_CMS_BDTMuonScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_muonUp")  , Form("histo_WZ_CMS_bdt_muonUp")  , nBinMVA, xbins);  histo_WZ_CMS_BDTMuonScaleBoundingUp   ->Sumw2();
-  histo_WZ_CMS_BDTMuonScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_muonDown"), Form("histo_WZ_CMS_bdt_muonDown"), nBinMVA, xbins);  histo_WZ_CMS_BDTMuonScaleBoundingDown ->Sumw2();
-  histo_ZZ_CMS_BDTMuonScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_muonUp")  , Form("histo_ZZ_CMS_bdt_muonUp")  , nBinMVA, xbins);  histo_ZZ_CMS_BDTMuonScaleBoundingUp   ->Sumw2();
-  histo_ZZ_CMS_BDTMuonScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_muonDown"), Form("histo_ZZ_CMS_bdt_muonDown"), nBinMVA, xbins);  histo_ZZ_CMS_BDTMuonScaleBoundingDown ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , Form("histo_ggZH_hinv_CMS_bdt_muonUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMuonScaleBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_muonDown"), Form("histo_ggZH_hinv_CMS_bdt_muonDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMuonScaleBoundingDown->Sumw2();
-
-  // Make BDT electron scale bounding histos
-  histo_VVV_CMS_BDTElectronScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_electronUp")  , Form("histo_VVV_CMS_bdt_electronUp")  , nBinMVA, xbins);             histo_VVV_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
-  histo_VVV_CMS_BDTElectronScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_electronDown"), Form("histo_VVV_CMS_bdt_electronDown"), nBinMVA, xbins);             histo_VVV_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
-  histo_WZ_CMS_BDTElectronScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_electronUp")  , Form("histo_WZ_CMS_bdt_electronUp")  , nBinMVA, xbins);               histo_WZ_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
-  histo_WZ_CMS_BDTElectronScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_electronDown"), Form("histo_WZ_CMS_bdt_electronDown"), nBinMVA, xbins);               histo_WZ_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
-  histo_ZZ_CMS_BDTElectronScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_electronUp")  , Form("histo_ZZ_CMS_bdt_electronUp")  , nBinMVA, xbins);               histo_ZZ_CMS_BDTElectronScaleBoundingUp         ->Sumw2();
-  histo_ZZ_CMS_BDTElectronScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_electronDown"), Form("histo_ZZ_CMS_bdt_electronDown"), nBinMVA, xbins);               histo_ZZ_CMS_BDTElectronScaleBoundingDown         ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , Form("histo_ggZH_hinv_CMS_bdt_electronUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTElectronScaleBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown= new TH1D( Form("histo_ggZH_hinv_CMS_bdt_electronDown"), Form("histo_ggZH_hinv_CMS_bdt_electronDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTElectronScaleBoundingDown->Sumw2();
-
-  // Make BDT met scale bounding histos
-  histo_VVV_CMS_BDTMETScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_METUp")  , Form("histo_VVV_CMS_bdt_METUp")  , nBinMVA, xbins); histo_VVV_CMS_BDTMETScaleBoundingUp  ->Sumw2();
-  histo_VVV_CMS_BDTMETScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_METDown"), Form("histo_VVV_CMS_bdt_METDown"), nBinMVA, xbins); histo_VVV_CMS_BDTMETScaleBoundingDown->Sumw2();
-  histo_WZ_CMS_BDTMETScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_METUp")  , Form("histo_WZ_CMS_bdt_METUp")  , nBinMVA, xbins);   histo_WZ_CMS_BDTMETScaleBoundingUp        ->Sumw2();
-  histo_WZ_CMS_BDTMETScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_METDown"), Form("histo_WZ_CMS_bdt_METDown"), nBinMVA, xbins);   histo_WZ_CMS_BDTMETScaleBoundingDown ->Sumw2();
-  histo_ZZ_CMS_BDTMETScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_METUp")  , Form("histo_ZZ_CMS_bdt_METUp")  , nBinMVA, xbins);   histo_ZZ_CMS_BDTMETScaleBoundingUp        ->Sumw2();
-  histo_ZZ_CMS_BDTMETScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_METDown"), Form("histo_ZZ_CMS_bdt_METDown"), nBinMVA, xbins);   histo_ZZ_CMS_BDTMETScaleBoundingDown ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METUp")  , Form("histo_ggZH_hinv_CMS_bdt_METUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMETScaleBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_METDown"), Form("histo_ggZH_hinv_CMS_bdt_METDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTMETScaleBoundingDown->Sumw2();
-
-  // Make BDT jet scale bounding histos
-  histo_VVV_CMS_BDTJetScaleBoundingUp           = new TH1D( Form("histo_VVV_CMS_bdt_JESUp")  , Form("histo_VVV_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_VVV_CMS_BDTJetScaleBoundingUp  ->Sumw2();
-  histo_VVV_CMS_BDTJetScaleBoundingDown         = new TH1D( Form("histo_VVV_CMS_bdt_JESDown"), Form("histo_VVV_CMS_bdt_JESDown"), nBinMVA, xbins); histo_VVV_CMS_BDTJetScaleBoundingDown->Sumw2();
-  histo_WZ_CMS_BDTJetScaleBoundingUp            = new TH1D( Form("histo_WZ_CMS_bdt_JESUp")  , Form("histo_WZ_CMS_bdt_JESUp")  , nBinMVA, xbins);   histo_WZ_CMS_BDTJetScaleBoundingUp        ->Sumw2();
-  histo_WZ_CMS_BDTJetScaleBoundingDown          = new TH1D( Form("histo_WZ_CMS_bdt_JESDown"), Form("histo_WZ_CMS_bdt_JESDown"), nBinMVA, xbins);   histo_WZ_CMS_BDTJetScaleBoundingDown ->Sumw2();
-  histo_ZZ_CMS_BDTJetScaleBoundingUp            = new TH1D( Form("histo_ZZ_CMS_bdt_JESUp")  , Form("histo_ZZ_CMS_bdt_JESUp")  , nBinMVA, xbins);   histo_ZZ_CMS_BDTJetScaleBoundingUp        ->Sumw2();
-  histo_ZZ_CMS_BDTJetScaleBoundingDown          = new TH1D( Form("histo_ZZ_CMS_bdt_JESDown"), Form("histo_ZZ_CMS_bdt_JESDown"), nBinMVA, xbins);   histo_ZZ_CMS_BDTJetScaleBoundingDown ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp    = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , Form("histo_ggZH_hinv_CMS_bdt_JESUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTJetScaleBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown  = new TH1D( Form("histo_ggZH_hinv_CMS_bdt_JESDown"), Form("histo_ggZH_hinv_CMS_bdt_JESDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_BDTJetScaleBoundingDown->Sumw2();
-
-  // Make pileup bounding histos
-  histo_VVV_CMS_PUBoundingUp                   = new TH1D( Form("histo_VVV_CMS_puUp")  , Form("histo_VVV_CMS_puUp")  , nBinMVA, xbins); histo_VVV_CMS_PUBoundingUp  ->Sumw2();
-  histo_VVV_CMS_PUBoundingDown                 = new TH1D( Form("histo_VVV_CMS_puDown"), Form("histo_VVV_CMS_puDown"), nBinMVA, xbins); histo_VVV_CMS_PUBoundingDown->Sumw2();
-  histo_WZ_CMS_PUBoundingUp                    = new TH1D( Form("histo_WZ_CMS_puUp")  , Form("histo_WZ_CMS_puUp")  , nBinMVA, xbins); histo_WZ_CMS_PUBoundingUp  ->Sumw2();
-  histo_WZ_CMS_PUBoundingDown                  = new TH1D( Form("histo_WZ_CMS_puDown"), Form("histo_WZ_CMS_puDown"), nBinMVA, xbins); histo_WZ_CMS_PUBoundingDown->Sumw2();
-  histo_ZZ_CMS_PUBoundingUp                    = new TH1D( Form("histo_ZZ_CMS_puUp")  , Form("histo_ZZ_CMS_puUp")  , nBinMVA, xbins); histo_ZZ_CMS_PUBoundingUp  ->Sumw2();
-  histo_ZZ_CMS_PUBoundingDown                  = new TH1D( Form("histo_ZZ_CMS_puDown"), Form("histo_ZZ_CMS_puDown"), nBinMVA, xbins); histo_ZZ_CMS_PUBoundingDown->Sumw2();
-  histo_ggZH_hinv_CMS_PUBoundingUp        = new TH1D( Form("histo_ggZH_hinv_CMS_puUp")  , Form("histo_ggZH_hinv_CMS_puUp")  , nBinMVA, xbins); histo_ggZH_hinv_CMS_PUBoundingUp  ->Sumw2();
-  histo_ggZH_hinv_CMS_PUBoundingDown      = new TH1D( Form("histo_ggZH_hinv_CMS_puDown"), Form("histo_ggZH_hinv_CMS_puDown"), nBinMVA, xbins); histo_ggZH_hinv_CMS_PUBoundingDown->Sumw2();
-  
-  // Make electroweak correction bounding histos
-  histo_WZ_CMS_EWKCorrUp                    = new TH1D( Form("histo_WZ_EWKCorrUp")  , Form("histo_WZ_EWKCorrUp")  , nBinMVA, xbins); histo_WZ_CMS_EWKCorrUp  ->Sumw2();
-  histo_WZ_CMS_EWKCorrDown                = new TH1D( Form("histo_WZ_EWKCorrDown"), Form("histo_WZ_EWKCorrDown"), nBinMVA, xbins); histo_WZ_CMS_EWKCorrDown->Sumw2();
-  histo_ZZ_CMS_EWKCorrUp                  = new TH1D( Form("histo_ZZ_EWKCorrUp")  , Form("histo_ZZ_EWKCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_EWKCorrUp  ->Sumw2();
-  histo_ZZ_CMS_EWKCorrDown                = new TH1D( Form("histo_ZZ_EWKCorrDown"), Form("histo_ZZ_EWKCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_EWKCorrDown->Sumw2();
-  histo_ZZ_CMS_ggCorrUp                   = new TH1D( Form("histo_ZZ_ggCorrUp")  , Form("histo_ZZ_ggCorrUp")  , nBinMVA, xbins); histo_ZZ_CMS_ggCorrUp  ->Sumw2();
-  histo_ZZ_CMS_ggCorrDown                 = new TH1D( Form("histo_ZZ_ggCorrDown"), Form("histo_ZZ_ggCorrDown"), nBinMVA, xbins); histo_ZZ_CMS_ggCorrDown->Sumw2();
-  histo_Zjets_CMS_ZjetsSystUp                    = new TH1D( Form("histo_Zjets_ZjetsSystUp")  , Form("histo_Zjets_ZjetsSystUp")  , nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystUp  ->Sumw2();
-  histo_Zjets_CMS_ZjetsSystDown           = new TH1D( Form("histo_Zjets_ZjetsSystDown"), Form("histo_Zjets_ZjetsSystDown"), nBinMVA, xbins); histo_Zjets_CMS_ZjetsSystDown->Sumw2();
-  
-  // Make the above bounding histos for each uncertainty for each signal model
+  TRandom3 toy_machine(randomToySeed);
+  bdt_toy_envelope_electronScale_VVV        = new TH2F("bdt_toy_envelope_electronScale_VVV"       , "bdt_toy_envelope_electronScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_electronScale_WZ         = new TH2F("bdt_toy_envelope_electronScale_WZ"        , "bdt_toy_envelope_electronScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_electronScale_ZZ         = new TH2F("bdt_toy_envelope_electronScale_ZZ"        , "bdt_toy_envelope_electronScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_electronScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_electronScale_ggZH_hinv" , "bdt_toy_envelope_electronScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_muonScale_VVV        = new TH2F("bdt_toy_envelope_muonScale_VVV"       , "bdt_toy_envelope_muonScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_muonScale_WZ         = new TH2F("bdt_toy_envelope_muonScale_WZ"        , "bdt_toy_envelope_muonScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_muonScale_ZZ         = new TH2F("bdt_toy_envelope_muonScale_ZZ"        , "bdt_toy_envelope_muonScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_muonScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_muonScale_ggZH_hinv" , "bdt_toy_envelope_muonScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_METScale_VVV        = new TH2F("bdt_toy_envelope_METScale_VVV"       , "bdt_toy_envelope_METScale_VVV"       , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_METScale_WZ         = new TH2F("bdt_toy_envelope_METScale_WZ"        , "bdt_toy_envelope_METScale_WZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_METScale_ZZ         = new TH2F("bdt_toy_envelope_METScale_ZZ"        , "bdt_toy_envelope_METScale_ZZ"        , nBinMVA, xbins, 1000 , 0, 4); 
+  bdt_toy_envelope_METScale_ggZH_hinv  = new TH2F("bdt_toy_envelope_METScale_ggZH_hinv" , "bdt_toy_envelope_METScale_ggZH_hinv" , nBinMVA, xbins, 1000 , 0, 4); 
+  histo_bdt_toys_electronScale_VVV       = new TH2F("histo_bdt_toys_electronScale_VVV"      , "histo_bdt_toys_electronScale_VVV"       , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_VVV->Sumw2();
+  histo_bdt_toys_electronScale_WZ        = new TH2F("histo_bdt_toys_electronScale_WZ"       , "histo_bdt_toys_electronScale_WZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_WZ->Sumw2();
+  histo_bdt_toys_electronScale_ZZ        = new TH2F("histo_bdt_toys_electronScale_ZZ"       , "histo_bdt_toys_electronScale_ZZ"        , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZZ->Sumw2();
+  histo_bdt_toys_electronScale_ggZH_hinv = new TH2F("histo_bdt_toys_electronScale_ggZH_hinv", "histo_bdt_toys_electronScale_ggZH_hinv" , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ggZH_hinv->Sumw2();
+  histo_bdt_toys_muonScale_VVV           = new TH2F("histo_bdt_toys_muonScale_VVV"          , "histo_bdt_toys_muonScale_VVV"           , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_VVV->Sumw2();
+  histo_bdt_toys_muonScale_WZ            = new TH2F("histo_bdt_toys_muonScale_WZ"           , "histo_bdt_toys_muonScale_WZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_WZ->Sumw2();
+  histo_bdt_toys_muonScale_ZZ            = new TH2F("histo_bdt_toys_muonScale_ZZ"           , "histo_bdt_toys_muonScale_ZZ"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZZ->Sumw2();
+  histo_bdt_toys_muonScale_ggZH_hinv     = new TH2F("histo_bdt_toys_muonScale_ggZH_hinv"    , "histo_bdt_toys_muonScale_ggZH_hinv"     , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ggZH_hinv->Sumw2();
+  histo_bdt_toys_METScale_VVV            = new TH2F("histo_bdt_toys_METScale_VVV"           , "histo_bdt_toys_METScale_VVV"            , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_VVV->Sumw2();
+  histo_bdt_toys_METScale_WZ             = new TH2F("histo_bdt_toys_METScale_WZ"            , "histo_bdt_toys_METScale_WZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_WZ->Sumw2();
+  histo_bdt_toys_METScale_ZZ             = new TH2F("histo_bdt_toys_METScale_ZZ"            , "histo_bdt_toys_METScale_ZZ"             , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZZ->Sumw2();
+  histo_bdt_toys_METScale_ggZH_hinv      = new TH2F("histo_bdt_toys_METScale_ggZH_hinv"     , "histo_bdt_toys_METScale_ggZH_hinv"      , nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ggZH_hinv->Sumw2();
+  bdt_syst_electronScaleUp_VVV       = new TH1F("bdt_syst_electronScaleUp_VVV", "bdt_syst_electronScaleUp_VVV", nBinMVA, xbins);
+  bdt_syst_electronScaleUp_WZ        = new TH1F("bdt_syst_electronScaleUp_WZ", "bdt_syst_electronScaleUp_WZ", nBinMVA, xbins);
+  bdt_syst_electronScaleUp_ZZ        = new TH1F("bdt_syst_electronScaleUp_ZZ", "bdt_syst_electronScaleUp_ZZ", nBinMVA, xbins);
+  bdt_syst_electronScaleUp_ggZH_hinv = new TH1F("bdt_syst_electronScaleUp_ggZH_hinv", "bdt_syst_electronScaleUp_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_muonScaleUp_VVV           = new TH1F("bdt_syst_muonScaleUp_VVV", "bdt_syst_muonScaleUp_VVV", nBinMVA, xbins);
+  bdt_syst_muonScaleUp_WZ            = new TH1F("bdt_syst_muonScaleUp_WZ", "bdt_syst_muonScaleUp_WZ", nBinMVA, xbins);
+  bdt_syst_muonScaleUp_ZZ            = new TH1F("bdt_syst_muonScaleUp_ZZ", "bdt_syst_muonScaleUp_ZZ", nBinMVA, xbins);
+  bdt_syst_muonScaleUp_ggZH_hinv     = new TH1F("bdt_syst_muonScaleUp_ggZH_hinv", "bdt_syst_muonScaleUp_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_METScaleUp_VVV            = new TH1F("bdt_syst_METScaleUp_VVV", "bdt_syst_METScaleUp_VVV", nBinMVA, xbins);
+  bdt_syst_METScaleUp_WZ             = new TH1F("bdt_syst_METScaleUp_WZ", "bdt_syst_METScaleUp_WZ", nBinMVA, xbins);
+  bdt_syst_METScaleUp_ZZ             = new TH1F("bdt_syst_METScaleUp_ZZ", "bdt_syst_METScaleUp_ZZ", nBinMVA, xbins);
+  bdt_syst_METScaleUp_ggZH_hinv      = new TH1F("bdt_syst_METScaleUp_ggZH_hinv", "bdt_syst_METScaleUp_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_electronScaleDown_VVV       = new TH1F("bdt_syst_electronScaleDown_VVV", "bdt_syst_electronScaleDown_VVV", nBinMVA, xbins);
+  bdt_syst_electronScaleDown_WZ        = new TH1F("bdt_syst_electronScaleDown_WZ", "bdt_syst_electronScaleDown_WZ", nBinMVA, xbins);
+  bdt_syst_electronScaleDown_ZZ        = new TH1F("bdt_syst_electronScaleDown_ZZ", "bdt_syst_electronScaleDown_ZZ", nBinMVA, xbins);
+  bdt_syst_electronScaleDown_ggZH_hinv = new TH1F("bdt_syst_electronScaleDown_ggZH_hinv", "bdt_syst_electronScaleDown_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_muonScaleDown_VVV           = new TH1F("bdt_syst_muonScaleDown_VVV", "bdt_syst_muonScaleDown_VVV", nBinMVA, xbins);
+  bdt_syst_muonScaleDown_WZ            = new TH1F("bdt_syst_muonScaleDown_WZ", "bdt_syst_muonScaleDown_WZ", nBinMVA, xbins);
+  bdt_syst_muonScaleDown_ZZ            = new TH1F("bdt_syst_muonScaleDown_ZZ", "bdt_syst_muonScaleDown_ZZ", nBinMVA, xbins);
+  bdt_syst_muonScaleDown_ggZH_hinv     = new TH1F("bdt_syst_muonScaleDown_ggZH_hinv", "bdt_syst_muonScaleDown_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_METScaleDown_VVV            = new TH1F("bdt_syst_METScaleDown_VVV", "bdt_syst_METScaleDown_VVV", nBinMVA, xbins);
+  bdt_syst_METScaleDown_WZ             = new TH1F("bdt_syst_METScaleDown_WZ", "bdt_syst_METScaleDown_WZ", nBinMVA, xbins);
+  bdt_syst_METScaleDown_ZZ             = new TH1F("bdt_syst_METScaleDown_ZZ", "bdt_syst_METScaleDown_ZZ", nBinMVA, xbins);
+  bdt_syst_METScaleDown_ggZH_hinv      = new TH1F("bdt_syst_METScaleDown_ggZH_hinv", "bdt_syst_METScaleDown_ggZH_hinv", nBinMVA, xbins);
+  bdt_syst_electronScaleUp_VVV       ->SetDirectory(0);
+  bdt_syst_electronScaleUp_WZ        ->SetDirectory(0);
+  bdt_syst_electronScaleUp_ZZ        ->SetDirectory(0);
+  bdt_syst_electronScaleUp_ggZH_hinv ->SetDirectory(0);
+  bdt_syst_muonScaleUp_VVV           ->SetDirectory(0);
+  bdt_syst_muonScaleUp_WZ            ->SetDirectory(0);
+  bdt_syst_muonScaleUp_ZZ            ->SetDirectory(0);
+  bdt_syst_muonScaleUp_ggZH_hinv     ->SetDirectory(0);
+  bdt_syst_METScaleUp_VVV            ->SetDirectory(0);
+  bdt_syst_METScaleUp_WZ             ->SetDirectory(0);
+  bdt_syst_METScaleUp_ZZ             ->SetDirectory(0);
+  bdt_syst_METScaleUp_ggZH_hinv      ->SetDirectory(0);
+  bdt_syst_electronScaleDown_VVV       ->SetDirectory(0);
+  bdt_syst_electronScaleDown_WZ        ->SetDirectory(0);
+  bdt_syst_electronScaleDown_ZZ        ->SetDirectory(0);
+  bdt_syst_electronScaleDown_ggZH_hinv ->SetDirectory(0);
+  bdt_syst_muonScaleDown_VVV           ->SetDirectory(0);
+  bdt_syst_muonScaleDown_WZ            ->SetDirectory(0);
+  bdt_syst_muonScaleDown_ZZ            ->SetDirectory(0);
+  bdt_syst_muonScaleDown_ggZH_hinv     ->SetDirectory(0);
+  bdt_syst_METScaleDown_VVV            ->SetDirectory(0);
+  bdt_syst_METScaleDown_WZ             ->SetDirectory(0);
+  bdt_syst_METScaleDown_ZZ             ->SetDirectory(0);
+  bdt_syst_METScaleDown_ggZH_hinv      ->SetDirectory(0);
   for(int nModel=0; nModel<nSigModels; nModel++) { 
-    histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]          = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), effMName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffMBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effMName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effMName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffMBoundingAvg[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingUp [nModel]         = new TH1D( Form("histo_ZH_hinv_%s_%sUp",                   signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sUp"  ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingDown [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_%sDown",            signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sDown",           signalName_[nModel].Data(), effEName.Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVALepEffEBoundingAvg [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_%sAvg",             signalName_[nModel].Data(), effEName.Data()), Form("histo_ZH_hinv_%s_%sAvg" ,           signalName_[nModel].Data(), effEName.Data())  , nBinMVA, xbins); histo_ZH_hinv_CMS_MVALepEffEBoundingAvg[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAMETBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAMETBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_metDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAMETBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVAJESBoundingUp [nModel]             = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jUp"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVAJESBoundingDown [nModel]           = new TH1D( Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_scale_jDown"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVAJESBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_MVABTAGBoundingUp [nModel]            = new TH1D( Form("histo_ZH_hinv_%s_CMS_eff_b_2016Up"        , signalName_[nModel].Data()),  Form("histo_ZH_hinv_%s_CMS_eff_b_2016Up"    , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVABTAGBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_MVABTAGBoundingDown [nModel]          = new TH1D( Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()),          Form("histo_ZH_hinv_%s_CMS_eff_b_2016Down"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_MVABTAGBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp [nModel]       = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown [nModel]     = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_muonDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMuonScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp [nModel]   = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown [nModel] = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_bdt_electronDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTElectronScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_METUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTMETScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_METDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTMETScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_BDTJetScaleBoundingUp [nModel]        = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_JESUp"  , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_BDTJetScaleBoundingDown [nModel]      = new TH1D( Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()),                Form("histo_ZH_hinv_%s_CMS_bdt_JESDown", signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_BDTJetScaleBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_PUBoundingUp [nModel]                 = new TH1D( Form("histo_ZH_hinv_%s_CMS_puUp"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puUp"           , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_PUBoundingDown [nModel]               = new TH1D( Form("histo_ZH_hinv_%s_CMS_puDown"         , signalName_[nModel].Data()),           Form("histo_ZH_hinv_%s_CMS_puDown"           , signalName_[nModel].Data()), nBinMVA, xbins); histo_ZH_hinv_CMS_PUBoundingDown[nModel]->Sumw2();
-    histo_ZH_hinv_CMS_EWKCorrUp[nModel]                     = new TH1D( Form("histo_ZH_hinv_%s_%sUp",   signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sUp",  signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrUp[nModel]  ->Sumw2();
-    histo_ZH_hinv_CMS_EWKCorrDown[nModel]                   = new TH1D( Form("histo_ZH_hinv_%s_%sDown", signalName_[nModel].Data(), "CMS_EWKCorr"), Form("histo_ZH_hinv_%s_%sDown",signalName_[nModel].Data(), "CMS_EWKCorr"), nBinMVA, xbins); histo_ZH_hinv_CMS_EWKCorrDown[nModel]->Sumw2();
-
+    bdt_toy_envelope_electronScale_ZH_hinv[nModel] = new TH2F(Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_electronScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+    bdt_toy_envelope_muonScale_ZH_hinv[nModel]     = new TH2F(Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_muonScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+    bdt_toy_envelope_METScale_ZH_hinv[nModel]      = new TH2F(Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_toy_envelope_METScale_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins, 1000 , 0, 4); 
+    histo_bdt_toys_electronScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_electronScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_electronScale_ZH_hinv[nModel]->Sumw2();
+    histo_bdt_toys_muonScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_muonScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_muonScale_ZH_hinv[nModel]->Sumw2();
+    histo_bdt_toys_METScale_ZH_hinv[nModel]   = new TH2F(Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   Form("histo_bdt_toys_METScale_ZH_hinv_%s",signalName_[nModel].Data()),   nBinMVA, xbins, num_bdt_toys, 0, num_bdt_toys); histo_bdt_toys_METScale_ZH_hinv[nModel]->Sumw2();
+    bdt_syst_electronScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_muonScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_METScaleUp_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleUp_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_electronScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_electronScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_muonScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_muonScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_METScaleDown_ZH_hinv[nModel] = new TH1F(Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), Form("bdt_syst_METScaleDown_ZH_hinv_%s",signalName_[nModel].Data()), nBinMVA, xbins);
+    bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+    bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+    bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetDirectory(0);
+    bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
+    bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
+    bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetDirectory(0);
   }
+  for(int nb=1; nb<nBinMVA; nb++) {  
+    bdt_syst_electronScaleUp_VVV       ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleUp_WZ        ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleUp_ZZ        ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleUp_ggZH_hinv ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleUp_VVV           ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleUp_WZ            ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleUp_ZZ            ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleUp_ggZH_hinv     ->SetBinContent(nb,1.);
+    bdt_syst_METScaleUp_VVV            ->SetBinContent(nb,1.);
+    bdt_syst_METScaleUp_WZ             ->SetBinContent(nb,1.);
+    bdt_syst_METScaleUp_ZZ             ->SetBinContent(nb,1.);
+    bdt_syst_METScaleUp_ggZH_hinv      ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleDown_VVV       ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleDown_WZ        ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleDown_ZZ        ->SetBinContent(nb,1.);
+    bdt_syst_electronScaleDown_ggZH_hinv ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleDown_VVV           ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleDown_WZ            ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleDown_ZZ            ->SetBinContent(nb,1.);
+    bdt_syst_muonScaleDown_ggZH_hinv     ->SetBinContent(nb,1.);
+    bdt_syst_METScaleDown_VVV            ->SetBinContent(nb,1.);
+    bdt_syst_METScaleDown_WZ             ->SetBinContent(nb,1.);
+    bdt_syst_METScaleDown_ZZ             ->SetBinContent(nb,1.);
+    bdt_syst_METScaleDown_ggZH_hinv      ->SetBinContent(nb,1.);
+    for(int nModel=0; nModel<nSigModels; nModel++) {
+      bdt_syst_electronScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+      bdt_syst_muonScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+      bdt_syst_METScaleUp_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+      bdt_syst_electronScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+      bdt_syst_muonScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+      bdt_syst_METScaleDown_ZH_hinv[nModel] ->SetBinContent(nb,1.);
+    }
+  }
+  // Store a value from Gaussian distribution with mean=0, sigma=1
+  // These values will get multiplied by the individual nuisance sizes
+  for(unsigned int i_toy=0; i_toy<num_bdt_toys; i_toy++) {
+    bdt_toy_scale[i_toy]=toy_machine.Gaus(0,1);
+  }
+  
   unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
-  printf("zhAnalysis::MakeHistos complete! (%lu seconds)\n", t2-t1);
-}
+  printf("zhAnalysis::SetupBDTSystematics : Complete (%lu seconds)\n", t2-t1);
+  return true;
 
-TH1D* zhAnalysis::MakeHisto(unsigned int thePlot, TString &plotName) {
-  TH1D *theHisto; unsigned nBinPlot; float xminPlot, xmaxPlot, pi=TMath::Pi();
-       if(thePlot== 0) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nJet";} 
-  else if(thePlot== 1) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nBJet";} 
-  else if(thePlot== 2) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="passZMass nLep";} 
-  else if(thePlot== 3) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="passZMass dPhi dilep MET";} 
-  else if(thePlot== 4) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="PRESEL MET";}
-  else if(thePlot== 5) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="PRESEL MET balance";}
-  else if(thePlot== 6) {nBinPlot= 100; xminPlot=50.0; xmaxPlot= 250.0; plotName="PRESEL pTll";}
-  else if(thePlot== 7) {nBinPlot=   4; xminPlot=-0.5; xmaxPlot=   3.5; plotName="N-1 nTau";}
-  else if(thePlot== 8) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 jet ET balance";}
-  else if(thePlot== 9) {nBinPlot= 500; xminPlot= 0.0; xmaxPlot=1000.0; plotName="N-1 mT";}
-  else if(thePlot==10) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 100.0; plotName="N-1 dilep mass";}
-  else if(thePlot==11) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="N-1 nJet";}
-  else if(thePlot==12) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot= 400.0; plotName="N-1 MET";}
-  else if(thePlot==13) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 MET balance";}
-  else if(thePlot==14) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi dilep MET";}
-  else if(thePlot==15) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 max CSV2";}
-  else if(thePlot==16) {nBinPlot= 100; xminPlot=50.0; xmaxPlot= 250.0; plotName="N-1 dilep pT";}
-  else if(thePlot==17) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi jet1 MET";}
-  else if(thePlot==18) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi lep1 lep2";}
-  else if(thePlot==19) {nBinPlot=  60; xminPlot=40.0; xmaxPlot= 100.0; plotName="N-1 MET";}
-  else if(thePlot==20) {nBinPlot=  60; xminPlot= 0.0; xmaxPlot=   3.0; plotName="N-1 dR lep1 lep2";}
-  else if(thePlot==21) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=1000.0; plotName="TIGHTSEL mTll";}
-  else if(thePlot==22) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="TIGHTSEL lep1 pT";}
-  else if(thePlot==23) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 200.0; plotName="TIGHTSEL lep2 pT";}
-  else if(thePlot==24) {nBinPlot=  40; xminPlot=-0.5; xmaxPlot=  39.5; plotName="TIGHTSEL NPV";}
-  else if(thePlot==25) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="TIGHTSEL pTll/mTll";}
-  else if(thePlot==26) {nBinPlot= 100; xminPlot=-1.0; xmaxPlot=   1.0; plotName="TIGHTSEL MET150 BDT";}
-  else if(thePlot==27) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="TIGHTSEL min dPhi lep MET";}
-  else if(thePlot==28) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   2.5; plotName="TIGHTSEL dilep eta";}
-  else if(thePlot==29) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="DYSANESEL1 dPhi jet1 MET";} 
-  else if(thePlot==30) {nBinPlot=  40; xminPlot= 0.0; xmaxPlot=   2.0; plotName="DYSANESEL1 calo PF balance";} 
-  else if(thePlot==31) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 500.0; plotName="DYSANESEL1 MET";} 
-  else if(thePlot==32) {nBinPlot=  32; xminPlot=-0.1; xmaxPlot=   3.1; plotName="DYSANESEL2 dPhi jet1 MET";} 
-  else if(thePlot==33) {nBinPlot=  40; xminPlot= 0.0; xmaxPlot=   2.0; plotName="DYSANESEL2 calo PF balance";} 
-  else if(thePlot==34) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 500.0; plotName="DYSANESEL2 MET";} 
-  else if(thePlot==35) {nBinPlot=  50; xminPlot= 0.0; xmaxPlot=   2.5; plotName="ZHGSEL pho abs eta";}
-  else if(thePlot==allPlots-2) {nBinPlot =  numberCuts+1; xminPlot =-0.5; xmaxPlot =  numberCuts+0.5; plotName="Cut flow";}
-  else if(thePlot==allPlots-1) plotName="Shape analysis";
-  else { printf("error with zhAnalysis::MakeHisto: thePlot out of bounds (%d). check allPlots in zhAnalysis.h\n", thePlot); assert(0); theHisto=new TH1D; return theHisto;}
-  if(thePlot != allPlots-1) theHisto = new TH1D("theHisto", "theHisto", nBinPlot, xminPlot, xmaxPlot);
-  else                      theHisto = new TH1D("theHisto", "theHisto", nBinMVA, xbins);
-  theHisto->Sumw2();
-  return theHisto;
 }
-
+bool zhAnalysis::SaveBDTSystematics(int nModel) {
+  printf("zhAnalysis::SaveBDTSystematics : Saving the BDT systematics to file\n");
+  unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
+  cachedSystFile->cd();
+  histo_bdt_toys_electronScale_VVV       ->Write();
+  histo_bdt_toys_electronScale_WZ        ->Write();
+  histo_bdt_toys_electronScale_ZZ        ->Write();
+  histo_bdt_toys_electronScale_ggZH_hinv ->Write();
+  histo_bdt_toys_electronScale_ZH_hinv[nModel]->Write();
+  histo_bdt_toys_muonScale_VVV           ->Write();
+  histo_bdt_toys_muonScale_WZ            ->Write();
+  histo_bdt_toys_muonScale_ZZ            ->Write();
+  histo_bdt_toys_muonScale_ggZH_hinv     ->Write();
+  histo_bdt_toys_muonScale_ZH_hinv[nModel]    ->Write();
+  histo_bdt_toys_METScale_VVV            ->Write();
+  histo_bdt_toys_METScale_WZ             ->Write();
+  histo_bdt_toys_METScale_ZZ             ->Write();
+  histo_bdt_toys_METScale_ggZH_hinv      ->Write();
+  histo_bdt_toys_METScale_ZH_hinv[nModel]     ->Write();
+  bdt_toy_envelope_electronScale_VVV->Write();
+  bdt_toy_envelope_electronScale_WZ->Write();
+  bdt_toy_envelope_electronScale_ZZ->Write();
+  bdt_toy_envelope_electronScale_ZH_hinv[nModel]->Write();
+  bdt_toy_envelope_electronScale_ggZH_hinv->Write();
+  bdt_toy_envelope_muonScale_VVV->Write();
+  bdt_toy_envelope_muonScale_WZ->Write();
+  bdt_toy_envelope_muonScale_ZZ->Write();
+  bdt_toy_envelope_muonScale_ZH_hinv[nModel]->Write();
+  bdt_toy_envelope_muonScale_ggZH_hinv->Write();
+  bdt_toy_envelope_METScale_VVV->Write();
+  bdt_toy_envelope_METScale_WZ->Write();
+  bdt_toy_envelope_METScale_ZZ->Write();
+  bdt_toy_envelope_METScale_ZH_hinv[nModel]->Write();
+  bdt_toy_envelope_METScale_ggZH_hinv->Write();
+  bdt_syst_electronScaleUp_VVV       ->Write();
+  bdt_syst_electronScaleUp_WZ        ->Write();
+  bdt_syst_electronScaleUp_ZZ        ->Write();
+  bdt_syst_electronScaleUp_ggZH_hinv ->Write();
+  bdt_syst_electronScaleUp_ZH_hinv[nModel] ->Write();
+  bdt_syst_muonScaleUp_VVV           ->Write();
+  bdt_syst_muonScaleUp_WZ            ->Write();
+  bdt_syst_muonScaleUp_ZZ            ->Write();
+  bdt_syst_muonScaleUp_ggZH_hinv     ->Write();
+  bdt_syst_muonScaleUp_ZH_hinv[nModel] ->Write();
+  bdt_syst_METScaleUp_VVV            ->Write();
+  bdt_syst_METScaleUp_WZ             ->Write();
+  bdt_syst_METScaleUp_ZZ             ->Write();
+  bdt_syst_METScaleUp_ggZH_hinv      ->Write();
+  bdt_syst_METScaleUp_ZH_hinv[nModel] ->Write();
+  bdt_syst_electronScaleDown_VVV       ->Write();
+  bdt_syst_electronScaleDown_WZ        ->Write();
+  bdt_syst_electronScaleDown_ZZ        ->Write();
+  bdt_syst_electronScaleDown_ggZH_hinv ->Write();
+  bdt_syst_electronScaleDown_ZH_hinv[nModel] ->Write();
+  bdt_syst_muonScaleDown_VVV           ->Write();
+  bdt_syst_muonScaleDown_WZ            ->Write();
+  bdt_syst_muonScaleDown_ZZ            ->Write();
+  bdt_syst_muonScaleDown_ggZH_hinv     ->Write();
+  bdt_syst_muonScaleDown_ZH_hinv[nModel] ->Write();
+  bdt_syst_METScaleDown_VVV            ->Write();
+  bdt_syst_METScaleDown_WZ             ->Write();
+  bdt_syst_METScaleDown_ZZ             ->Write();
+  bdt_syst_METScaleDown_ggZH_hinv      ->Write();
+  bdt_syst_METScaleDown_ZH_hinv[nModel] ->Write();
+  cachedSystFile->Close();
+  
+  unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
+  printf("zhAnalysis::SaveBDTSystematics : Complete (%lu seconds)\n", t2-t1);
+  return true;
+}

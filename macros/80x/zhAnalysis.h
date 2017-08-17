@@ -15,7 +15,6 @@
 #include "TMVA/Reader.h"
 
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
-//#include "PandaAnalysis/Flat/interface/PandaLeptonicAnalyzer.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
 #include "MitZHAnalysis/macros/80x/FlatFile.h"
 
@@ -38,12 +37,11 @@ const int MVAVarType = 1; const int nBinMVA = 12; Double_t xbins[nBinMVA+1] = {0
 const int      allPlots     = 37; //number of variable plots
 const int      processTypes = 8; // number of process categories
 const int      numberCuts   = 11; //number of cuts for the cutflow numbers
+const unsigned num_bdt_toys = 1000;
 
 class zhAnalysis {
   public:
     // Settings
-    unsigned   nJetsType;
-    int        typeSel;
     bool       isMIT                   = true;
     bool       isBlinded               = false;
     int        plotModel               = 0;
@@ -102,8 +100,8 @@ class zhAnalysis {
     };
     zhAnalysis(string subdirectory_="");
     ~zhAnalysis();
-    void LoadFlatFiles(bool doDM=false);
-    void Run(bool verbose=true, int nJetsType_=1, int typeSel_=3);
+    bool LoadFlatFiles(bool doDM=false);
+    void Run(bool verbose_=false, int nJetsType_=1, int typeSel_=3, int plotModel_=0);
   private:
     // Hardcoded settings
     
@@ -111,19 +109,29 @@ class zhAnalysis {
     TString systTypeName[nSystTypes]= {"JESUP","JESDOWN","METUP","METDOWN"};
     const TString  typeLepSel   = "medium";
     const bool     useDYPT      = true;
-    const unsigned num_bdt_toys = 1000;
     const double   bTagCut      = 0.8484;
-    int period                  = 1;
-    TString ECMsb               = "13TeV2016";
-    unsigned       randomToySeed;
-    char           finalStateName[4];
+    const int period            = 1;
+    const TString ECMsb         = "13TeV2017";
+    char finalStateName[4];
     string         subdirectory = "";
     TString effMName="CMS_eff2017_m",   effEName="CMS_eff2017_e",
             momMName="CMS_scale2017_m", momEName="CMS_scale2017_e";
 
-    // Switches and counters
+    // Systematics numbers
+    double systEM[2] = {1.0, 1.0};
+    double qcdScaleTotal[2] = {0.035, 0.231};
+    double pdfTotal[2] = {0.016, 0.051};
+
+    // Switches, counters, other storage
+    unsigned       randomToySeed;
     int nSigModels;
     unsigned nInputFiles=0;
+    bool verbose=false;
+    bool madeHistos=false;
+    float bdt_toy_scale[num_bdt_toys];
+    unsigned   nJetsType;
+    int        typeSel;
+    
 
     // File prefixes/paths
     TString filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
@@ -131,12 +139,14 @@ class zhAnalysis {
     TString filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
     TString filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
     TString zjetsTemplatesPath = "";
+    char filenameBDTSysts[200]; 
 
     // Files, signals, category/process names
     vector<FlatFile> inputFlatFiles; vector<TString> signalName_;
     TString plotName_[allPlots];
     TString categoryName_[processTypes]={"Data","Nonresonant","Z+jets","WZ","ZZ","VVV","qqZH","ggZH"};
     TString processName[processTypes] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
+    TFile* cachedSystFile;
 
     // Allocate memory for histograms. Support only 500 signal models (hard-coded).
     TH1D* histoZHSEL[4];
@@ -357,6 +367,9 @@ class zhAnalysis {
     // Private member functions
     void  SetFinalStateName();
     TH1D* MakeHisto(unsigned int thePlot, TString &plotName);
-    void  MakeHistos();
-    void  WriteHistos();
+    bool  MakeHistos();
+    bool  SaveHistos();
+    bool  LoadCachedBDTSystematics();
+    bool  SetupBDTSystematics();
+    bool  SaveBDTSystematics(int nModel);
 };

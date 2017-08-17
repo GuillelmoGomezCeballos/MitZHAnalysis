@@ -17,6 +17,7 @@ zhAnalysis::zhAnalysis(string subdirectory_) {
   return;                                                                                                             
 }
 
+zhAnalysis::~zhAnalysis() {}
 
 void zhAnalysis::Run(
   bool verbose_/*=false*/, int nJetsType_/*=1*/, int typeSel_/*=3*/, int plotModel_/*=0*/
@@ -2086,7 +2087,6 @@ bool zhAnalysis::SaveHistos() {
         bdt_toy_binyields_METScale_ggZH_hinv[nb-1]            ->GetXaxis()->SetRangeUser(0.8,1.199);
  
         // Since not using cached results, finally calculate the bin-by-bin % systematics (up and down) for the BDT 
-        double quantileProbs[3]={0.159,0.5,0.841};
         double theQuantilesElectron[3], theQuantilesMuon[3], theQuantilesMET[3];
         if(histo_ZH_hinv[nModel]->GetBinContent(nb)   > 0 ) { 
           bdt_toy_binyields_electronScale_ZH_hinv[nModel][nb-1]->GetQuantiles(3, theQuantilesElectron, quantileProbs);

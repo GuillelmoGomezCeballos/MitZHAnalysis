@@ -19,4 +19,5 @@ FlatFile::FlatFile(TString name_, int category_, int signalIndex_) {
 FlatFile::FlatFile() {
   name=""; category=-1; signalIndex=-999;
 }
+FlatFile::~FlatFile() {}
 

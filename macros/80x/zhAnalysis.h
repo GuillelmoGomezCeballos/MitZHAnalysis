@@ -14,9 +14,9 @@
 #include <fstream>
 #include "TMVA/Reader.h"
 
+#include "MitZHAnalysis/macros/80x/FlatFile.h"
 #include "PandaAnalysis/Flat/interface/GeneralLeptonicTree.h"
 #include "MitZHAnalysis/macros/80x/zhMVA.h"
-#include "MitZHAnalysis/macros/80x/FlatFile.h"
 
 // MVA variable types:
 // 1: MET only
@@ -121,6 +121,7 @@ class zhAnalysis {
     double systEM[2] = {1.0, 1.0};
     double qcdScaleTotal[2] = {0.035, 0.231};
     double pdfTotal[2] = {0.016, 0.051};
+    double quantileProbs[3]={0.159,0.5,0.841};
 
     // Switches, counters, other storage
     unsigned       randomToySeed;
@@ -365,11 +366,12 @@ class zhAnalysis {
     TH2F *bdt_toy_envelope_METScale_VVV, *bdt_toy_envelope_METScale_WZ, *bdt_toy_envelope_METScale_ZZ, *bdt_toy_envelope_METScale_ZH_hinv[500], *bdt_toy_envelope_METScale_ggZH_hinv;
 
     // Private member functions
-    void  SetFinalStateName();
+    bool  ComputeSystematics();
+    bool  LoadCachedBDTSystematics();
     TH1D* MakeHisto(unsigned int thePlot, TString &plotName);
     bool  MakeHistos();
-    bool  SaveHistos();
-    bool  LoadCachedBDTSystematics();
-    bool  SetupBDTSystematics();
     bool  SaveBDTSystematics(int nModel);
+    bool  SaveHistos();
+    void  SetFinalStateName();
+    bool  SetupBDTSystematics();
 };

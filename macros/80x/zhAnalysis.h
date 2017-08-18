@@ -123,6 +123,11 @@ class zhAnalysis {
     double pdfTotal[2] = {0.016, 0.051};
     double quantileProbs[3]={0.159,0.5,0.841};
 
+    // Physics quantities
+    GeneralLeptonicTree gltEvent;
+    float normalizedWeight, sf_btag0, sf_btag0BUp, sf_btag0BDown, sf_btag0MUp, sf_btag0MDown;
+    TTree *inputTree;
+    
     // Switches, counters, other storage
     unsigned       randomToySeed;
     int nSigModels;
@@ -373,5 +378,6 @@ class zhAnalysis {
     bool  SaveBDTSystematics(int nModel);
     bool  SaveHistos();
     void  SetFinalStateName();
+    void  SetBranchAddresses(TTree *theInputTree, bool isData=false);
     bool  SetupBDTSystematics();
 };

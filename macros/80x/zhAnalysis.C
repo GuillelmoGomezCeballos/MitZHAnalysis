@@ -167,150 +167,9 @@ void zhAnalysis::Run(
     int nModel = (inputFlatFile.category==6 || inputFlatFile.category==7) ? inputFlatFile.signalIndex:-1;
     if(nModel>=0) signalName=signalName_[nModel];
     if(nModel > 0 && nModel != plotModel && MVAVarType==3) continue;
-    TTree *the_input_tree = (TTree*)inputTFile->FindObjectAny("events");
-
-    GeneralLeptonicTree gltEvent;
-    float normalizedWeight, sf_btag0, sf_btag0BUp, sf_btag0BDown, sf_btag0MUp, sf_btag0MDown;
-    { // set branch addresses
-      the_input_tree->SetBranchAddress("runNumber", &gltEvent.runNumber);
-      the_input_tree->SetBranchAddress("lumiNumber", &gltEvent.lumiNumber);
-      the_input_tree->SetBranchAddress("eventNumber", &gltEvent.eventNumber);
-      the_input_tree->SetBranchAddress("npv", &gltEvent.npv);
-      the_input_tree->SetBranchAddress("pu", &gltEvent.pu);
-      the_input_tree->SetBranchAddress("metFilter", &gltEvent.metFilter);
-      the_input_tree->SetBranchAddress("egmFilter", &gltEvent.egmFilter);
-      the_input_tree->SetBranchAddress("nLooseLep", &gltEvent.nLooseLep);
-      the_input_tree->SetBranchAddress("looseLep1PdgId", &gltEvent.looseLep1PdgId);
-      the_input_tree->SetBranchAddress("looseLep2PdgId", &gltEvent.looseLep2PdgId);
-      the_input_tree->SetBranchAddress("looseLep3PdgId", &gltEvent.looseLep3PdgId);
-      the_input_tree->SetBranchAddress("looseLep4PdgId", &gltEvent.looseLep4PdgId);
-      the_input_tree->SetBranchAddress("looseLep1SelBit", &gltEvent.looseLep1SelBit);
-      the_input_tree->SetBranchAddress("looseLep2SelBit", &gltEvent.looseLep2SelBit);
-      the_input_tree->SetBranchAddress("looseLep3SelBit", &gltEvent.looseLep3SelBit);
-      the_input_tree->SetBranchAddress("looseLep4SelBit", &gltEvent.looseLep4SelBit);
-      the_input_tree->SetBranchAddress("looseLep1Pt", &gltEvent.looseLep1Pt);
-      the_input_tree->SetBranchAddress("looseLep2Pt", &gltEvent.looseLep2Pt);
-      the_input_tree->SetBranchAddress("looseLep3Pt", &gltEvent.looseLep3Pt);
-      the_input_tree->SetBranchAddress("looseLep4Pt", &gltEvent.looseLep4Pt);
-      the_input_tree->SetBranchAddress("looseLep1Eta", &gltEvent.looseLep1Eta);
-      the_input_tree->SetBranchAddress("looseLep2Eta", &gltEvent.looseLep2Eta);
-      the_input_tree->SetBranchAddress("looseLep3Eta", &gltEvent.looseLep3Eta);
-      the_input_tree->SetBranchAddress("looseLep4Eta", &gltEvent.looseLep4Eta);
-      the_input_tree->SetBranchAddress("looseLep1Phi", &gltEvent.looseLep1Phi);
-      the_input_tree->SetBranchAddress("looseLep2Phi", &gltEvent.looseLep2Phi);
-      the_input_tree->SetBranchAddress("looseLep3Phi", &gltEvent.looseLep3Phi);
-      the_input_tree->SetBranchAddress("looseLep4Phi", &gltEvent.looseLep4Phi);
-      the_input_tree->SetBranchAddress("nJet", &gltEvent.nJet);
-      the_input_tree->SetBranchAddress("jetNLBtags", &gltEvent.jetNLBtags);
-      the_input_tree->SetBranchAddress("jetNMBtags", &gltEvent.jetNMBtags);
-      the_input_tree->SetBranchAddress("jetNTBtags", &gltEvent.jetNTBtags);
-      the_input_tree->SetBranchAddress("jet1Pt", &gltEvent.jet1Pt);
-      the_input_tree->SetBranchAddress("jet2Pt", &gltEvent.jet2Pt);
-      the_input_tree->SetBranchAddress("jet3Pt", &gltEvent.jet3Pt);
-      the_input_tree->SetBranchAddress("jet4Pt", &gltEvent.jet4Pt);
-      the_input_tree->SetBranchAddress("jet1Eta", &gltEvent.jet1Eta);
-      the_input_tree->SetBranchAddress("jet2Eta", &gltEvent.jet2Eta);
-      the_input_tree->SetBranchAddress("jet3Eta", &gltEvent.jet3Eta);
-      the_input_tree->SetBranchAddress("jet4Eta", &gltEvent.jet4Eta);
-      the_input_tree->SetBranchAddress("jet1Phi", &gltEvent.jet1Phi);
-      the_input_tree->SetBranchAddress("jet2Phi", &gltEvent.jet2Phi);
-      the_input_tree->SetBranchAddress("jet3Phi", &gltEvent.jet3Phi);
-      the_input_tree->SetBranchAddress("jet4Phi", &gltEvent.jet4Phi);
-      the_input_tree->SetBranchAddress("jet1BTag", &gltEvent.jet1BTag);
-      the_input_tree->SetBranchAddress("jet2BTag", &gltEvent.jet2BTag);
-      the_input_tree->SetBranchAddress("jet3BTag", &gltEvent.jet3BTag);
-      the_input_tree->SetBranchAddress("jet4BTag", &gltEvent.jet4BTag);
-      the_input_tree->SetBranchAddress("jet1SelBit", &gltEvent.jet1SelBit);
-      the_input_tree->SetBranchAddress("jet2SelBit", &gltEvent.jet2SelBit);
-      the_input_tree->SetBranchAddress("jet3SelBit", &gltEvent.jet3SelBit);
-      the_input_tree->SetBranchAddress("jet4SelBit", &gltEvent.jet4SelBit);
-      the_input_tree->SetBranchAddress("jet1PtUp", &gltEvent.jet1PtUp);
-      the_input_tree->SetBranchAddress("jet2PtUp", &gltEvent.jet2PtUp);
-      the_input_tree->SetBranchAddress("jet3PtUp", &gltEvent.jet3PtUp);
-      the_input_tree->SetBranchAddress("jet4PtUp", &gltEvent.jet4PtUp);
-      the_input_tree->SetBranchAddress("jet1PtDown", &gltEvent.jet1PtDown);
-      the_input_tree->SetBranchAddress("jet2PtDown", &gltEvent.jet2PtDown);
-      the_input_tree->SetBranchAddress("jet3PtDown", &gltEvent.jet3PtDown);
-      the_input_tree->SetBranchAddress("jet4PtDown", &gltEvent.jet4PtDown);
-      the_input_tree->SetBranchAddress("jet1EtaUp", &gltEvent.jet1EtaUp);
-      the_input_tree->SetBranchAddress("jet2EtaUp", &gltEvent.jet2EtaUp);
-      the_input_tree->SetBranchAddress("jet3EtaUp", &gltEvent.jet3EtaUp);
-      the_input_tree->SetBranchAddress("jet4EtaUp", &gltEvent.jet4EtaUp);
-      the_input_tree->SetBranchAddress("jet1EtaDown", &gltEvent.jet1EtaDown);
-      the_input_tree->SetBranchAddress("jet2EtaDown", &gltEvent.jet2EtaDown);
-      the_input_tree->SetBranchAddress("jet3EtaDown", &gltEvent.jet3EtaDown);
-      the_input_tree->SetBranchAddress("jet4EtaDown", &gltEvent.jet4EtaDown);
-      the_input_tree->SetBranchAddress("pfmet", &gltEvent.pfmet);
-      the_input_tree->SetBranchAddress("pfmetphi", &gltEvent.pfmetphi);
-      the_input_tree->SetBranchAddress("pfmetRaw", &gltEvent.pfmetRaw);
-      the_input_tree->SetBranchAddress("pfmetUp", &gltEvent.pfmetUp);
-      the_input_tree->SetBranchAddress("pfmetDown", &gltEvent.pfmetDown);
-      the_input_tree->SetBranchAddress("pfmetnomu", &gltEvent.pfmetnomu);
-      the_input_tree->SetBranchAddress("puppimet", &gltEvent.puppimet);
-      the_input_tree->SetBranchAddress("puppimetphi", &gltEvent.puppimetphi);
-      the_input_tree->SetBranchAddress("calomet", &gltEvent.calomet);
-      the_input_tree->SetBranchAddress("calometphi", &gltEvent.calometphi);
-      the_input_tree->SetBranchAddress("trkmet", &gltEvent.trkmet);
-      the_input_tree->SetBranchAddress("trkmetphi", &gltEvent.trkmetphi);
-      the_input_tree->SetBranchAddress("dphipfmet", &gltEvent.dphipfmet);
-      the_input_tree->SetBranchAddress("dphipuppimet", &gltEvent.dphipuppimet);
-      the_input_tree->SetBranchAddress("nTau", &gltEvent.nTau);
-      the_input_tree->SetBranchAddress("nLoosePhoton", &gltEvent.nLoosePhoton);
-      the_input_tree->SetBranchAddress("loosePho1Pt", &gltEvent.loosePho1Pt);
-      the_input_tree->SetBranchAddress("loosePho1Eta", &gltEvent.loosePho1Eta);
-      the_input_tree->SetBranchAddress("loosePho1Phi", &gltEvent.loosePho1Phi);
-      if(inputFlatFile.category == 0) the_input_tree->SetBranchAddress("trigger", &gltEvent.trigger);
-      else {
-        the_input_tree->SetBranchAddress("looseGenLep1PdgId", &gltEvent.looseGenLep1PdgId);
-        the_input_tree->SetBranchAddress("looseGenLep2PdgId", &gltEvent.looseGenLep2PdgId);
-        the_input_tree->SetBranchAddress("looseGenLep3PdgId", &gltEvent.looseGenLep3PdgId);
-        the_input_tree->SetBranchAddress("looseGenLep4PdgId", &gltEvent.looseGenLep4PdgId);
-        the_input_tree->SetBranchAddress("jet1GenPt", &gltEvent.jet1GenPt);
-        the_input_tree->SetBranchAddress("jet2GenPt", &gltEvent.jet2GenPt);
-        the_input_tree->SetBranchAddress("jet3GenPt", &gltEvent.jet3GenPt);
-        the_input_tree->SetBranchAddress("jet4GenPt", &gltEvent.jet4GenPt);
-        the_input_tree->SetBranchAddress("jet1Flav", &gltEvent.jet1Flav);
-        the_input_tree->SetBranchAddress("jet2Flav", &gltEvent.jet2Flav);
-        the_input_tree->SetBranchAddress("jet3Flav", &gltEvent.jet3Flav);
-        the_input_tree->SetBranchAddress("jet4Flav", &gltEvent.jet4Flav);
-        the_input_tree->SetBranchAddress("sf_pu"            , &gltEvent.sf_pu);
-        the_input_tree->SetBranchAddress("sf_puUp"          , &gltEvent.sf_puUp);
-        the_input_tree->SetBranchAddress("sf_puDown"        , &gltEvent.sf_puDown);
-        the_input_tree->SetBranchAddress("sf_zz"            , &gltEvent.sf_zz);
-        the_input_tree->SetBranchAddress("sf_zzUnc"         , &gltEvent.sf_zzUnc);
-        the_input_tree->SetBranchAddress("sf_wz"            , &gltEvent.sf_wz);
-        the_input_tree->SetBranchAddress("sf_zh"            , &gltEvent.sf_zh);
-        the_input_tree->SetBranchAddress("sf_zhUp"          , &gltEvent.sf_zhUp);
-        the_input_tree->SetBranchAddress("sf_zhDown"        , &gltEvent.sf_zhDown);
-        the_input_tree->SetBranchAddress("sf_tt"            , &gltEvent.sf_tt);
-        the_input_tree->SetBranchAddress("sf_trk1"          , &gltEvent.sf_trk1);
-        the_input_tree->SetBranchAddress("sf_trk2"          , &gltEvent.sf_trk2);
-        the_input_tree->SetBranchAddress("sf_trk3"          , &gltEvent.sf_trk3);
-        the_input_tree->SetBranchAddress("sf_trk4"          , &gltEvent.sf_trk4);
-        the_input_tree->SetBranchAddress("sf_loose1"        , &gltEvent.sf_loose1);
-        the_input_tree->SetBranchAddress("sf_loose2"        , &gltEvent.sf_loose2);
-        the_input_tree->SetBranchAddress("sf_loose3"        , &gltEvent.sf_loose3);
-        the_input_tree->SetBranchAddress("sf_loose4"        , &gltEvent.sf_loose4);
-        the_input_tree->SetBranchAddress("sf_medium1"       , &gltEvent.sf_medium1);
-        the_input_tree->SetBranchAddress("sf_medium2"       , &gltEvent.sf_medium2);
-        the_input_tree->SetBranchAddress("sf_medium3"       , &gltEvent.sf_medium3);
-        the_input_tree->SetBranchAddress("sf_medium4"       , &gltEvent.sf_medium4);
-        the_input_tree->SetBranchAddress("sf_tight1"        , &gltEvent.sf_tight1);
-        the_input_tree->SetBranchAddress("sf_tight2"        , &gltEvent.sf_tight2);
-        the_input_tree->SetBranchAddress("sf_tight3"        , &gltEvent.sf_tight3);
-        the_input_tree->SetBranchAddress("sf_tight4"        , &gltEvent.sf_tight4);
-        the_input_tree->SetBranchAddress("sf_unc1"          , &gltEvent.sf_unc1);
-        the_input_tree->SetBranchAddress("sf_unc2"          , &gltEvent.sf_unc2);
-        the_input_tree->SetBranchAddress("sf_unc3"          , &gltEvent.sf_unc3);
-        the_input_tree->SetBranchAddress("sf_unc4"          , &gltEvent.sf_unc4);
-        the_input_tree->SetBranchAddress("sf_btag0"         , &sf_btag0        );
-        the_input_tree->SetBranchAddress("sf_btag0BUp"      , &sf_btag0BUp     );
-        the_input_tree->SetBranchAddress("sf_btag0BDown"    , &sf_btag0BDown   );
-        the_input_tree->SetBranchAddress("sf_btag0MUp"      , &sf_btag0MUp     );
-        the_input_tree->SetBranchAddress("sf_btag0MDown"    , &sf_btag0MDown   );
-        the_input_tree->SetBranchAddress("normalizedWeight" , &normalizedWeight);
-      }
-    }
+    TTree *inputTree = (TTree*)inputTFile->FindObjectAny("events");
+    bool isData=(inputFlatFile.category==0);
+    SetBranchAddresses(inputTree,isData);
 
     int initPDFTag = -1;
     bool errorMsgQCDscale = false;
@@ -320,15 +179,16 @@ void zhAnalysis::Run(
     histoZHSEL[3]->Scale(0.0);
     double theMCPrescale = mcPrescale;
     if(inputFlatFile.category == 0) theMCPrescale = 1.0;
-    for (int i=0; i<int(the_input_tree->GetEntries()/theMCPrescale); ++i) {
-      if(i%1000000==0) printf("event %d out of %d\n",i,(int)the_input_tree->GetEntries());
-      the_input_tree->GetEntry(i);
+    for (int i=0; i<int(inputTree->GetEntries()/theMCPrescale); ++i) {
+      if(i%1000000==0) printf("event %d out of %d\n",i,(int)inputTree->GetEntries());
+      inputTree->GetEntry(i);
 
       Bool_t passFilter[4] = {kFALSE,kFALSE,kFALSE,kFALSE};
       if(gltEvent.looseLep1Pt>20 && gltEvent.looseLep2Pt>10) passFilter[0] = kTRUE;
       if(passFilter[0] == kFALSE) continue;
       
-      passFilter[1] = (inputFlatFile.category != 0) || ( 
+      // To do: get the trigger bits and selection bits defined outside of zhAnalysis and PandaLeptonicAnalyzer namespaces? ~DGH
+      passFilter[1] = (!isData) || ( 
         (gltEvent.trigger & zhAnalysis::TriggerBits::kEGTrig  ) != 0 ||
         (gltEvent.trigger & zhAnalysis::TriggerBits::kMuTrig  ) != 0 ||
         (gltEvent.trigger & zhAnalysis::TriggerBits::kEGEGTrig) != 0 ||
@@ -336,7 +196,6 @@ void zhAnalysis::Run(
         (gltEvent.trigger & zhAnalysis::TriggerBits::kMuEGTrig) != 0
       ); // pass filter if it's a MC file or if it passes the trigger soup
       if(passFilter[1] == kFALSE) continue;
-      
       // Begin the offline leptonic selection 
       vector<int> idLep;
       vector<bool> idTight, idSoft; unsigned int goodIsTight = 0;
@@ -355,24 +214,25 @@ void zhAnalysis::Run(
 
       // Create the lepton container. Store "true" in idTight for the leptons that pass the selection.
       // Note: idLep is currently redundant because the minimum fakeable object definition is equivalent to that of PandaLeptonicAnalyzer ~DGH
+      // It might be faster to allocate the size of these vectors once based on gltEvent.looseLep*Pt, then just set using [] ~DGH
       { bool isTight;
         // Not storing soft muons for now, need to support it in PandaLeptonicAnalyzer if we want to do it here! ~DGH
-        if(gltEvent.looseLep1Pt>=10 && fsMap.find(gltEvent.looseLep1PdgId)==fsMap.end()) {
+        if(gltEvent.looseLep1Pt>=10 && fsMap.find(gltEvent.looseLep1PdgId)!=fsMap.end()) {
           isTight=((gltEvent.looseLep1SelBit & fsMap[gltEvent.looseLep1PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
           idLepPts.push_back(&gltEvent.looseLep1Pt); idLepEtas.push_back(&gltEvent.looseLep1Eta); idLepPhis.push_back(&gltEvent.looseLep1Phi); idLepPdgIds.push_back(&gltEvent.looseLep1PdgId); idLep.push_back((int)idLep.size());
           idLepIdSfs.push_back( (gltEvent.looseLep1PdgId==13 || gltEvent.looseLep1PdgId==-13)? &gltEvent.sf_tight1 : &gltEvent.sf_medium1 );
           idLepTrkSfs.push_back( &gltEvent.sf_trk1 );
-        } if(gltEvent.looseLep2Pt>=10 && fsMap.find(gltEvent.looseLep2PdgId)==fsMap.end()) {
+        } if(gltEvent.looseLep2Pt>=10 && fsMap.find(gltEvent.looseLep2PdgId)!=fsMap.end()) {
           isTight=((gltEvent.looseLep2SelBit & fsMap[gltEvent.looseLep2PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
           idLepPts.push_back(&gltEvent.looseLep2Pt); idLepEtas.push_back(&gltEvent.looseLep2Eta); idLepPhis.push_back(&gltEvent.looseLep2Phi); idLepPdgIds.push_back(&gltEvent.looseLep2PdgId); idLep.push_back((int)idLep.size());
           idLepIdSfs.push_back( (gltEvent.looseLep2PdgId==13 || gltEvent.looseLep2PdgId==-13)? &gltEvent.sf_tight2 : &gltEvent.sf_medium2 );
           idLepTrkSfs.push_back( &gltEvent.sf_trk2 );
-        } if(gltEvent.looseLep3Pt>=10 && fsMap.find(gltEvent.looseLep3PdgId)==fsMap.end()) {
+        } if(gltEvent.looseLep3Pt>=10 && fsMap.find(gltEvent.looseLep3PdgId)!=fsMap.end()) {
           isTight=((gltEvent.looseLep3SelBit & fsMap[gltEvent.looseLep3PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
           idLepPts.push_back(&gltEvent.looseLep3Pt); idLepEtas.push_back(&gltEvent.looseLep3Eta); idLepPhis.push_back(&gltEvent.looseLep3Phi); idLepPdgIds.push_back(&gltEvent.looseLep3PdgId); idLep.push_back((int)idLep.size());
           idLepIdSfs.push_back( (gltEvent.looseLep3PdgId==13 || gltEvent.looseLep3PdgId==-13)? &gltEvent.sf_tight3 : &gltEvent.sf_medium3 );
           idLepTrkSfs.push_back( &gltEvent.sf_trk3 );
-        } if(gltEvent.looseLep4Pt>=10 && fsMap.find(gltEvent.looseLep4PdgId)==fsMap.end()) {
+        } if(gltEvent.looseLep4Pt>=10 && fsMap.find(gltEvent.looseLep4PdgId)!=fsMap.end()) {
           isTight=((gltEvent.looseLep4SelBit & fsMap[gltEvent.looseLep4PdgId])!=0); idTight.push_back(isTight); goodIsTight+=isTight;
           idLepPts.push_back(&gltEvent.looseLep4Pt); idLepEtas.push_back(&gltEvent.looseLep4Eta); idLepPhis.push_back(&gltEvent.looseLep4Phi); idLepPdgIds.push_back(&gltEvent.looseLep4PdgId); idLep.push_back((int)idLep.size());
           idLepIdSfs.push_back( (gltEvent.looseLep4PdgId==13 || gltEvent.looseLep4PdgId==-13)? &gltEvent.sf_tight4 : &gltEvent.sf_medium4 );
@@ -685,7 +545,7 @@ void zhAnalysis::Run(
                           
       // Begin event weighting                     
       double totalWeight = (inputFlatFile.category == 0) ? 1.0 : normalizedWeight; {
-        totalWeight *= 1000.*theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff; // lumi is in inverse femtobarns
+        totalWeight *= theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff; // lumi is in inverse femtobarns
         // Btag scale factor
         totalWeight *= sf_btag0; if(totalWeight == 0) continue;
         // ZH EWK correction (only for SM case)
@@ -1280,9 +1140,10 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
   //Input Files
   //*******************************************************
   // Data files - Macro Category 0
-  inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
+  //inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
 
   // Begin MC backgrounds 
+      
     // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
     inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sTT2L.root",filesPathMC.Data()),1,-1);
@@ -1316,15 +1177,18 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
     inputFlatFiles.emplace_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()),2,-1);
     // WZ backgrounds - Macro Category 3
     inputFlatFiles.emplace_back(Form("%sWZ.root",filesPathMC.Data()),3,-1);
-    // ZZ Backgrounds - Macro Category 4
+    // ZZ Backgrounds - Macro Category 4*/
     // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
     inputFlatFiles.emplace_back(Form("%sZZ.root",filesPathMC.Data()),4,-1);
+      
     // Triboson / VVV Backgrounds - Macro Category 5
     // Does this include tZq? ~DGH
     inputFlatFiles.emplace_back(Form("%sVVV.root",filesPathMC.Data()),5,-1);
+      
   // End MC backgrounds
 
   // Monte Carlo signals
+  signalName_.push_back("sm");
   if(false){ // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;
     signalName_.push_back("sm");
@@ -2914,4 +2778,145 @@ bool zhAnalysis::SaveBDTSystematics(int nModel) {
   unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
   printf("zhAnalysis::SaveBDTSystematics : Complete (%lu seconds)\n", t2-t1);
   return true;
+}
+void zhAnalysis::SetBranchAddresses(TTree *theInputTree, bool isData) {
+  theInputTree->SetBranchAddress("runNumber", &gltEvent.runNumber);
+  theInputTree->SetBranchAddress("lumiNumber", &gltEvent.lumiNumber);
+  theInputTree->SetBranchAddress("eventNumber", &gltEvent.eventNumber);
+  theInputTree->SetBranchAddress("npv", &gltEvent.npv);
+  theInputTree->SetBranchAddress("pu", &gltEvent.pu);
+  theInputTree->SetBranchAddress("metFilter", &gltEvent.metFilter);
+  theInputTree->SetBranchAddress("egmFilter", &gltEvent.egmFilter);
+  theInputTree->SetBranchAddress("nLooseLep", &gltEvent.nLooseLep);
+  theInputTree->SetBranchAddress("looseLep1PdgId", &gltEvent.looseLep1PdgId);
+  theInputTree->SetBranchAddress("looseLep2PdgId", &gltEvent.looseLep2PdgId);
+  theInputTree->SetBranchAddress("looseLep3PdgId", &gltEvent.looseLep3PdgId);
+  theInputTree->SetBranchAddress("looseLep4PdgId", &gltEvent.looseLep4PdgId);
+  theInputTree->SetBranchAddress("looseLep1SelBit", &gltEvent.looseLep1SelBit);
+  theInputTree->SetBranchAddress("looseLep2SelBit", &gltEvent.looseLep2SelBit);
+  theInputTree->SetBranchAddress("looseLep3SelBit", &gltEvent.looseLep3SelBit);
+  theInputTree->SetBranchAddress("looseLep4SelBit", &gltEvent.looseLep4SelBit);
+  theInputTree->SetBranchAddress("looseLep1Pt", &gltEvent.looseLep1Pt);
+  theInputTree->SetBranchAddress("looseLep2Pt", &gltEvent.looseLep2Pt);
+  theInputTree->SetBranchAddress("looseLep3Pt", &gltEvent.looseLep3Pt);
+  theInputTree->SetBranchAddress("looseLep4Pt", &gltEvent.looseLep4Pt);
+  theInputTree->SetBranchAddress("looseLep1Eta", &gltEvent.looseLep1Eta);
+  theInputTree->SetBranchAddress("looseLep2Eta", &gltEvent.looseLep2Eta);
+  theInputTree->SetBranchAddress("looseLep3Eta", &gltEvent.looseLep3Eta);
+  theInputTree->SetBranchAddress("looseLep4Eta", &gltEvent.looseLep4Eta);
+  theInputTree->SetBranchAddress("looseLep1Phi", &gltEvent.looseLep1Phi);
+  theInputTree->SetBranchAddress("looseLep2Phi", &gltEvent.looseLep2Phi);
+  theInputTree->SetBranchAddress("looseLep3Phi", &gltEvent.looseLep3Phi);
+  theInputTree->SetBranchAddress("looseLep4Phi", &gltEvent.looseLep4Phi);
+  theInputTree->SetBranchAddress("nJet", &gltEvent.nJet);
+  theInputTree->SetBranchAddress("jetNLBtags", &gltEvent.jetNLBtags);
+  theInputTree->SetBranchAddress("jetNMBtags", &gltEvent.jetNMBtags);
+  theInputTree->SetBranchAddress("jetNTBtags", &gltEvent.jetNTBtags);
+  theInputTree->SetBranchAddress("jet1Pt", &gltEvent.jet1Pt);
+  theInputTree->SetBranchAddress("jet2Pt", &gltEvent.jet2Pt);
+  theInputTree->SetBranchAddress("jet3Pt", &gltEvent.jet3Pt);
+  theInputTree->SetBranchAddress("jet4Pt", &gltEvent.jet4Pt);
+  theInputTree->SetBranchAddress("jet1Eta", &gltEvent.jet1Eta);
+  theInputTree->SetBranchAddress("jet2Eta", &gltEvent.jet2Eta);
+  theInputTree->SetBranchAddress("jet3Eta", &gltEvent.jet3Eta);
+  theInputTree->SetBranchAddress("jet4Eta", &gltEvent.jet4Eta);
+  theInputTree->SetBranchAddress("jet1Phi", &gltEvent.jet1Phi);
+  theInputTree->SetBranchAddress("jet2Phi", &gltEvent.jet2Phi);
+  theInputTree->SetBranchAddress("jet3Phi", &gltEvent.jet3Phi);
+  theInputTree->SetBranchAddress("jet4Phi", &gltEvent.jet4Phi);
+  theInputTree->SetBranchAddress("jet1BTag", &gltEvent.jet1BTag);
+  theInputTree->SetBranchAddress("jet2BTag", &gltEvent.jet2BTag);
+  theInputTree->SetBranchAddress("jet3BTag", &gltEvent.jet3BTag);
+  theInputTree->SetBranchAddress("jet4BTag", &gltEvent.jet4BTag);
+  theInputTree->SetBranchAddress("jet1SelBit", &gltEvent.jet1SelBit);
+  theInputTree->SetBranchAddress("jet2SelBit", &gltEvent.jet2SelBit);
+  theInputTree->SetBranchAddress("jet3SelBit", &gltEvent.jet3SelBit);
+  theInputTree->SetBranchAddress("jet4SelBit", &gltEvent.jet4SelBit);
+  theInputTree->SetBranchAddress("jet1PtUp", &gltEvent.jet1PtUp);
+  theInputTree->SetBranchAddress("jet2PtUp", &gltEvent.jet2PtUp);
+  theInputTree->SetBranchAddress("jet3PtUp", &gltEvent.jet3PtUp);
+  theInputTree->SetBranchAddress("jet4PtUp", &gltEvent.jet4PtUp);
+  theInputTree->SetBranchAddress("jet1PtDown", &gltEvent.jet1PtDown);
+  theInputTree->SetBranchAddress("jet2PtDown", &gltEvent.jet2PtDown);
+  theInputTree->SetBranchAddress("jet3PtDown", &gltEvent.jet3PtDown);
+  theInputTree->SetBranchAddress("jet4PtDown", &gltEvent.jet4PtDown);
+  theInputTree->SetBranchAddress("jet1EtaUp", &gltEvent.jet1EtaUp);
+  theInputTree->SetBranchAddress("jet2EtaUp", &gltEvent.jet2EtaUp);
+  theInputTree->SetBranchAddress("jet3EtaUp", &gltEvent.jet3EtaUp);
+  theInputTree->SetBranchAddress("jet4EtaUp", &gltEvent.jet4EtaUp);
+  theInputTree->SetBranchAddress("jet1EtaDown", &gltEvent.jet1EtaDown);
+  theInputTree->SetBranchAddress("jet2EtaDown", &gltEvent.jet2EtaDown);
+  theInputTree->SetBranchAddress("jet3EtaDown", &gltEvent.jet3EtaDown);
+  theInputTree->SetBranchAddress("jet4EtaDown", &gltEvent.jet4EtaDown);
+  theInputTree->SetBranchAddress("pfmet", &gltEvent.pfmet);
+  theInputTree->SetBranchAddress("pfmetphi", &gltEvent.pfmetphi);
+  theInputTree->SetBranchAddress("pfmetRaw", &gltEvent.pfmetRaw);
+  theInputTree->SetBranchAddress("pfmetUp", &gltEvent.pfmetUp);
+  theInputTree->SetBranchAddress("pfmetDown", &gltEvent.pfmetDown);
+  theInputTree->SetBranchAddress("pfmetnomu", &gltEvent.pfmetnomu);
+  theInputTree->SetBranchAddress("puppimet", &gltEvent.puppimet);
+  theInputTree->SetBranchAddress("puppimetphi", &gltEvent.puppimetphi);
+  theInputTree->SetBranchAddress("calomet", &gltEvent.calomet);
+  theInputTree->SetBranchAddress("calometphi", &gltEvent.calometphi);
+  theInputTree->SetBranchAddress("trkmet", &gltEvent.trkmet);
+  theInputTree->SetBranchAddress("trkmetphi", &gltEvent.trkmetphi);
+  theInputTree->SetBranchAddress("dphipfmet", &gltEvent.dphipfmet);
+  theInputTree->SetBranchAddress("dphipuppimet", &gltEvent.dphipuppimet);
+  theInputTree->SetBranchAddress("nTau", &gltEvent.nTau);
+  theInputTree->SetBranchAddress("nLoosePhoton", &gltEvent.nLoosePhoton);
+  theInputTree->SetBranchAddress("loosePho1Pt", &gltEvent.loosePho1Pt);
+  theInputTree->SetBranchAddress("loosePho1Eta", &gltEvent.loosePho1Eta);
+  theInputTree->SetBranchAddress("loosePho1Phi", &gltEvent.loosePho1Phi);
+  if(isData) theInputTree->SetBranchAddress("trigger", &gltEvent.trigger);
+  else {
+    theInputTree->SetBranchAddress("looseGenLep1PdgId", &gltEvent.looseGenLep1PdgId);
+    theInputTree->SetBranchAddress("looseGenLep2PdgId", &gltEvent.looseGenLep2PdgId);
+    theInputTree->SetBranchAddress("looseGenLep3PdgId", &gltEvent.looseGenLep3PdgId);
+    theInputTree->SetBranchAddress("looseGenLep4PdgId", &gltEvent.looseGenLep4PdgId);
+    theInputTree->SetBranchAddress("jet1GenPt", &gltEvent.jet1GenPt);
+    theInputTree->SetBranchAddress("jet2GenPt", &gltEvent.jet2GenPt);
+    theInputTree->SetBranchAddress("jet3GenPt", &gltEvent.jet3GenPt);
+    theInputTree->SetBranchAddress("jet4GenPt", &gltEvent.jet4GenPt);
+    theInputTree->SetBranchAddress("jet1Flav", &gltEvent.jet1Flav);
+    theInputTree->SetBranchAddress("jet2Flav", &gltEvent.jet2Flav);
+    theInputTree->SetBranchAddress("jet3Flav", &gltEvent.jet3Flav);
+    theInputTree->SetBranchAddress("jet4Flav", &gltEvent.jet4Flav);
+    theInputTree->SetBranchAddress("sf_pu"            , &gltEvent.sf_pu);
+    theInputTree->SetBranchAddress("sf_puUp"          , &gltEvent.sf_puUp);
+    theInputTree->SetBranchAddress("sf_puDown"        , &gltEvent.sf_puDown);
+    theInputTree->SetBranchAddress("sf_zz"            , &gltEvent.sf_zz);
+    theInputTree->SetBranchAddress("sf_zzUnc"         , &gltEvent.sf_zzUnc);
+    theInputTree->SetBranchAddress("sf_wz"            , &gltEvent.sf_wz);
+    theInputTree->SetBranchAddress("sf_zh"            , &gltEvent.sf_zh);
+    theInputTree->SetBranchAddress("sf_zhUp"          , &gltEvent.sf_zhUp);
+    theInputTree->SetBranchAddress("sf_zhDown"        , &gltEvent.sf_zhDown);
+    theInputTree->SetBranchAddress("sf_tt"            , &gltEvent.sf_tt);
+    theInputTree->SetBranchAddress("sf_trk1"          , &gltEvent.sf_trk1);
+    theInputTree->SetBranchAddress("sf_trk2"          , &gltEvent.sf_trk2);
+    theInputTree->SetBranchAddress("sf_trk3"          , &gltEvent.sf_trk3);
+    theInputTree->SetBranchAddress("sf_trk4"          , &gltEvent.sf_trk4);
+    theInputTree->SetBranchAddress("sf_loose1"        , &gltEvent.sf_loose1);
+    theInputTree->SetBranchAddress("sf_loose2"        , &gltEvent.sf_loose2);
+    theInputTree->SetBranchAddress("sf_loose3"        , &gltEvent.sf_loose3);
+    theInputTree->SetBranchAddress("sf_loose4"        , &gltEvent.sf_loose4);
+    theInputTree->SetBranchAddress("sf_medium1"       , &gltEvent.sf_medium1);
+    theInputTree->SetBranchAddress("sf_medium2"       , &gltEvent.sf_medium2);
+    theInputTree->SetBranchAddress("sf_medium3"       , &gltEvent.sf_medium3);
+    theInputTree->SetBranchAddress("sf_medium4"       , &gltEvent.sf_medium4);
+    theInputTree->SetBranchAddress("sf_tight1"        , &gltEvent.sf_tight1);
+    theInputTree->SetBranchAddress("sf_tight2"        , &gltEvent.sf_tight2);
+    theInputTree->SetBranchAddress("sf_tight3"        , &gltEvent.sf_tight3);
+    theInputTree->SetBranchAddress("sf_tight4"        , &gltEvent.sf_tight4);
+    theInputTree->SetBranchAddress("sf_unc1"          , &gltEvent.sf_unc1);
+    theInputTree->SetBranchAddress("sf_unc2"          , &gltEvent.sf_unc2);
+    theInputTree->SetBranchAddress("sf_unc3"          , &gltEvent.sf_unc3);
+    theInputTree->SetBranchAddress("sf_unc4"          , &gltEvent.sf_unc4);
+    theInputTree->SetBranchAddress("sf_btag0"         , &sf_btag0        );
+    theInputTree->SetBranchAddress("sf_btag0BUp"      , &sf_btag0BUp     );
+    theInputTree->SetBranchAddress("sf_btag0BDown"    , &sf_btag0BDown   );
+    theInputTree->SetBranchAddress("sf_btag0MUp"      , &sf_btag0MUp     );
+    theInputTree->SetBranchAddress("sf_btag0MDown"    , &sf_btag0MDown   );
+    theInputTree->SetBranchAddress("normalizedWeight" , &normalizedWeight);
+  }
+
 }

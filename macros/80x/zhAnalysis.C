@@ -1153,7 +1153,6 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
   // Begin MC backgrounds 
       
     // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
-    inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sTT2L.root",filesPathMC.Data()),1,-1);
     // Previously counted TTZToLLNuNu as VVV background? ~DGH
     inputFlatFiles.emplace_back(Form("%sTTV.root",filesPathMC.Data()),1,-1);

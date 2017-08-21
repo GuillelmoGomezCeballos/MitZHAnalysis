@@ -552,7 +552,7 @@ void zhAnalysis::Run(
       }
                           
       // Begin event weighting                     
-      double totalWeight = (inputFlatFile.category == 0) ? 1.0 : normalizedWeight; {
+      double totalWeight = isData? 1.0 : normalizedWeight; if(!isData) {
         totalWeight *= theLumi*puWeight*effSF*fakeSF*theMCPrescale*trigEff; // lumi is in inverse femtobarns
         // Btag scale factor
         totalWeight *= sf_btag0; if(totalWeight == 0) continue;
@@ -1149,7 +1149,7 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
   //*******************************************************
   // Data files - Macro Category 0
   inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
-
+  /*
   // Begin MC backgrounds 
       
     // Combo / flavor-symmetric / non-resonant Backgrounds - Macro Category 1
@@ -1192,7 +1192,7 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
     inputFlatFiles.emplace_back(Form("%sVVV.root",filesPathMC.Data()),5,-1);
       
   // End MC backgrounds
-
+  */
   // Monte Carlo signals
   if(false){ // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;

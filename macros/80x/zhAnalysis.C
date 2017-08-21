@@ -1472,7 +1472,7 @@ bool zhAnalysis::MakeHistos() {
   for(int thePlot=0; thePlot<allPlots; thePlot++) {
     TH1D* histos = MakeHisto(thePlot, plotName);
     plotName_[thePlot]=plotName;
-    for(int iType=0; iType<processTypes; iType++) histo[thePlot][iType] = (TH1D*) histos->Clone(Form("histo %s %s",categoryName_[iType].Data(), plotName.Data()));
+    for(int iType=0; iType<processTypes; iType++) histo[thePlot][iType] = (TH1D*) histos->Clone(Form("histo%d", iType));
     histos->Reset();histos->Clear();
   }
   // Make MVA shape histos
@@ -1739,7 +1739,7 @@ TH1D* zhAnalysis::MakeHisto(unsigned int thePlot, TString &plotName) {
   else if(thePlot== 9) {nBinPlot= 500; xminPlot= 0.0; xmaxPlot=1000.0; plotName="N-1 mT";}
   else if(thePlot==10) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot= 100.0; plotName="N-1 dilep mass";}
   else if(thePlot==11) {nBinPlot=   7; xminPlot=-0.5; xmaxPlot=   6.5; plotName="N-1 nJet";}
-  else if(thePlot==12) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot= 400.0; plotName="N-1 MET";}
+  else if(thePlot==12) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot= 400.0; plotName="N-1 MET high";}
   else if(thePlot==13) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 MET balance";}
   else if(thePlot==14) {nBinPlot= 200; xminPlot= 0.0; xmaxPlot=    pi; plotName="N-1 dPhi dilep MET";}
   else if(thePlot==15) {nBinPlot= 100; xminPlot= 0.0; xmaxPlot=   1.0; plotName="N-1 max CSV2";}

@@ -45,7 +45,7 @@ class zhAnalysis {
     bool       isMIT                   = true;
     bool       isBlinded               = false;
     int        plotModel               = 0;
-    double     lumi                    = 3.8;
+    double     lumi                    = 8.3;
     bool       isMINIAOD               = true;
     bool       useZjetsTemplate        = false;
     bool       usePureMC               = true; 
@@ -140,10 +140,10 @@ class zhAnalysis {
     
 
     // File prefixes/paths
-    TString filesPathDA   = "/data/t3home000/ceballos/panda/v_003_0/";
-    TString filesPathMC	  = "/data/t3home000/ceballos/panda/v_003_0/";
-    TString filesPathMC2  = "/data/t3home000/ceballos/panda/v_003_0/";
-    TString filesPathDMMC = "/data/t3home000/ceballos/panda/v_003_0/";
+    TString filesPathDA   = "/data/t3home000/ceballos/panda/v_005_0/";
+    TString filesPathMC	  = "/data/t3home000/ceballos/panda/v_004_0/";
+    TString filesPathMC2  = "/data/t3home000/ceballos/panda/v_004_0/";
+    TString filesPathDMMC = "/data/t3home000/ceballos/panda/v_004_0/";
     TString zjetsTemplatesPath = "";
     char filenameBDTSysts[200]; 
 

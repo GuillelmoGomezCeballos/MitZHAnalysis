@@ -4,6 +4,7 @@
 // zhAnalysis Constructor
 // sets up the subdirectory output and the random toy seed
 zhAnalysis::zhAnalysis(string subdirectory_) {
+  subdirectory=subdirectory_;
   if(subdirectory!="" && subdirectory.c_str()[0]!='/') subdirectory = "/"+subdirectory;
   system(("mkdir -p MitZHAnalysis/datacards"+subdirectory).c_str());
   system(("mkdir -p MitZHAnalysis/plots"+subdirectory).c_str());
@@ -162,7 +163,7 @@ void zhAnalysis::Run(
   //*******************************************************
   for(unsigned ifile=0; ifile<nInputFiles; ifile++) {
     FlatFile inputFlatFile = inputFlatFiles[ifile];
-    printf("sampleNames(%d): %s\n",ifile, inputFlatFile.name.Data());
+    printf("zhAnalysis::Run : Reading sample #%d (%s)\n",ifile, inputFlatFile.name.Data());
     TFile *inputTFile = inputFlatFile.Open();
     int nModel = (inputFlatFile.category==6 || inputFlatFile.category==7) ? inputFlatFile.signalIndex:-1;
     if(nModel>=0) signalName=signalName_[nModel];
@@ -179,8 +180,15 @@ void zhAnalysis::Run(
     histoZHSEL[3]->Scale(0.0);
     double theMCPrescale = mcPrescale;
     if(inputFlatFile.category == 0) theMCPrescale = 1.0;
+    // Catch all of the possible ways that someone could name a glu-glu ntuple
+    bool isGluonInduced=
+      inputFlatFile.name.Contains("gg") ||
+      inputFlatFile.name.Contains("GG") ||
+      inputFlatFile.name.Contains("GluGlu") ||
+      inputFlatFile.name.Contains("Cont");
+
     for (int i=0; i<int(inputTree->GetEntries()/theMCPrescale); ++i) {
-      if(i%1000000==0) printf("event %d out of %d\n",i,(int)inputTree->GetEntries());
+      if(i%1000000==0) printf("zhAnalysis::Run : Processed events %d/%d for sample #%d\n",i,(int)inputTree->GetEntries(),ifile);
       inputTree->GetEntry(i);
 
       Bool_t passFilter[4] = {kFALSE,kFALSE,kFALSE,kFALSE};
@@ -195,7 +203,7 @@ void zhAnalysis::Run(
         (gltEvent.trigger & zhAnalysis::TriggerBits::kMuMuTrig) != 0 ||
         (gltEvent.trigger & zhAnalysis::TriggerBits::kMuEGTrig) != 0
       ); // pass filter if it's a MC file or if it passes the trigger soup
-      if(passFilter[1] == kFALSE) continue;
+      //if(passFilter[1] == kFALSE) continue;
       // Begin the offline leptonic selection 
       vector<int> idLep;
       vector<bool> idTight, idSoft; unsigned int goodIsTight = 0;
@@ -491,7 +499,7 @@ void zhAnalysis::Run(
       //                                                   TMath::Abs((int)(*eventLeptons.pdgId)[idLep[0]]),TMath::Abs((int)(*eventLeptons.pdgId)[idLep[1]]));
       //}
       // luminosity
-      double theLumi  = 1.0; if(inputFlatFile.category != 0) theLumi  = lumi*1000.;
+      double theLumi  = 1.0; if(inputFlatFile.category != 0) theLumi  = lumi;
       // pile-up
       double puWeight     = 1.0; if(inputFlatFile.category != 0) puWeight     = gltEvent.sf_pu; 
       double puWeightUp   = 1.0; if(inputFlatFile.category != 0) puWeightUp   = gltEvent.sf_puUp;
@@ -550,8 +558,8 @@ void zhAnalysis::Run(
         totalWeight *= sf_btag0; if(totalWeight == 0) continue;
         // ZH EWK correction (only for SM case)
         if(theCategory==6 && signalName_[nModel]=="sm") totalWeight *= gltEvent.sf_zh;
-        // ZZ corrections
-        if(theCategory==4) totalWeight *= gltEvent.sf_zz;
+        // ZZ corrections for only the quark induced datasets
+        if( theCategory==4 && !isGluonInduced) totalWeight *= gltEvent.sf_zz;
         // WZ
         if(theCategory == 3) totalWeight *= gltEvent.sf_wz;
       } // End event weighting
@@ -1140,7 +1148,7 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
   //Input Files
   //*******************************************************
   // Data files - Macro Category 0
-  //inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
+  inputFlatFiles.emplace_back(Form("%sdata.root",filesPathDA.Data()),0,-1);
 
   // Begin MC backgrounds 
       
@@ -1151,13 +1159,12 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
     inputFlatFiles.emplace_back(Form("%sTTV.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sTW.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sqqWW.root",filesPathMC.Data()),1,-1);
+    inputFlatFiles.emplace_back(Form("%sggWW.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sWGstar.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sWWdps.root",filesPathMC.Data()),1,-1);
     // Include this one? Does it include (WGToLNuG) ? ~DGH
     inputFlatFiles.emplace_back(Form("%sVG.root",filesPathMC.Data()),1,-1);
     inputFlatFiles.emplace_back(Form("%sH125.root",filesPathMC.Data()),1,-1);
-    // Missing Standard Model Higgs backgrounds (GluGluHToWWTo2L2Nu, VBFHToWWTo2L2Nu_M125, GluGluHToTauTau_M125, VBFHToTauTau_M125) ? ~DGH
-    // Missing WWW or included in VVV ? ~DGH
     
     // Drell-Yan / Z backgrounds - Macro Category 2
     if(useDYPT==false){
@@ -1173,13 +1180,12 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
       inputFlatFiles.emplace_back(Form("%sDYJetsToLL_Pt650ToInf.root",filesPathMC.Data()),2,-1);
       //inputFlatFiles.emplace_back(Form("%s",filesPathMC.Data()),2,-1);
     }
-    // Include Z->tau tau ? ~DGH
     inputFlatFiles.emplace_back(Form("%sDYJetsToTauTau.root",filesPathMC.Data()),2,-1);
     // WZ backgrounds - Macro Category 3
     inputFlatFiles.emplace_back(Form("%sWZ.root",filesPathMC.Data()),3,-1);
-    // ZZ Backgrounds - Macro Category 4*/
-    // Does this include gluon induced production, ZZTo2L2Q, gg/qq ZZ to 4 leptons? ~DGH
-    inputFlatFiles.emplace_back(Form("%sZZ.root",filesPathMC.Data()),4,-1);
+    // ZZ Backgrounds - Macro Category 4
+    inputFlatFiles.emplace_back(Form("%sqqZZ.root",filesPathMC.Data()),4,-1);
+    inputFlatFiles.emplace_back(Form("%sggZZ.root",filesPathMC.Data()),4,-1);
       
     // Triboson / VVV Backgrounds - Macro Category 5
     // Does this include tZq? ~DGH
@@ -1188,7 +1194,6 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
   // End MC backgrounds
 
   // Monte Carlo signals
-  signalName_.push_back("sm");
   if(false){ // Model 0: standard model Higgs (125) with glu-glu
     int mH=125;
     signalName_.push_back("sm");
@@ -1196,7 +1201,7 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
     inputFlatFiles.emplace_back(Form("%sZH_ZToEE_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,0); 
     inputFlatFiles.emplace_back(Form("%sggZH_HToInv_ZToLL_M125_13TeV_powheg_pythia8.root",filesPathDMMC.Data()),7,0);       
   }  // Models 1 thru 8: standard-model-like Higgs mass points without glu-glu (8 models)
-
+  else signalName_.push_back("sm"); // catch for now, since we have no models
   if(false){ int mH_[10]={110, 125, 150, 200, 300, 400, 500, 600, 800, 1000}; int iH=0; for(int i=1; i<=10; i++) { int mH = mH_[iH]; 
     signalName_.push_back(Form("mh%d", mH));
     inputFlatFiles.emplace_back(Form("%sZH_ZToMM_HToInvisible_M%d_13TeV_powheg_pythia8.root",filesPathDMMC.Data(),mH),6,iH+1); 
@@ -1460,7 +1465,7 @@ bool zhAnalysis::LoadFlatFiles(bool doDM) {
 }
 
 bool zhAnalysis::MakeHistos() {
-  printf("zhAnalysis::MakeHistos start making histograms...\n");
+  printf("zhAnalysis::MakeHistos : Start making histograms...\n");
   unsigned long int t1 = static_cast<unsigned long int>(time(NULL));
   // Make plotting histos
   TString plotName;
@@ -1715,7 +1720,7 @@ bool zhAnalysis::MakeHistos() {
 
   }
   unsigned long int t2 = static_cast<unsigned long int>(time(NULL));
-  printf("zhAnalysis::MakeHistos complete! (%lu seconds)\n", t2-t1);
+  printf("zhAnalysis::MakeHistos : Complete! (%lu seconds)\n", t2-t1);
   madeHistos=true;
   return true;
 }

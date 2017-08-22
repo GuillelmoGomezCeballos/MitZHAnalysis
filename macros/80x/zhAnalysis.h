@@ -55,7 +55,7 @@ class zhAnalysis {
     double     mcPrescale              = 1.;
     bool       useBDT                  = false;
     bool       useCachedBDTSystematics = false;
-    string     the_BDT_weights         = "";
+    string     bdtWeightsFile          = "";
 
     // kluge fix because aclic does not want to compile CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h
     // which is included in PandaLeptonicAnalyzer.h
@@ -98,6 +98,35 @@ class zhAnalysis {
       METDOWN,
       nSystTypes
     };
+    
+    // BDT memory allocation - public members for now
+    TMVA::Reader *reader;
+    Float_t  mvaAbsDilepMassDiff;    bool useMvaAbsDilepMassDiff    = 0;
+    Float_t  mvaBalance;             bool useMvaBalance             = 0;
+    Float_t  mvaCosThetaCSL1;        bool useMvaCosThetaCSL1        = 0;
+    Float_t  mvaCosThetaStarL1;      bool useMvaCosThetaStarL1      = 0;
+    Float_t  mvaDilepPT;             bool useMvaDilepPT             = 0;
+    Float_t  mvaDPhiDilepMET;        bool useMvaDPhiDilepMET        = 0;
+    Float_t  mvaDPhiJetMET;          bool useMvaDPhiJetMET          = 0;
+    Float_t  mvaDPhiL1L2;            bool useMvaDPhiL1L2            = 0;
+    Float_t  mvaDRL1L2;              bool useMvaDRL1L2              = 0;
+    Float_t  mvaEtaDilep;            bool useMvaEtaDilep            = 0;
+    Float_t  mvaEtaL1;               bool useMvaEtaL1               = 0;
+    Float_t  mvaEtaL2;               bool useMvaEtaL2               = 0;
+    Float_t  mvaLepPTBalance;        bool useMvaLepPTBalance        = 0;
+    Float_t  mvaMET;                 bool useMvaMET                 = 0;
+    Float_t  mvaMTDilep;             bool useMvaMTDilep             = 0;
+    Float_t  mvaMTJetMET;            bool useMvaMTJetMET            = 0;
+    Float_t  mvaMTL1MET;             bool useMvaMTL1MET             = 0;
+    Float_t  mvaMTL2MET;             bool useMvaMTL2MET             = 0;
+    Float_t  mvaPTL1;                bool useMvaPTL1                = 0;
+    Float_t  mvaPTL2;                bool useMvaPTL2                = 0;
+    Int_t    mvaNJets;               bool useMvaNJets               = 0;
+    Int_t    mvaNTaus;               bool useMvaNTaus               = 0;
+    Int_t    mvaBVeto;               bool useMvaBVeto               = 0;
+    Int_t    mva3LVeto;              bool useMva3LVeto              = 0;
+    
+    // Public member functions
     zhAnalysis(string subdirectory_="");
     ~zhAnalysis();
     bool LoadFlatFiles(bool doDM=false);
@@ -153,6 +182,7 @@ class zhAnalysis {
     TString categoryName_[processTypes]={"Data","Nonresonant","Z+jets","WZ","ZZ","VVV","qqZH","ggZH"};
     TString processName[processTypes] = {"..Data", "....EM", "...DY", "...WZ", "....ZZ", "...VVV", "....ZH", "..ggZH"};
     TFile* cachedSystFile;
+    
 
     // Allocate memory for histograms. Support only 500 signal models (hard-coded).
     TH1D* histoZHSEL[4];
@@ -372,6 +402,7 @@ class zhAnalysis {
 
     // Private member functions
     bool  ComputeSystematics();
+    void  CreateMvaReader();
     bool  LoadCachedBDTSystematics();
     TH1D* MakeHisto(unsigned int thePlot, TString &plotName);
     bool  MakeHistos();

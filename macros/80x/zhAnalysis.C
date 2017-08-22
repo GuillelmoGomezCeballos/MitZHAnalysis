@@ -71,83 +71,10 @@ void zhAnalysis::Run(
   for(int nModel=0; nModel<nSigModels; nModel++) { for(unsigned int i=0; i<nSelTypes*4; i++) { for(int j=0; j<processTypes; j++) {       
     bgdDecay[nModel][i][j] = 0.0; weiDecay[nModel][i][j] = 0.0; 
   }}}
-  TMVA::Reader *reader; // =new TMVA::Reader();
-  Float_t  mva_balance,
-           mva_cos_theta_star_l1,
-           mva_cos_theta_CS_l1,
-           mva_delphi_ptll_MET,
-           mva_delphi_ll,
-           mva_delphi_jet_MET,
-           mva_deltaR_ll,
-           mva_etall,
-           mva_etal1,
-           mva_etal2,
-           mva_MET,
-           mva_mll_minus_mZ,
-           mva_mTjetMET,
-           mva_mTll,
-           mva_mTl1MET,
-           mva_mTl2MET,
-           mva_ptll,
-           mva_ptl1,
-           mva_ptl2,
-           mva_ptl1mptl2_over_ptll,
-           mva_response,
-           mva_weight;//,
-           //aux_PDFscale[102],
-           //aux_PUscale,
-           //aux_QCDscale_r1f2,
-           //aux_QCDscale_r1f5,
-           //aux_QCDscale_r2f1,
-           //aux_QCDscale_r2f2,
-           //aux_QCDscale_r5f1,
-           //aux_QCDscale_r5f5,
-           //aux_MET_JESup,
-           //aux_MET_JESdown;
-  UChar_t  mva_njets,
-           mva_ntaus,
-           aux_njets_JESup,
-           aux_njets_JESdown;
-  Bool_t   mva_btag_veto,
-           mva_3lveto;
-  if(useBDT) {
-    reader=new TMVA::Reader();
-    if(MVAVarType==3) {
-      //reader->AddVariable( "mva_balance"                       , &mva_balance            );
-      //reader->AddVariable( "mva_cos_theta_star_l1"             , &mva_cos_theta_star_l1  );
-      reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
-      reader->AddVariable( "mva_delphi_ptll_MET"               , &mva_delphi_ptll_MET    );
-      //reader->AddVariable( "mva_delphi_ll"                     , &mva_delphi_ll          );
-      reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
-      //reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
-      reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
-      reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
-      reader->AddVariable( "mva_MET"                           , &mva_MET                );
-      reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      //reader->AddVariable( "mva_mTll"                          , &mva_mTll               );
-      reader->AddVariable( "mva_mTl1MET"                       , &mva_mTl1MET            );
-      reader->AddVariable( "mva_mTl2MET"                       , &mva_mTl2MET            );
-      reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
-      reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
-      reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
-      //reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
-    } else if(MVAVarType==4) {
-      reader->AddVariable( "TMath::Abs(mva_cos_theta_CS_l1)"   , &mva_cos_theta_CS_l1    );
-      reader->AddVariable( "mva_deltaR_ll"                     , &mva_deltaR_ll          );
-      reader->AddVariable( "TMath::Abs(mva_etall)"             , &mva_etall              );
-      reader->AddVariable( "TMath::Abs(mva_etal1)"             , &mva_etal1              );
-      reader->AddVariable( "TMath::Abs(mva_etal2)"             , &mva_etal2              );
-      reader->AddVariable( "mva_mll_minus_mZ"                  , &mva_mll_minus_mZ       );
-      reader->AddVariable( "mva_ptll"                          , &mva_ptll               );
-      reader->AddVariable( "mva_ptl1"                          , &mva_ptl1               );
-      reader->AddVariable( "mva_ptl2"                          , &mva_ptl2               );
-      reader->AddVariable( "mva_ptl1mptl2_over_ptll"           , &mva_ptl1mptl2_over_ptll);
-    }
-    reader->BookMVA("BDT", the_BDT_weights);
-  }
   
-  // Either set up the random BDT toys or load the cached systematics here
   if (useBDT) { 
+    CreateMvaReader();
+    // Either set up the random BDT toys or load the cached systematics here
     // Filename for the cached bdt systematics, we will either read them from here or write fresh ones to here 
     sprintf(filenameBDTSysts,"MitZHAnalysis/plots%s/zll%shinv%s_%s_BDTsyst_%s.root", subdirectory.c_str(), addChan.Data(), finalStateName, signalName_[plotModel].Data(), ECMsb.Data());
     if(useCachedBDTSystematics) LoadCachedBDTSystematics();
@@ -451,7 +378,7 @@ void zhAnalysis::Run(
                       lepton2 = idLep2P4,
                       MET     = metP4,
                       jet1    = jet1P4;
-        bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0,0,0,0);
+        bdt_value = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mvaBalance, mvaCosThetaStarL1, mvaCosThetaCSL1, mvaDPhiDilepMET, mvaDPhiL1L2, mvaDPhiJetMET, mvaDRL1L2, mvaEtaDilep, mvaEtaL1, mvaEtaL2, mvaMET, mvaAbsDilepMassDiff, mvaMTJetMET, mvaMTDilep, mvaMTL1MET, mvaMTL2MET, mvaDilepPT, mvaPTL1, mvaPTL2, mvaLepPTBalance, 0,0,0,0);
      }
      bool passBDT = bdt_value>bdtMIN;
      if(MVAVarType==3) {
@@ -648,7 +575,7 @@ void zhAnalysis::Run(
             if(lep1IsMuon||lep2IsMuon) { // don't perform expensive BDT evaluation unless there is a muon
               lepton1_scale_variation = lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
               lepton2_scale_variation = lep2IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
-              bdt_toy_value_muonScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+              bdt_toy_value_muonScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mvaBalance, mvaCosThetaStarL1, mvaCosThetaCSL1, mvaDPhiDilepMET, mvaDPhiL1L2, mvaDPhiJetMET, mvaDRL1L2, mvaEtaDilep, mvaEtaL1, mvaEtaL2, mvaMET, mvaAbsDilepMassDiff, mvaMTJetMET, mvaMTDilep, mvaMTL1MET, mvaMTL2MET, mvaDilepPT, mvaPTL1, mvaPTL2, mvaLepPTBalance, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
                 MVAVar_toy_muonScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_muonScale, xbins[nBinMVA]);
             }
             // BDT variation with the electron scale variation (flat 1%)
@@ -656,14 +583,14 @@ void zhAnalysis::Run(
             if(!lep1IsMuon || !lep2IsMuon) { // don't perform expensive BDT evaluation unless there is an electron
               lepton1_scale_variation = !lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
               lepton2_scale_variation = !lep1IsMuon? 0.01 * bdt_toy_scale[i_toy] : 0;
-              bdt_toy_value_electronScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
+              bdt_toy_value_electronScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mvaBalance, mvaCosThetaStarL1, mvaCosThetaCSL1, mvaDPhiDilepMET, mvaDPhiL1L2, mvaDPhiJetMET, mvaDRL1L2, mvaEtaDilep, mvaEtaL1, mvaEtaL2, mvaMET, mvaAbsDilepMassDiff, mvaMTJetMET, mvaMTDilep, mvaMTL1MET, mvaMTL2MET, mvaDilepPT, mvaPTL1, mvaPTL2, mvaLepPTBalance, lepton1_scale_variation, lepton2_scale_variation, 0, 0);
                   MVAVar_toy_electronScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_electronScale, xbins[nBinMVA]);
             }
             // BDT variation with the MET scale variation (from Nero)
             if(bdt_toy_scale[i_toy] >= 0) 
-              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, bdt_toy_scale[i_toy] * (gltEvent.pfmetUp / MET.Pt() - 1.), 0);
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mvaBalance, mvaCosThetaStarL1, mvaCosThetaCSL1, mvaDPhiDilepMET, mvaDPhiL1L2, mvaDPhiJetMET, mvaDRL1L2, mvaEtaDilep, mvaEtaL1, mvaEtaL2, mvaMET, mvaAbsDilepMassDiff, mvaMTJetMET, mvaMTDilep, mvaMTL1MET, mvaMTL2MET, mvaDilepPT, mvaPTL1, mvaPTL2, mvaLepPTBalance, 0, 0, bdt_toy_scale[i_toy] * (gltEvent.pfmetUp / MET.Pt() - 1.), 0);
             else
-              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mva_balance, mva_cos_theta_star_l1, mva_cos_theta_CS_l1, mva_delphi_ptll_MET, mva_delphi_ll, mva_delphi_jet_MET, mva_deltaR_ll, mva_etall, mva_etal1, mva_etal2, mva_MET, mva_mll_minus_mZ, mva_mTjetMET, mva_mTll, mva_mTl1MET, mva_mTl2MET, mva_ptll, mva_ptl1, mva_ptl2, mva_ptl1mptl2_over_ptll, 0, 0, -bdt_toy_scale[i_toy] * (gltEvent.pfmetDown / MET.Pt() - 1.), 0);
+              bdt_toy_value_METScale = mvaNuisances(reader, lepton1, lepton2, MET, jet1, mvaBalance, mvaCosThetaStarL1, mvaCosThetaCSL1, mvaDPhiDilepMET, mvaDPhiL1L2, mvaDPhiJetMET, mvaDRL1L2, mvaEtaDilep, mvaEtaL1, mvaEtaL2, mvaMET, mvaAbsDilepMassDiff, mvaMTJetMET, mvaMTDilep, mvaMTL1MET, mvaMTL2MET, mvaDilepPT, mvaPTL1, mvaPTL2, mvaLepPTBalance, 0, 0, -bdt_toy_scale[i_toy] * (gltEvent.pfmetDown / MET.Pt() - 1.), 0);
                   MVAVar_toy_METScale = getMVAVar(MVAVarType, passAllCuts[TIGHTSEL], typePair, metP4.Pt(), mtW, dilep.M(), bdt_toy_value_METScale, xbins[nBinMVA]);
 
             if(theCategory == 3)      { histo_bdt_toys_muonScale_WZ       ->Fill(MVAVar_toy_muonScale, i_toy, totalWeight); histo_bdt_toys_electronScale_WZ       ->Fill(MVAVar_toy_electronScale, i_toy, totalWeight); histo_bdt_toys_METScale_WZ       ->Fill(MVAVar_toy_METScale, i_toy, totalWeight); }
@@ -2922,4 +2849,33 @@ void zhAnalysis::SetBranchAddresses(TTree *theInputTree, bool isData) {
     theInputTree->SetBranchAddress("normalizedWeight" , &normalizedWeight);
   }
 
+}
+
+void zhAnalysis::CreateMvaReader() {
+  reader=new TMVA::Reader();
+  if(useMvaAbsDilepMassDiff) reader->AddVariable("mvaAbsDilepMassDiff"         , &mvaAbsDilepMassDiff); 
+  if(useMvaBalance         ) reader->AddVariable("mvaBalance"                  , &mvaBalance         ); 
+  if(useMvaCosThetaCSL1    ) reader->AddVariable("TMath::Abs(mvaCosThetaCSL1)" , &mvaCosThetaCSL1    ); 
+  if(useMvaCosThetaStarL1  ) reader->AddVariable("mvaCosThetaStarL1"           , &mvaCosThetaStarL1  ); 
+  if(useMvaDilepPT         ) reader->AddVariable("mvaDilepPT"                  , &mvaDilepPT         ); 
+  if(useMvaDPhiDilepMET    ) reader->AddVariable("mvaDPhiDilepMET"             , &mvaDPhiDilepMET    ); 
+  if(useMvaDPhiJetMET      ) reader->AddVariable("mvaDPhiJetMET"               , &mvaDPhiJetMET      ); 
+  if(useMvaDPhiL1L2        ) reader->AddVariable("mvaDPhiL1L2"                 , &mvaDPhiL1L2        ); 
+  if(useMvaDRL1L2          ) reader->AddVariable("mvaDRL1L2"                   , &mvaDRL1L2          ); 
+  if(useMvaEtaDilep        ) reader->AddVariable("TMath::Abs(mvaEtaDilep)"     , &mvaEtaDilep        ); 
+  if(useMvaEtaL1           ) reader->AddVariable("TMath::Abs(mvaEtaL1)"        , &mvaEtaL1           ); 
+  if(useMvaEtaL2           ) reader->AddVariable("TMath::Abs(mvaEtaL2)"        , &mvaEtaL2           ); 
+  if(useMvaLepPTBalance    ) reader->AddVariable("mvaLepPTBalance"             , &mvaLepPTBalance    ); 
+  if(useMvaMET             ) reader->AddVariable("mvaMET"                      , &mvaMET             ); 
+  if(useMvaMTDilep         ) reader->AddVariable("mvaMTDilep"                  , &mvaMTDilep         ); 
+  if(useMvaMTJetMET        ) reader->AddVariable("mvaMTJetMET"                 , &mvaMTJetMET        ); 
+  if(useMvaMTL1MET         ) reader->AddVariable("mvaMTL1MET"                  , &mvaMTL1MET         ); 
+  if(useMvaMTL2MET         ) reader->AddVariable("mvaMTL2MET"                  , &mvaMTL2MET         ); 
+  if(useMvaPTL1            ) reader->AddVariable("mvaPTL1"                     , &mvaPTL1            ); 
+  if(useMvaPTL2            ) reader->AddVariable("mvaPTL2"                     , &mvaPTL2            ); 
+  if(useMvaNJets           ) reader->AddVariable("mvaNJets"                    , &mvaNJets           ); 
+  if(useMvaNTaus           ) reader->AddVariable("mvaNTaus"                    , &mvaNTaus           ); 
+  if(useMvaBVeto           ) reader->AddVariable("mvaBVeto"                    , &mvaBVeto           ); 
+  if(useMva3LVeto          ) reader->AddVariable("mva3LVeto"                   , &mva3LVeto          ); 
+  reader->BookMVA("BDT", bdtWeightsFile);
 }

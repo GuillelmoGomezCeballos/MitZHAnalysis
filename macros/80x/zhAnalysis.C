@@ -335,7 +335,6 @@ void zhAnalysis::Run(
           if( *jetBTags[nj] > 0.8       ) idBJet.push_back(nj);
         } if(*jetPts[nj]      > 30) {
           sumPtJets += *jetPts[nj];
-          idJet.push_back(nj);
           // WARNING: jet energy/mass not available in PandaLeptonicAnalyzer, need to add it. ~DGH
           TLorentzVector jetP4; jetP4.SetPtEtaPhiM( *jetPts[nj], *jetEtas[nj], *jetPhis[nj], 0.0); dilepJet += jetP4;
         }

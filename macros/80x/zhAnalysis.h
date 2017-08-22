@@ -43,7 +43,7 @@ class zhAnalysis {
   public:
     // Settings
     bool       isMIT                   = true;
-    bool       isBlinded               = false;
+    bool       isBlinded               = true;
     int        plotModel               = 0;
     double     lumi                    = 8.3;
     bool       isMINIAOD               = true;

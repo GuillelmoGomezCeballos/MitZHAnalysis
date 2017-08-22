@@ -332,7 +332,7 @@ void zhAnalysis::Run(
         // WARNING: Previously computed the b-veto using 20 GeV jets, but PandaLeptonicAnalyzer only considers 30 GeV+ jets! ~DGH
         if(*jetPts[nj]      > 20) {
           if( *jetBTags[nj] > bDiscrMax ) bDiscrMax = *jetBTags[nj];
-          if( *jetBTags[nj] > 0.8       ) idBJet.push_back(nj);
+          if( *jetBTags[nj] > 0.8484    ) idBJet.push_back(nj);
         } if(*jetPts[nj]      > 30) {
           sumPtJets += *jetPts[nj];
           // WARNING: jet energy/mass not available in PandaLeptonicAnalyzer, need to add it. ~DGH

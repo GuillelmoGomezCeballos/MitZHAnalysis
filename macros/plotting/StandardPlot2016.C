@@ -16,10 +16,10 @@
 //#endif
 
 Bool_t isHWWOverlaid = true;
-enum samp { iWW, iZJets, iTop, iWWEWK, iWWQCD, iVV, iWJets, iHiggs, iHiggs2, iWZ, iZZ, iWG, iVVV, iEM, iDPS,  iWS, nSamples };
+enum samp { iWW, iOther, iVV, iWJets, iZJets, iEM, iVVV, iTop, iWWQCD, iHiggs, iHiggs2, iWZ, iZZ, iWG, iDPS,  iWS, iWWEWK, nSamples };
 
-float xPos[nSamples+1] = {0.19,0.19,0.19,0.19,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41,0.41}; 
-float yOff[nSamples+1] = {   0,   1,   2,   3,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12};
+float xPos[nSamples+1] = {0.19,0.19,0.19,0.19,0.19,0.19,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40}; 
+float yOff[nSamples+1] = {   0,   1,   2,   3,   4,   5,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11};
 
 const Float_t _tsize   = 0.035;
 const Float_t _xoffset = 0.20;
@@ -47,6 +47,25 @@ Float_t GetMaximumIncludingErrors(TH1F* h)
     return maxWithErrors;
 }
 
+//------------------------------------------------------------------------------
+// GetMinimumIncludingErrors
+//------------------------------------------------------------------------------
+Float_t GetMinimumIncludingErrors(TH1F* h)
+{
+    Float_t minWithErrors = 100000000000;
+
+    for (Int_t i=1; i<=h->GetNbinsX(); i++) {
+
+        Float_t binHeight = h->GetBinContent(i) + h->GetBinError(i);
+
+        if(doApplyBinWidth) binHeight = binHeight/h->GetBinWidth(i)*SFBinWidth;
+
+        if (binHeight < minWithErrors) minWithErrors = binHeight;
+    }
+
+    return minWithErrors;
+}
+
 
 //------------------------------------------------------------------------------
 // AxisFonts
@@ -60,10 +79,11 @@ void AxisFonts(TAxis*  axis,
     axis->SetLabelSize  (0.050);
     axis->SetNdivisions (  505);
     axis->SetTitleFont  (   42);
-    axis->SetTitleOffset(  1.5);
-    axis->SetTitleSize  (0.050);
+    axis->SetTitleOffset(  1.3);
+    axis->SetTitleSize  (0.070);
 
-    if (coordinate == "y") axis->SetTitleOffset(1.6);
+    if      (coordinate == "y" && doApplyBinWidth == true) axis->SetTitleOffset(1.1);
+    else if (coordinate == "y")                            axis->SetTitleOffset(1.1);
 
     axis->SetTitle(title);
 }
@@ -110,10 +130,32 @@ void DrawLegend(Float_t x1,
     legend->Draw();
 }
 
-class StandardPlot2015 {
+void DrawLegendTG(Float_t x1,
+        Float_t y1,
+        TGraph  *hist,
+        TString label,
+        TString option)
+{
+    TLegend* legend = new TLegend(x1,
+            y1,
+            x1 + _xoffset,
+            y1 + _yoffset);
+
+    legend->SetBorderSize(     0);
+    legend->SetFillColor (     0);
+    legend->SetTextAlign (    12);
+    legend->SetTextFont  (    42);
+    legend->SetTextSize  (_tsize);
+
+    legend->AddEntry(hist, label.Data(), option.Data());
+
+    legend->Draw();
+}
+
+class StandardPlot2016 {
 
     public: 
-        StandardPlot2015() { _hist.resize(nSamples,0); _data = 0; _breakdown = false; _HiggsLabel = "";_Higgs2Label = "";_labelEM = " Non-prompt";}
+        StandardPlot2016() { _hist.resize(nSamples,0); _data = 0; _breakdown = false; _HiggsLabel = "";_Higgs2Label = "";_labelEM = " Nonprompt";_labelVVV = " VVV";}
         void setMCHist   (const samp &s, TH1F * h)  { _hist[s]       = h;  } 
         void setDataHist  (TH1F * h) { _data	      = h;  }
         void setWWHist    (TH1F * h) { setMCHist(iWW   ,h); }
@@ -132,8 +174,10 @@ class StandardPlot2015 {
         void setZZHist    (TH1F * h) { setMCHist(iZZ   ,h); }
         void setVVVHist   (TH1F * h) { setMCHist(iVVV  ,h); }
         void setEMHist    (TH1F * h) { setMCHist(iEM   ,h); }
+        void setOtherHist (TH1F * h) { setMCHist(iOther   ,h); }
         void setOverlaid  (bool b)   { isHWWOverlaid = b;   }
-        void setLabelEM   (TString s){ _labelEM = s.Data();}
+        void setLabelEM   (TString s){ _labelEM  = s.Data();}
+        void setLabelVVV  (TString s){ _labelVVV = s.Data();}
 
   TH1F* getDataHist() { return _data; }
 
@@ -166,18 +210,19 @@ class StandardPlot2015 {
             _sampleColor[iZJets ] = 901;//kGreen+2;
             _sampleColor[iTop   ] = kYellow;
             _sampleColor[iVV    ] = kAzure-2;
-            _sampleColor[iWJets ] = kGray+1;
+            _sampleColor[iWJets ] = TColor::GetColor(155,152,204);
             _sampleColor[iWG    ] = kViolet-9;
             _sampleColor[iHiggs ] = 809;//kOrange+7;
             _sampleColor[iHiggs2] = 419;//kOrange+7;
-            _sampleColor[iWZ    ] = 856;//kAzure-2;
+            _sampleColor[iWZ    ] = kAzure-4;//TColor::GetColor(222,90,106);
             _sampleColor[iZZ    ] = 842;//kBlue-3;
             _sampleColor[iVVV   ] = 832;//kRed+1;
             _sampleColor[iEM    ] = 798;//kYellow;
-            _sampleColor[iWWEWK ] = kRed-7;;//kAzure-2;
+            _sampleColor[iWWEWK ] = TColor::GetColor(248,206,104);
             _sampleColor[iWWQCD ] = kYellow;
             _sampleColor[iDPS   ] = kGreen;;//kGreen+2;
             _sampleColor[iWS    ] = 419;
+            _sampleColor[iOther ] = TColor::GetColor(250,202,255);
 
             //setUpStyle();
             //if(!gPad) new TCanvas();
@@ -229,8 +274,8 @@ class StandardPlot2015 {
 		hSum->Add(_hist[i]);
             }
 
-            if(_hist[iHiggs] ) _hist[iHiggs ]->SetLineWidth(3);
-            if(_hist[iHiggs2]) _hist[iHiggs2]->SetLineWidth(3);
+            if(_hist[iHiggs] ) _hist[iHiggs ]->SetLineWidth(4);
+            if(_hist[iHiggs2]) _hist[iHiggs2]->SetLineWidth(4);
             if(_hist[iHiggs2]) _hist[iHiggs2]->SetLineStyle(2);
             if(_data) _data->Rebin(rebin);
 	    //_data->SetBinContent(1,_data->GetBinContent(1)+100);
@@ -243,9 +288,9 @@ class StandardPlot2015 {
             if(_data) _data->SetMarkerStyle(kFullCircle);
 	    hstack->Draw("hist");
 
+  	    TGraphAsymmErrors * gsyst = new TGraphAsymmErrors(hSum);
 	    bool plotSystErrorBars = true;
 	    if(plotSystErrorBars == true) {
-  	      TGraphAsymmErrors * gsyst = new TGraphAsymmErrors(hSum);
               for (int i = 0; i < gsyst->GetN(); ++i) {
                 double systBck = 0;
 		if(_hist[iWW	]) systBck = systBck + 1.000*TMath::Power(0.100*_hist[iWW    ]->GetBinContent(i+1),2);
@@ -262,6 +307,7 @@ class StandardPlot2015 {
 		if(_hist[iZZ	]) systBck = systBck + 1.000*TMath::Power(0.100*_hist[iZZ    ]->GetBinContent(i+1),2);
 		if(_hist[iVVV	]) systBck = systBck + 1.000*TMath::Power(0.100*_hist[iVVV   ]->GetBinContent(i+1),2);
 		if(_hist[iEM	]) systBck = systBck + 1.000*TMath::Power(0.400*_hist[iEM    ]->GetBinContent(i+1),2);
+		if(_hist[iOther ]) systBck = systBck + 1.000*TMath::Power(0.100*_hist[iOther ]->GetBinContent(i+1),2);
 		if(_hist[iHiggs	]) systBck = systBck + 1.000*TMath::Power(0.200*_hist[iHiggs ]->GetBinContent(i+1),2);
                 double total = hSum->GetBinContent(i+1);
                 if(total > 0) systBck = sqrt(systBck)/total; else systBck=0.0; 
@@ -340,13 +386,15 @@ class StandardPlot2015 {
             if (_data) {
 
                 Float_t dataMax = GetMaximumIncludingErrors(_data);
-
                 if (dataMax > theMax) theMax = dataMax;
+
+                Float_t dataMin = GetMinimumIncludingErrors(_data);
+                if (dataMin < theMin) theMin = dataMin;
             }
 
             if (gPad->GetLogy()) {
-            	hstack->SetMaximum(2000 * theMax);
-            	hstack->SetMinimum(TMath::Max(0.9 * theMin,0.050));
+            	hstack->SetMaximum(250 * theMax);
+            	hstack->SetMinimum(TMath::Max(0.9 * theMin,0.010));
             } else {
               hstack->SetMaximum(1.75 * theMax);
             }
@@ -355,16 +403,22 @@ class StandardPlot2015 {
                 THStackAxisFonts(hstack, "y", "Events");
                 hstack->GetHistogram()->LabelsOption("v");
             } else {
-                THStackAxisFonts(hstack, "x", TString::Format("%s [%s]",_xLabel.Data(),_units.Data()));
                 if(_units.Sizeof() == 1) {
                     THStackAxisFonts(hstack, "x", _xLabel.Data());
                     if     (doApplyBinWidth == true && SFBinWidth == 1) THStackAxisFonts(hstack, "y", "Events / GeV");
                     else if(doApplyBinWidth == true)                    THStackAxisFonts(hstack, "y", Form("Events / %.2f",SFBinWidth));
                     else                                                THStackAxisFonts(hstack, "y", "Events");
                 } else {
-                    THStackAxisFonts(hstack, "x", TString::Format("%s [%s]",_xLabel.Data(),_units.Data()));
-                    if(hSum->GetBinWidth(0) < 1) THStackAxisFonts(hstack, "y", TString::Format("Events / %.1f %s",hSum->GetBinWidth(0),_units.Data()));
-		    else                         THStackAxisFonts(hstack, "y", TString::Format("Events / %.0f %s",hSum->GetBinWidth(0),_units.Data()));
+		    if(_units.EndsWith("BIN") == false){
+                      THStackAxisFonts(hstack, "x", TString::Format("%s [%s]",_xLabel.Data(),_units.Data()));
+                      if(hSum->GetBinWidth(0) < 1) THStackAxisFonts(hstack, "y", TString::Format("Events / %.1f %s",hSum->GetBinWidth(0),_units.Data()));
+		      else                         THStackAxisFonts(hstack, "y", TString::Format("Events / %.0f %s",hSum->GetBinWidth(0),_units.Data()));
+                    }
+		    else {
+		      _units = _units.ReplaceAll("BIN","");
+                      THStackAxisFonts(hstack, "x", TString::Format("%s [%s]",_xLabel.Data(),_units.Data()));
+                      THStackAxisFonts(hstack, "y", TString::Format("Events"));
+		    }
                 }
             }
 
@@ -373,24 +427,29 @@ class StandardPlot2015 {
             TString higgsLabel  = Form("%s",_HiggsLabel.Data());
             TString higgs2Label = Form("%s",_Higgs2Label.Data());
 
-            if(_data          && _data         ->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _data,	       "data",    "lp"); j++; }
-            if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "WW",	  "f" ); j++; }
-            if(_hist[iZJets ] && _hist[iZJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZJets ], "Z+jets/#gamma", "f" ); j++; }
+            if(_data          && _data         ->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _data,	       "Data",    "lp"); j++; }
+            if(_hist[iWWEWK ] && _hist[iWWEWK ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWWEWK ], "EW WW", "f" ); j++; }
+            if(_hist[iZZ    ] && _hist[iZZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZZ    ], "ZZ",	  "f" ); j++; }
+            if(_hist[iWZ    ] && _hist[iWZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWZ    ], "WZ",	  "f" ); j++; }
+            ///if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "WW",	  "f" ); j++; }
+            if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "2016 data",	  "f" ); j++; }
+            if(_hist[iVVV   ] && _hist[iVVV   ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iVVV   ], _labelVVV.Data(),	  "f" ); j++; }
+            if(_hist[iEM    ] && _hist[iEM    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iEM    ], _labelEM.Data(), "f" ); j++; }
+            if(_hist[iZJets ] && _hist[iZJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZJets ], "Drell-Yan", "f" ); j++; }
             if(_hist[iTop   ] && _hist[iTop   ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iTop   ], "t#bar{t}","f" ); j++; }
             if(_hist[iVV    ] && _hist[iVV    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iVV    ], "VV","f" ); j++; }
-            if(_hist[iWJets ] && _hist[iWJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWJets ], "Non-prompt",  "f" ); j++; }
-            if(_hist[iWG    ] && _hist[iWG    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWG    ], "V+#gamma^{(*)}", "f" ); j++; }
-            if(_hist[iWZ    ] && _hist[iWZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWZ    ], "WZ",	  "f" ); j++; }
-            if(_hist[iZZ    ] && _hist[iZZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZZ    ], "ZZ",	  "f" ); j++; }
-            if(_hist[iVVV   ] && _hist[iVVV   ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iVVV   ], "VVV",	  "f" ); j++; }
-            if(_hist[iEM    ] && _hist[iEM    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iEM    ], _labelEM.Data(), "f" ); j++; }
-            if(_hist[iWWEWK ] && _hist[iWWEWK ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWWEWK ], "EWK WW", "f" ); j++; }
+            //if(_hist[iWJets ] && _hist[iWJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWJets ], "Nonprompt",  "f" ); j++; }
+            if(_hist[iWJets ] && _hist[iWJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWJets ], "Nonresonant",  "f" ); j++; }
+            if(_hist[iWG    ] && _hist[iWG    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWG    ], "V+#gamma", "f" ); j++; }
             if(_hist[iWWQCD ] && _hist[iWWQCD ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWWQCD ], "QCD WW", "f" ); j++; }
             if(_hist[iDPS   ] && _hist[iDPS   ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iDPS   ], "DPS WW",  "f" ); j++; }
             if(_hist[iWS    ] && _hist[iWS    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWS    ], "Wrong-sign",	  "f" ); j++; }
+            if(_hist[iOther ] && _hist[iOther ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iOther ], "Others", "f" ); j++; }
             if     (_hist[iHiggs   ] && isHWWOverlaid) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iHiggs   ], higgsLabel, "f" ); j++; }
             else if(_hist[iHiggs   ])                  { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iHiggs   ], higgsLabel, "l" ); j++; }
-            if(_hist[iHiggs2]) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iHiggs2], higgs2Label, "l" ); j++; }
+            if(_hist[iHiggs2]) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset*1.2, _hist[iHiggs2], higgs2Label, "l" ); j++; }
+
+            if(plotSystErrorBars == true) {DrawLegendTG(xPos[j], 0.84 - yOff[j]*_yoffset*1.4,gsyst, "Bkg. unc.",  "f" ); j++;}
 
             //TLatex* luminosity = new TLatex(0.9, 0.8, TString::Format("L = %.1f fb^{-1}",_lumi));
             //luminosity->SetNDC();
@@ -407,11 +466,11 @@ class StandardPlot2015 {
         void setUnits(const TString &s) { _units = s; }
         void setBreakdown(const bool &b = true) { _breakdown = b; }
         void addLabel(const std::string &s) {
-            _extraLabel = new TLatex(0.9, 0.74, TString(s));
+            _extraLabel = new TLatex(0.9, 0.70, TString(s));
             _extraLabel->SetNDC();
             _extraLabel->SetTextAlign(32);
             _extraLabel->SetTextFont(42);
-            _extraLabel->SetTextSize(_tsize);
+            _extraLabel->SetTextSize(0.06); // 0.06
         }
 
     private: 
@@ -427,5 +486,6 @@ class StandardPlot2015 {
         TString  _HiggsLabel;
         TString  _Higgs2Label;
         TString  _labelEM;
+        TString  _labelVVV;
 
 };

@@ -1,4 +1,5 @@
 #include "TROOT.h"
+#include "Math/ProbFuncMathCore.h"
 #include "TInterpreter.h"
 #include "TFile.h"
 #include "TCanvas.h"
@@ -8,12 +9,15 @@
 #include "Math/QuantFuncMathCore.h"
 #include "TMath.h"
 #include "TGraphAsymmErrors.h"
-#include "StandardPlot2015.C"
+#include "StandardPlot2016.C"
+//#include "GoodStyle.C"
 #include "TSystem.h"
 #include "CMS_lumi.C"
+#include "TRandom.h"
 
-//double scaling[5] = {73.496/69.913,1.2,168.114/157.695,404.402/361.347,2.583/2.537};
-double scaling[5] = {1,1,1,1,1};
+double scaling[8] = {1,1,1,1,1,1,1,1};
+//double scaling[8] = {73.496/69.913,1.2,168.114/157.695,404.402/361.347,2.583/2.537,1,1,1}; // EM/Zjets/WZ/ZZ/VVV
+//double scaling[8] = {0.94,1.04,1.04,1.01,1.00,1.02,1.01,1.05}; // EWK/QCD/VV/VVV/WS/WG/DPS/Wjets
 
 void eraselabel(TPad *p,Double_t h){
   p->cd();
@@ -36,11 +40,11 @@ void atributes(TH1D *histo, TString xtitle = "", TString ytitle = "Fraction", TS
   }
   histo->GetXaxis()->SetLabelFont  (   42);
   histo->GetXaxis()->SetLabelOffset(0.015);
-  histo->GetXaxis()->SetLabelSize  (0.100);
+  histo->GetXaxis()->SetLabelSize  (0.140);
   histo->GetXaxis()->SetNdivisions (  505);
   histo->GetXaxis()->SetTitleFont  (   42);
-  histo->GetXaxis()->SetTitleOffset(  1.1);
-  histo->GetXaxis()->SetTitleSize  (0.100);
+  histo->GetXaxis()->SetTitleOffset( 0.95);
+  histo->GetXaxis()->SetTitleSize  (0.140);
   histo->GetXaxis()->SetTickLength (0.07 );
 
   histo->GetYaxis()->SetTitle(ytitle.Data());
@@ -57,18 +61,18 @@ void atributes(TH1D *histo, TString xtitle = "", TString ytitle = "Fraction", TS
   histo->SetMarkerStyle(kFullCircle);
 }
 
-void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TString units = "", TString plotName = "histo_nice.root", TString outputName = "njets",
+void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TString units = "", TString plotName = "histo_nice.root", TString outputName = "njets",
                 bool isLogY = false, TString higgsLabel = "", double lumi = 1.0, bool isBlind = false, TString extraLabel = "",
 		TString plotExtraName = "histo_nice2.root", TString higgs2Label = "", bool show2D = false) {
 
   gInterpreter->ExecuteMacro("GoodStyle.C");
-  gROOT->LoadMacro("StandardPlot2015.C");
+  //gROOT->LoadMacro("StandardPlot2016.C");
   gStyle->SetOptStat(0);
 
   TFile* file = new TFile(plotName, "read");  if(!file) {printf("File %s does not exist\n",plotName.Data()); return;}
   TFile* fileExtra = new TFile(plotExtraName, "read"); bool hasFileExtra = true; if(!fileExtra->IsOpen()) hasFileExtra = false;
 
-  StandardPlot2015 myPlot;
+  StandardPlot2016 myPlot;
   myPlot.setLumi(lumi);
   myPlot.setLabel(XTitle);
   myPlot.addLabel(extraLabel.Data());
@@ -76,6 +80,7 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   myPlot.setHiggs2Label(higgs2Label.Data());
   myPlot.setUnits(units);
 
+  TH1F* hOther;
   TH1F* hWWEWK;
   TH1F* hWWQCD;
   TH1F* hDPS  ;
@@ -129,6 +134,20 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hBck->Add(hWJets,1);
     hBck->Add(hWG   ,1);
     hBck->Add(hHiggs,1);
+    
+    bool doRescale = false;
+    if(doRescale){
+      double sf = hData->GetSumOfWeights()/hBck->GetSumOfWeights();
+      hBck  ->Scale(sf);
+      hWW   ->Scale(sf);
+      hZJets->Scale(sf);
+      hTop  ->Scale(sf);
+      hVV   ->Scale(sf);
+      hWJets->Scale(sf);
+      hWG   ->Scale(sf);
+      hHiggs->Scale(sf);
+    }
+
   }
   else if(nsel == 1){
     printf("WZ style plots\n");
@@ -178,7 +197,7 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     if(hasFileExtra) hHiggs2 = (TH1F*)fileExtra->Get("histo6");
     hZJets->Scale(lumi);
     //hHiggs->Scale(lumi);
-    hHiggs->Scale(1);
+    hHiggs->Scale(0.1);
     hggZH ->Scale(1);
     bool doRemoveBins = false;
     if(doRemoveBins){
@@ -217,7 +236,7 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hBck->Add(hWG   ,1);  
   }
   else if(nsel == 4){
-    printf("WWSS style plots\n");
+    printf("WWSS OLD style plots\n");
     hData   = (TH1F*)file->Get("histo0");
     hWWEWK  = (TH1F*)file->Get("histo1");
     hWWQCD  = (TH1F*)file->Get("histo2");
@@ -232,6 +251,15 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     TH1F * hFakeE   = (TH1F*)file->Get("histo10");
     hWJets->Add(hFakeE);
     //hWS->Scale(lumi);
+
+    hWWEWK ->Scale(scaling[0]);
+    hWWQCD ->Scale(scaling[1]);
+    hVV    ->Scale(scaling[2]);
+    hVVV   ->Scale(scaling[3]);
+    hWS    ->Scale(scaling[4]);
+    hWG    ->Scale(scaling[5]);
+    hDPS   ->Scale(scaling[6]);
+    hWJets ->Scale(scaling[7]);
 
     if(hasFileExtra) hHiggs  = (TH1F*)file->Get("histo11");
     if(hasFileExtra) hHiggs2 = (TH1F*)fileExtra->Get("histo12");
@@ -261,7 +289,7 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   }
   else if(nsel == 5){
     printf("WW style plots\n");
-    hWW         = (TH1F*)file->Get("histo1"); TH1F *hWWAux = (TH1F*)file->Get("histo2"); hWW->Add(hWWAux);
+    hWW     = (TH1F*)file->Get("histo1"); TH1F *hWWAux = (TH1F*)file->Get("histo2"); hWW->Add(hWWAux);
     hTop    = (TH1F*)file->Get("histo3");
     hZJets  = (TH1F*)file->Get("histo4");
     hVV     = (TH1F*)file->Get("histo5"); TH1F *hVVAux = (TH1F*)file->Get("histo6"); hVV->Add(hVVAux);
@@ -270,8 +298,8 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hHiggs  = (TH1F*)file->Get("histo11");
     hData   = (TH1F*)file->Get("histo0");
 
-    hWW->Scale(lumi);
-    //hTop->Scale(lumi);
+    //hWW->Scale(lumi);
+    //hTop->Scale(0.91);
 
     bool doRemoveBins = false;
     if(doRemoveBins){
@@ -294,6 +322,64 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hBck->Add(hWG   ,1);  
     hBck->Add(hWJets,1); 
     hBck->Add(hHiggs,1);
+    
+    bool doRescale = false;
+    if(doRescale){
+      double sf = hData->GetSumOfWeights()/hBck->GetSumOfWeights();
+      hBck  ->Scale(sf);
+      hWW   ->Scale(sf);
+      hTop  ->Scale(sf);
+      hZJets->Scale(sf);
+      hVV   ->Scale(sf);
+      hWG   ->Scale(sf);
+      hWJets->Scale(sf);
+      hHiggs->Scale(sf);
+    }
+  }
+  else if(nsel == 6){
+    printf("WWSS style plots\n");
+    hData   = (TH1F*)file->Get("histo0");
+    hWWEWK  = (TH1F*)file->Get("histo1");
+    hWWQCD  = (TH1F*)file->Get("histo2");
+    hWZ     = (TH1F*)file->Get("histo3");
+    hZZ     = (TH1F*)file->Get("histo4");
+    hVVV    = (TH1F*)file->Get("histo5");
+    hWS     = (TH1F*)file->Get("histo6");
+    hWG     = (TH1F*)file->Get("histo7");
+    hDPS    = (TH1F*)file->Get("histo8");
+    hWJets  = (TH1F*)file->Get("histo9");
+    TH1F * hFakeE   = (TH1F*)file->Get("histo10");
+    hWJets->Add(hFakeE);
+
+    hOther  = (TH1F*)hWWQCD->Clone();
+    hOther->Add(hZZ );
+    hOther->Add(hVVV);
+    hOther->Add(hWS );
+    hOther->Add(hWG );
+    hOther->Add(hDPS);
+
+    hWWEWK ->Scale(scaling[0]);
+    hOther ->Scale(scaling[1]);
+    hWZ    ->Scale(scaling[2]);
+    hWJets ->Scale(scaling[3]);
+
+    if(hasFileExtra) hHiggs  = (TH1F*)file->Get("histo11");
+    if(hasFileExtra) hHiggs2 = (TH1F*)fileExtra->Get("histo12");
+
+    bool doRemoveBins = false;
+    if(doRemoveBins){
+      for(int i=hData->GetNbinsX(); i>=25; i--){
+        hData  ->SetBinContent(i,0);
+        //hWWEWK->SetBinContent(i,0);
+        //hOther->SetBinContent(i,0);
+        //hWZ	->SetBinContent(i,0);
+        //hWJets->SetBinContent(i,0);
+      }
+    }
+    hBck    = (TH1F*)hWWEWK->Clone();
+    hBck->Add(hOther,1);
+    hBck->Add(hWZ   ,1);  
+    hBck->Add(hWJets,1);
   }
   else {
     return;
@@ -340,7 +426,8 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
        hHiggs2->GetSumOfWeights() > 0) printf("Higgs2: %f\n",hHiggs2->GetSumOfWeights());
     
     myPlot.setOverlaid(false);
-    myPlot.setLabelEM("WW+top-quark");
+    myPlot.setLabelEM(" Nonresonant");
+    myPlot.setLabelVVV("Other bkg.");
 
     printf("%f + %f + %f + %f + %f = %f - %f - %f\n",
           hEM->GetSumOfWeights(),hZJets->GetSumOfWeights(),hWZ->GetSumOfWeights(),hZZ->GetSumOfWeights(),hVVV->GetSumOfWeights(),
@@ -380,6 +467,23 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
 	  hBck->GetSumOfWeights(),
 	  hData->GetSumOfWeights());
   }
+  else if(nsel == 6){
+    if(hWJets->GetSumOfWeights() > 0) myPlot.setMCHist(iWJets, (TH1F*)hWJets->Clone("hWJets"));
+    if(hWWEWK->GetSumOfWeights() > 0) myPlot.setMCHist(iWWEWK, (TH1F*)hWWEWK->Clone("hWWEWK"));
+    if(hOther->GetSumOfWeights() > 0) myPlot.setMCHist(iOther, (TH1F*)hOther->Clone("hOther"));
+    if(hWZ   ->GetSumOfWeights() > 0) myPlot.setMCHist(iWZ   , (TH1F*)hWZ   ->Clone("hWZ"));
+
+    myPlot.setOverlaid(false);
+    if(hasFileExtra && hHiggs ->GetSumOfWeights() > 0) myPlot.setMCHist(iHiggs,(TH1F*)hHiggs->Clone("hHiggs"));
+    if(hasFileExtra && hHiggs ->GetSumOfWeights() > 0) printf("Higgs: %f\n",hHiggs->GetSumOfWeights());
+    if(hasFileExtra && hHiggs2->GetSumOfWeights() > 0) myPlot.setMCHist(iHiggs2,(TH1F*)hHiggs2->Clone("hHiggs2"));
+    if(hasFileExtra && hHiggs2->GetSumOfWeights() > 0) printf("Higgs2: %f\n",hHiggs2->GetSumOfWeights());
+
+    printf("%f + %f + %f + %f = %f - %f\n",
+          hWWEWK->GetSumOfWeights(),hOther->GetSumOfWeights(),hWZ->GetSumOfWeights(),hWJets->GetSumOfWeights(),
+	  hBck->GetSumOfWeights(),
+	  hData->GetSumOfWeights());
+  }
 
   if(isBlind == false) myPlot.setDataHist(hData);
 
@@ -404,10 +508,9 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   if(isLogY == true) c1->SetLogy();
   if(isLogY == true) pad1->SetLogy();
   myPlot.Draw(ReBin);
-  CMS_lumi( pad1, 4, 12 );
+  CMS_lumi( pad1, 4, 33 );
 
   pad2->cd();
-  bool showPulls = false;
   //pad2->SetGridy();
   hBck ->Rebin(ReBin);
   TH1D* hTotalDivision = (TH1D*) hData->Clone();
@@ -421,17 +524,26 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
 
   hDataDivision ->Add(hData );
   hTotalDivision->Add(hBck  );
-
+  hTotalDivision->Scale(hDataDivision->GetSumOfWeights()/hTotalDivision->GetSumOfWeights());
   TGraphAsymmErrors *g = new TGraphAsymmErrors(hDataDivision);
+  bool showPulls = false;
+  bool useGarwood = false;
   for(int i=1; i<=hDataDivision->GetNbinsX(); i++){
     if(showPulls){
       double pull = 0.0;
-      if((hDataDivision->GetBinError(i) > 0 || hTotalDivision->GetBinError(i) > 0) && hDataDivision->GetBinContent(i) > 0){
-        pull = (hDataDivision->GetBinContent(i)-hTotalDivision->GetBinContent(i))/sqrt(hDataDivision->GetBinError(i)*hDataDivision->GetBinError(i)+hTotalDivision->GetBinError(i)*hTotalDivision->GetBinError(i));
+      if(useGarwood == false){
+        if((hDataDivision->GetBinError(i) > 0 || hTotalDivision->GetBinError(i) > 0) && hDataDivision->GetBinContent(i) > 0){
+          pull = (hDataDivision->GetBinContent(i)-hTotalDivision->GetBinContent(i))/sqrt(hDataDivision->GetBinError(i)*hDataDivision->GetBinError(i)+hTotalDivision->GetBinError(i)*hTotalDivision->GetBinError(i));
+        }
+      } 
+      else {
+        pull = TMath::Sqrt(2)*TMath::ErfInverse(-1+2*ROOT::Math::poisson_cdf(hDataDivision->GetBinContent(i),hTotalDivision->GetBinContent(i))); 
       }
       hRatio->SetBinContent(i,pull);
       hRatio->SetBinError(i,1.0);
-    } else {
+      printf("pull(%3d): da: %f pred: %f --> %f\n",i,hDataDivision ->GetBinContent(i),hTotalDivision->GetBinContent(i),pull);
+    } 
+    else {
       double N = g->GetY()[i-1];
       double alpha=(1-0.6827);
       double L = (N==0) ? 0 : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
@@ -444,11 +556,13 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
         pull = (hDataDivision->GetBinContent(i)/hTotalDivision->GetBinContent(i));
 	pullerr = pull*diff/hDataDivision->GetBinContent(i);
       }
+      //if(pull>1.1 && i<10) pull = 1.1-gRandom->Uniform()*0.01;
+      //if(pull<0.9 && i<10) pull = 0.9+gRandom->Uniform()*0.01;
       hRatio->SetBinContent(i,pull);
       hRatio->SetBinError(i,pullerr);
       hBand->SetBinContent(i,1);
-      hBand->SetBinError  (i,hTotalDivision->GetBinError(i)/hTotalDivision->GetBinContent(i));
-      //printf("ratio(%d): %f +/- %f --> da: %f +/- %f (%f) pred: %f +/- %f\n",i,pull,pullerr,hDataDivision ->GetBinContent(i),hDataDivision ->GetBinError(i),diff,hTotalDivision->GetBinContent(i),hTotalDivision->GetBinError(i));
+      hBand->SetBinError(i,hTotalDivision->GetBinError(i)/hTotalDivision->GetBinContent(i));
+      //printf("ratio(%3d): %f +/- %f --> da: %f +/- %f (%f) pred: %f +/- %f\n",i,pull,pullerr,hDataDivision ->GetBinContent(i),hDataDivision ->GetBinError(i),diff,hTotalDivision->GetBinContent(i),hTotalDivision->GetBinError(i));
     }
   }
   if(showPulls) atributes(hRatio,XTitle.Data(),"Pull",units.Data());
@@ -471,7 +585,7 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   Double_t dy = TMath::Max(TMath::Abs(hRatio->GetMaximum()),
                            TMath::Abs(hRatio->GetMinimum())) + theLines[1];
   if(showPulls) hRatio->GetYaxis()->SetRangeUser(-dy, +dy);
-  else          hRatio->GetYaxis()->SetRangeUser(0.2, +2.2);
+  else          hRatio->GetYaxis()->SetRangeUser(0.2, +1.8);
   hRatio->GetYaxis()->CenterTitle();
   eraselabel(pad1,hData->GetXaxis()->GetLabelSize());
   }
@@ -487,6 +601,8 @@ void finalPlot2015(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     myOutputFile = Form("plots/%s.png",outputName.Data());
     //c1->SaveAs(myOutputFile.Data());
     myOutputFile = Form("plots/%s.pdf",outputName.Data());
+    c1->SaveAs(myOutputFile.Data());
+    myOutputFile = Form("plots/%s.root",outputName.Data());
     c1->SaveAs(myOutputFile.Data());
   }
 

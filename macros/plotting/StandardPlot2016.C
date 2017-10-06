@@ -18,14 +18,14 @@
 Bool_t isHWWOverlaid = true;
 enum samp { iWW, iOther, iVV, iWJets, iZJets, iEM, iVVV, iTop, iWWQCD, iHiggs, iHiggs2, iWZ, iZZ, iWG, iDPS,  iWS, iWWEWK, nSamples };
 
-float xPos[nSamples+1] = {0.19,0.19,0.19,0.19,0.19,0.19,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40}; 
-float yOff[nSamples+1] = {   0,   1,   2,   3,   4,   5,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11};
+float xPos[nSamples+1] = {0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30}; 
+float yOff[nSamples+1] = {   0,   1,   2,   3,   4,   5,   6,   7,   8,   0,   1,   2,   3,   4,   5,   6,   7,   8};
 
-const Float_t _tsize   = 0.035;
+const Float_t _tsize   = 0.04;
 const Float_t _xoffset = 0.20;
 const Float_t _yoffset = 0.05;
 
-const bool doApplyBinWidth = false;
+const bool doApplyBinWidth = true;
 const double SFBinWidth = 1;
 
 //------------------------------------------------------------------------------
@@ -350,7 +350,7 @@ class StandardPlot2016 {
                     g->SetPoint      (i, g->GetX()[i], g->GetY()[i]/_data->GetBinWidth(i+1)*SFBinWidth);
   		  }
                 }
-  		g->Draw("P");
+  		g->Draw("ep");
 	      }
 	      else {
                 if(doApplyBinWidth == true){
@@ -416,8 +416,8 @@ class StandardPlot2016 {
                     }
 		    else {
 		      _units = _units.ReplaceAll("BIN","");
-                      THStackAxisFonts(hstack, "x", TString::Format("%s [%s]",_xLabel.Data(),_units.Data()));
-                      THStackAxisFonts(hstack, "y", TString::Format("Events"));
+                      THStackAxisFonts(hstack, "x", TString::Format("%s (%s)",_xLabel.Data(),_units.Data()));
+                      THStackAxisFonts(hstack, "y", TString::Format("Events / bin"));
 		    }
                 }
             }
@@ -431,8 +431,7 @@ class StandardPlot2016 {
             if(_hist[iWWEWK ] && _hist[iWWEWK ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWWEWK ], "EW WW", "f" ); j++; }
             if(_hist[iZZ    ] && _hist[iZZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZZ    ], "ZZ",	  "f" ); j++; }
             if(_hist[iWZ    ] && _hist[iWZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWZ    ], "WZ",	  "f" ); j++; }
-            ///if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "WW",	  "f" ); j++; }
-            if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "2016 data",	  "f" ); j++; }
+            if(_hist[iWW    ] && _hist[iWW    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWW    ], "WW",	  "f" ); j++; }
             if(_hist[iVVV   ] && _hist[iVVV   ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iVVV   ], _labelVVV.Data(),	  "f" ); j++; }
             if(_hist[iEM    ] && _hist[iEM    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iEM    ], _labelEM.Data(), "f" ); j++; }
             if(_hist[iZJets ] && _hist[iZJets ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZJets ], "Drell-Yan", "f" ); j++; }
@@ -447,9 +446,9 @@ class StandardPlot2016 {
             if(_hist[iOther ] && _hist[iOther ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iOther ], "Others", "f" ); j++; }
             if     (_hist[iHiggs   ] && isHWWOverlaid) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iHiggs   ], higgsLabel, "f" ); j++; }
             else if(_hist[iHiggs   ])                  { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iHiggs   ], higgsLabel, "l" ); j++; }
-            if(_hist[iHiggs2]) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset*1.2, _hist[iHiggs2], higgs2Label, "l" ); j++; }
+            if(_hist[iHiggs2]) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset*1.03, _hist[iHiggs2], higgs2Label, "l" ); j++; }
 
-            if(plotSystErrorBars == true) {DrawLegendTG(xPos[j], 0.84 - yOff[j]*_yoffset*1.4,gsyst, "Bkg. unc.",  "f" ); j++;}
+            if(plotSystErrorBars == true) {DrawLegendTG(xPos[j], 0.84 - yOff[j]*_yoffset*1.07,gsyst, "Bkg. unc.",  "f" ); j++;}
 
             //TLatex* luminosity = new TLatex(0.9, 0.8, TString::Format("L = %.1f fb^{-1}",_lumi));
             //luminosity->SetNDC();
@@ -466,11 +465,11 @@ class StandardPlot2016 {
         void setUnits(const TString &s) { _units = s; }
         void setBreakdown(const bool &b = true) { _breakdown = b; }
         void addLabel(const std::string &s) {
-            _extraLabel = new TLatex(0.9, 0.70, TString(s));
+            _extraLabel = new TLatex(0.35, 0.70, TString(s));
             _extraLabel->SetNDC();
             _extraLabel->SetTextAlign(32);
             _extraLabel->SetTextFont(42);
-            _extraLabel->SetTextSize(0.06); // 0.06
+            _extraLabel->SetTextSize(0.06);
         }
 
     private: 

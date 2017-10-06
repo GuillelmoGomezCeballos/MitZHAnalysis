@@ -492,7 +492,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   if(show2D==false){
   if(isLogY == true) c1->SetLogy();
   myPlot.Draw(ReBin);  // Can pass a rebin 
-  CMS_lumi( c1, 4, 12 );
+  CMS_lumi( c1, 4, 11 );
   } else {
   c1->SetBottomMargin(0.1);
   c1->cd();
@@ -508,7 +508,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   if(isLogY == true) c1->SetLogy();
   if(isLogY == true) pad1->SetLogy();
   myPlot.Draw(ReBin);
-  CMS_lumi( pad1, 4, 33 );
+  CMS_lumi( pad1, 4, 11 );
 
   pad2->cd();
   //pad2->SetGridy();
@@ -567,7 +567,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   }
   if(showPulls) atributes(hRatio,XTitle.Data(),"Pull",units.Data());
   else          atributes(hRatio,XTitle.Data(),"Data/Bkg.",units.Data());
-  hRatio->Draw("e");
+  hRatio->Draw("ep");
   hBand->SetFillColor(12);
   hBand->SetFillStyle(3002);
   hBand->SetMarkerSize(0);

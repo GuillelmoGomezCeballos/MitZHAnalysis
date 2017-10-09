@@ -497,7 +497,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   c1->SetBottomMargin(0.1);
   c1->cd();
   TPad *pad1 = new TPad("pad1", "pad1",0.00,0.30,1.00,1.00);
-  TPad *pad2 = new TPad("pad2", "pad2",0.00,0.00,1.00,0.30);
+  TPad *pad2 = new TPad("pad2", "pad2",0.00,0.00,1.00,0.29);
   pad1->SetBottomMargin(0);
   pad2->SetTopMargin(0);
   pad2->SetBottomMargin(0.3);
@@ -567,7 +567,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   }
   if(showPulls) atributes(hRatio,XTitle.Data(),"Pull",units.Data());
   else          atributes(hRatio,XTitle.Data(),"Data/Bkg.",units.Data());
-  hRatio->Draw("ep");
+  hRatio->Draw("e1p");
   hBand->SetFillColor(12);
   hBand->SetFillStyle(3002);
   hBand->SetMarkerSize(0);

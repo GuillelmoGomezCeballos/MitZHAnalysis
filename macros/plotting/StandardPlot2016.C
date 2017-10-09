@@ -340,8 +340,8 @@ class StandardPlot2016 {
                   g->SetPointEYlow(i,double(N)-L);
                   g->SetPointEYhigh(i, U-double(N));
                   
-                  g->SetPointEXlow (i, 0);
-                  g->SetPointEXhigh(i, 0);
+                  g->SetPointEXlow (i, _data->GetBinWidth(i)/2.);
+                  g->SetPointEXhigh(i, _data->GetBinWidth(i)/2.);
   		}
                 if(doApplyBinWidth == true){
  		  for (int i = 0; i < g->GetN(); ++i) {

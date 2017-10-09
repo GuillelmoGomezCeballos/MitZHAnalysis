@@ -10,3 +10,7 @@ root -q -l -b finalPlot2016.C+'(1,1,"BDT classifier","","inputs_zh_2016/histowz_
 root -q -l -b finalPlot2016.C+'(2,1,"BDT classifier","","inputs_zh_2016/histozh_postfit_nice.root","fullsel_bdt_ll_postfit",0,"ZH(125)",1,0,"ee+#mu#mu","","",1)';
 
 sed -i 's/double SFBinWidth = 0.05/double SFBinWidth = 1/' StandardPlot2016.C;
+
+root -l -b -q PlotLimit_ZHinv.C+'("inputs_zh_2016/ana_zhinv_bdt_nj.txt" ,"ana_hzinv_met_nj" ,"35.9 fb^{-1} (13 TeV)",110,1000,1,0,"ZH #rightarrow 2l+p_{T}^{miss} + #leq 1 jet",1,5,"pdf")';
+
+root -l -b -q PlotLimit_ZHinv.C+'("inputs_zh_2016/ana_zhinv_bdt_nj_ratios.txt" ,"ana_hzinv_met_nj_ratios" ,"35.9 fb^{-1} (13 TeV)",110,300,0,0,"qq #rightarrow ZH #rightarrow 2l+p_{T}^{miss} + #leq 1 jet",1,4,"pdf")';

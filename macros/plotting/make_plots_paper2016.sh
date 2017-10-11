@@ -5,9 +5,9 @@ root -q -l -b finalPlot2016.C+'(2,1,"p_{T}^{miss} [GeV]","","inputs_zh_2016/hist
 
 sed -i 's/double SFBinWidth = 1/double SFBinWidth = 0.05/' StandardPlot2016.C;
 
-root -q -l -b finalPlot2016.C+'(1,1,"BDT classifier","","inputs_zh_2016/histo_1_bdt.root","fullsel_bdt_wz_postfit",0,"ZH(125)",1,0,"WZ CR","","",1,0.2,.899)';
-root -q -l -b finalPlot2016.C+'(1,1,"BDT classifier","","inputs_zh_2016/histo_0_bdt.root","fullsel_bdt_zz_postfit",0,"ZH(125)",1,0,"ZZ CR","","",1,0.2,.899)';
-root -q -l -b finalPlot2016.C+'(2,1,"BDT classifier","","inputs_zh_2016/histo_2_bdt.root","fullsel_bdt_ll_postfit",0,"ZH(125)",1,0,"ee+#mu#mu","","",1,0.2,.899)';
+root -q -l -b finalPlot2016.C+'(1,1,"BDT classifier","","inputs_zh_2016/guiBdtPostfitForensics/histo_1_bdt.root","fullsel_bdt_wz_postfit",0,"ZH(125)",1,0,"WZ CR","","",1,0.2,.899)';
+root -q -l -b finalPlot2016.C+'(1,1,"BDT classifier","","inputs_zh_2016/guiBdtPostfitForensics/histo_0_bdt.root","fullsel_bdt_zz_postfit",0,"ZH(125)",1,0,"ZZ CR","","",1,0.2,.899)';
+root -q -l -b finalPlot2016.C+'(2,1,"BDT classifier","","inputs_zh_2016/guiBdtPostfitForensics/histo_2_bdt.root","fullsel_bdt_ll_postfit",0,"ZH(125)",1,0,"ee+#mu#mu","","",1,0.2,.899)';
 
 sed -i 's/double SFBinWidth = 0.05/double SFBinWidth = 1/' StandardPlot2016.C;
 

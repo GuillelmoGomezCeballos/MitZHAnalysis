@@ -203,7 +203,7 @@ class StandardPlot2016 {
 
         }
 
-        TH1* Draw(const int &rebin=1) {
+        TH1* Draw(const int &rebin=1, double xmin=0, double xmax=0) {
 
             Color_t _sampleColor[nSamples];
             _sampleColor[iWW    ] = kAzure-9;
@@ -238,6 +238,7 @@ class StandardPlot2016 {
 	    else                   {printf("PROBLEM\n");assert(0);}
 	    hSum->Rebin(rebin);
 	    hSum->Scale(0.0);
+  	    if(xmin!=xmax) hSum->GetXaxis()->SetRangeUser(xmin,xmax);
             for (int i=0; i<nSamples; i++) {
 
                 // in case the user doesn't set it
@@ -269,6 +270,7 @@ class StandardPlot2016 {
 
                 _hist[i]->SetFillColor(_sampleColor[i]);
                 _hist[i]->SetFillStyle(1001);
+  	         if(xmin!=xmax) _hist[i]->GetXaxis()->SetRangeUser(xmin,xmax);
 
                 hstack->Add(_hist[i]);
 		hSum->Add(_hist[i]);
@@ -287,6 +289,8 @@ class StandardPlot2016 {
             if(_data) _data->SetLineColor  (kBlack);
             if(_data) _data->SetMarkerStyle(kFullCircle);
 	    hstack->Draw("hist");
+  	    if(xmin!=xmax) hstack->GetXaxis()->SetRangeUser(xmin,xmax);
+            gPad->Update();
 
   	    TGraphAsymmErrors * gsyst = new TGraphAsymmErrors(hSum);
 	    bool plotSystErrorBars = true;

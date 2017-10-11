@@ -63,7 +63,7 @@ void atributes(TH1D *histo, TString xtitle = "", TString ytitle = "Fraction", TS
 
 void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TString units = "", TString plotName = "histo_nice.root", TString outputName = "njets",
                 bool isLogY = false, TString higgsLabel = "", double lumi = 1.0, bool isBlind = false, TString extraLabel = "",
-		TString plotExtraName = "histo_nice2.root", TString higgs2Label = "", bool show2D = false) {
+		TString plotExtraName = "histo_nice2.root", TString higgs2Label = "", bool show2D = false, double xmin=0., double xmax=0.) {
 
   gInterpreter->ExecuteMacro("GoodStyle.C");
   //gROOT->LoadMacro("StandardPlot2016.C");
@@ -112,6 +112,16 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hHiggs  = (TH1F*)file->Get("histo7");
     hData   = (TH1F*)file->Get("histo0");
     hZJets->Scale(lumi);
+    if(xmin!=xmax) {
+      hWW     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hZJets  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hTop    ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hVV     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hWJets  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hWG     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hHiggs  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hData   ->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
     bool doRemoveBins = false;
     if(doRemoveBins){
@@ -158,6 +168,15 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hVVV    = (TH1F*)file->Get("histo5");
     hData   = (TH1F*)file->Get("histo0");
     hHiggs  = (TH1F*)file->Get("histo6");
+    if(xmin!=xmax) {
+      hEM     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hZJets  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hWZ     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hZZ     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hVVV    ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hData   ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hHiggs  ->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
     bool doRemoveBins = false;
     if(doRemoveBins){
       for(int i=hData->GetNbinsX()-185; i<=hData->GetNbinsX(); i++){
@@ -187,6 +206,16 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
     hHiggs  = (TH1F*)file->Get("histo6");
     hggZH   = (TH1F*)file->Get("histo7");
     hData   = (TH1F*)file->Get("histo0");
+    if(xmin!=xmax) {
+      hEM     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hZJets  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hWZ     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hZZ     ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hVVV    ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hHiggs  ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hggZH   ->GetXaxis()->SetRangeUser(xmin, xmax);
+      hData   ->GetXaxis()->SetRangeUser(xmin, xmax);
+    }
 
     hEM	  ->Scale(scaling[0]);
     hZJets->Scale(scaling[1]);
@@ -507,7 +536,7 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   pad1->cd();
   if(isLogY == true) c1->SetLogy();
   if(isLogY == true) pad1->SetLogy();
-  myPlot.Draw(ReBin);
+  myPlot.Draw(ReBin,xmin,xmax);
   CMS_lumi( pad1, 4, 11 );
 
   pad2->cd();
@@ -567,6 +596,10 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   }
   if(showPulls) atributes(hRatio,XTitle.Data(),"Pull",units.Data());
   else          atributes(hRatio,XTitle.Data(),"Data/Bkg.",units.Data());
+  if(xmin!=xmax) { 
+    hRatio->GetXaxis()->SetRangeUser(xmin, xmax);
+    hBand->GetXaxis()->SetRangeUser(xmin,xmax);
+  }
   hRatio->Draw("e1p");
   hBand->SetFillColor(12);
   hBand->SetFillStyle(3002);
@@ -577,8 +610,8 @@ void finalPlot2016(int nsel = 0, int ReBin = 1, TString XTitle = "N_{jets}", TSt
   // Draw a line throgh y=0
   double theLines[2] = {1.0, 0.5};
   if(showPulls) {theLines[0] = 0.0; theLines[1] = 1.5;}
-  TLine* baseline = new TLine(hRatio->GetXaxis()->GetXmin(), theLines[0],
-                              hRatio->GetXaxis()->GetXmax(), theLines[0]);
+  TLine* baseline = new TLine((xmin!=xmax)?xmin:hRatio->GetXaxis()->GetXmin(), theLines[0],
+                              (xmin!=xmax)?xmax:hRatio->GetXaxis()->GetXmax(), theLines[0]);
   baseline->SetLineStyle(kDashed);
   baseline->Draw();
   // Set the y-axis range symmetric around y=0

@@ -335,6 +335,10 @@ void PlotLimit_ZHinv(
   //DrawTLatex(0.18, 0.94, 0.032, "#bf{CMS}");
   DrawTLatex(0.74, 0.94, 0.032, TString(luminosity).Data());
 
+  if(ratio == 5) {
+    DrawTLatex(0.25, 0.600, 0.033, "#sigma #bf{#it{#Beta}}(H #rightarrow inv.)/#sigma_{SM} < 0.45 (0.44) at 95% CL");
+  }
+
   TLegend* leg = new TLegend(0.60, 0.68, 0.80, 0.88, "");
 
   leg->SetBorderSize(    0);

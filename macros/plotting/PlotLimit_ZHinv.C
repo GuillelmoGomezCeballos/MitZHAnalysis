@@ -327,15 +327,15 @@ void PlotLimit_ZHinv(
   // Cosmetics
   //----------------------------------------------------------------------------
   //DrawTLatex(0.94, 0.850, 0.050, "#bf{CMS} Preliminary");
-  DrawTLatex(0.66, 0.850, 0.050, "#bf{CMS}");
+  DrawTLatex(0.20, 0.850, 0.050, "#bf{CMS}");
+  DrawTLatex(0.20, 0.800, 0.033, title.c_str());
   //DrawTLatex(0.94, 0.850, 0.032, "CMS");
   //DrawTLatex(0.94, 0.795, 0.032, title.c_str());
   //DrawTLatex(0.94, 0.740, 0.032, TString("L = "+ luminosity).Data());
   //DrawTLatex(0.18, 0.94, 0.032, "#bf{CMS}");
-  DrawTLatex(0.94, 0.80, 0.042, title.c_str());
-  DrawTLatex(0.95, 0.94, 0.032, TString(luminosity).Data());
+  DrawTLatex(0.74, 0.94, 0.032, TString(luminosity).Data());
 
-  TLegend* leg = new TLegend(0.20, 0.66, 0.355, 0.88, "");
+  TLegend* leg = new TLegend(0.60, 0.68, 0.80, 0.88, "");
 
   leg->SetBorderSize(    0);
   leg->SetFillColor (    0);
@@ -344,13 +344,13 @@ void PlotLimit_ZHinv(
   leg->SetTextSize  (0.030);
 
   if(ObsLim != NULL)
-  leg->AddEntry(ObsLim,    " 95% CL observed",     "l");
-  leg->AddEntry(ExpLim,    " 95% CL expected",     "l");
+  leg->AddEntry(ObsLim,    " Observed 95% CL",     "l");
+  leg->AddEntry(ExpLim,    " Expected 95% CL",     "l");
   leg->AddEntry(ExpBand68, " Expected #pm 1 s.d.", "f");
   leg->AddEntry(ExpBand95, " Expected #pm 2 s.d.", "f");
   if(ratio == 5) {
   leg->AddEntry(ExpTheory, " #sigma_{qq #rightarrow ZH}^{SM}","l");
-  leg->AddEntry(Dummy,     " #sigma #bf{#it{#Beta}}(H #rightarrow inv.)/#sigma_{SM} < 0.45 (0.44) at 95% CL","l");
+  //leg->AddEntry(Dummy,     " #sigma #bf{#it{#Beta}}(H #rightarrow inv.)/#sigma_{SM} < 0.45 (0.44) at 95% CL","l");
   }
   leg->Draw("same");
 
@@ -398,7 +398,7 @@ void DrawTLatex(Double_t x, Double_t y, Double_t tsize, const char* text)
   TLatex* tl = new TLatex(x, y, text);
 
   tl->SetNDC();
-  tl->SetTextAlign(   32);
+  tl->SetTextAlign(   11);
   tl->SetTextFont (   42);
   tl->SetTextSize (tsize);
 

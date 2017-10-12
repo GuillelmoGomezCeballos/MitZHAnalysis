@@ -18,12 +18,12 @@
 Bool_t isHWWOverlaid = true;
 enum samp { iWW, iOther, iVV, iWJets, iZJets, iEM, iVVV, iTop, iWWQCD, iHiggs, iHiggs2, iWZ, iZZ, iWG, iDPS,  iWS, iWWEWK, nSamples };
 
-float xPos[nSamples+1] = {0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30}; 
+float xPos[nSamples+1] = {0.45,0.45,0.45,0.45,0.45,0.45,0.45,0.45,0.45,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25}; 
 float yOff[nSamples+1] = {   0,   1,   2,   3,   4,   5,   6,   7,   8,   0,   1,   2,   3,   4,   5,   6,   7,   8};
 
-const Float_t _tsize   = 0.04;
-const Float_t _xoffset = 0.20;
-const Float_t _yoffset = 0.05;
+const Float_t _tsize   = 0.045;
+const Float_t _xoffset = 0.200;
+const Float_t _yoffset = 0.055;
 
 const bool doApplyBinWidth = true;
 const double SFBinWidth = 1;
@@ -431,7 +431,7 @@ class StandardPlot2016 {
             TString higgsLabel  = Form("%s",_HiggsLabel.Data());
             TString higgs2Label = Form("%s",_Higgs2Label.Data());
 
-            if(_data          && _data         ->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _data,	       "Data",    "lp"); j++; }
+            if(_data          && _data         ->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _data,	       "Data",    "ep"); j++; }
             if(_hist[iWWEWK ] && _hist[iWWEWK ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWWEWK ], "EW WW", "f" ); j++; }
             if(_hist[iZZ    ] && _hist[iZZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iZZ    ], "ZZ",	  "f" ); j++; }
             if(_hist[iWZ    ] && _hist[iWZ    ]->GetSumOfWeights() > 0) { DrawLegend(xPos[j], 0.84 - yOff[j]*_yoffset, _hist[iWZ    ], "WZ",	  "f" ); j++; }

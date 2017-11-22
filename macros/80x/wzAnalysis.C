@@ -118,6 +118,14 @@ void wzAnalysis(
   infilenamev.push_back(Form("%sZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8.root",filesPathMC.Data()));                   infilecatv.push_back(2);
 
   infilenamev.push_back(Form("%sWZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8.root",filesPathMC.Data()));			   infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_0Jets_MLL-4To50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	    infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_1Jets_MLL-4To50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	    infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_2Jets_MLL-4To50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	    infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_3Jets_MLL-4To50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));	    infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_0Jets_MLL-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_1Jets_MLL-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_2Jets_MLL-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(3);
+  //infilenamev.push_back(Form("%sWZTo3LNu_3Jets_MLL-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8.root",filesPathMC.Data()));  infilecatv.push_back(3);
 
   infilenamev.push_back(Form("%sZZTo4L_13TeV_powheg_pythia8.root",filesPathMC.Data()));					   infilecatv.push_back(4);
   infilenamev.push_back(Form("%sGluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8.root",filesPathMC.Data()));		   infilecatv.push_back(4);
@@ -233,7 +241,7 @@ void wzAnalysis(
   int nBinPlot      = 200;
   double xminPlot   = 0.0;
   double xmaxPlot   = 200.0;
-  const int allPlots = 45;
+  const int allPlots = 46;
   const int histBins = 7;
   TH1D* histo[allStates][allPlots][histBins];
   TString processName[histBins] = {"..Data", "....EM", "Zgamma", "....WZ", "...ZZ", "...VVV", ".Higgs"};
@@ -378,6 +386,7 @@ void wzAnalysis(
     else if(thePlot >= 39 && thePlot <= 39) {nBinPlot =  80; xminPlot = 0.0; xmaxPlot =   8.0;}
     else if(thePlot >= 42 && thePlot <= 42) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   1.0;}
     else if(thePlot >= 43 && thePlot <= 43) {nBinPlot = 100; xminPlot = 0.0; xmaxPlot =   TMath::Pi();}
+    else if(thePlot >= 44 && thePlot <= 44) {nBinPlot =  50; xminPlot =-2.5; xmaxPlot =   2.5;}
     TH1D* histos;
     if(thePlot != allPlots-1 && thePlot != 40 && thePlot != 41) histos = new TH1D("histos", "histos", nBinPlot, xminPlot, xmaxPlot);
     else                                                        histos = new TH1D("histos", "histos", nBinMVA, xbins);
@@ -1295,6 +1304,7 @@ void wzAnalysis(
 	else if(thePlot == 41 && passAllCuts[WZSEL])                     {makePlot = true;theVar = TMath::Min(dilepZ.Pt(),xbins[nBinMVA]-0.001);}
 	else if(thePlot == 42 && passAllCuts[WZLOOSESEL])                {makePlot = true;theVar = TMath::Min(ptFrac,0.999);}
 	else if(thePlot == 43 && passAllCuts[WZLOOSESEL])                {makePlot = true;theVar = dPhiDiLepMET;}
+	else if(thePlot == 44 && passAllCuts[WZSEL])                     {makePlot = true;theVar = ((TLorentzVector*)(*eventLeptons.p4)[idLep[tagZ[2]]])->Eta();}
 
 	if(makePlot) histo[     5][thePlot][theCategory]->Fill(theVar,totalWeight);
 	if(makePlot) histo[type3l][thePlot][theCategory]->Fill(theVar,totalWeight);
